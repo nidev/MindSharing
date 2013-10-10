@@ -14,9 +14,9 @@ public class SentenceSplit {
 	public static void main(String[] args)
 	{
 		ArrayList<String> list=split("나는 밥을 먹었다.");
-		for(int i=0; i<list.size();i++)//list 내용 프린트
+		for(String x : list)//list 내용 프린트 iterator를 이용 간략화
 		{
-			System.out.println(list.get(i));
+			System.out.println(x);
 		}
 	}
 }
