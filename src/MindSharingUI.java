@@ -17,6 +17,8 @@ import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
+import javax.swing.JScrollBar;
+import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.border.Border;
 
@@ -103,23 +105,33 @@ public class MindSharingUI extends JFrame
 		menubar.add(m_info);
 		
 		
-		// 입력창: 라벨, 텍스트 상자, 버튼
+		// 상단: 입력창: 라벨, 텍스트 상자, 버튼
 		JLabel l_input = new JLabel("분석 텍스트 입력:");
 		JTextArea ta_input = new JTextArea(3, 70);
+		ta_input.setText("분석할 텍스트는 여기에 입력");
 		JButton b_input = new JButton("분석");
 		
+		// 하단: 출력창: 텍스트 상자만 일단
+		JTextArea ta_output = new JTextArea(40, 70);
+		ta_output.setText("분석된 아웃풋은 일단 여기에 출력");
 		
 		/*
 		 * 화면 구성요소 모두 프레임에 추가
 		 */
 		setJMenuBar(menubar);
 		
+		// 상단: 입력부
 		JPanel topPane = new JPanel(new BorderLayout());
 		topPane.add(l_input, BorderLayout.WEST);
 		topPane.add(ta_input, BorderLayout.CENTER);
 		topPane.add(b_input, BorderLayout.EAST);
 		
 		add(topPane, BorderLayout.NORTH);
+		
+		// 하단: 분석 출력부
+		JScrollPane centerPane = new JScrollPane(ta_output, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+		
+		add(centerPane, BorderLayout.SOUTH);
 		
 
 		/*
