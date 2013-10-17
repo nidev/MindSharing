@@ -1,0 +1,132 @@
+import java.awt.BorderLayout;
+import java.awt.Button;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.Graphics;
+import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
+import java.io.Closeable;
+
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JPanel;
+import javax.swing.JTextArea;
+import javax.swing.border.Border;
+
+
+public class MindSharingUI extends JFrame
+{
+	Dimension main_screen_size = new Dimension(480, 600);
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
+	public MindSharingUI()
+	{
+		/*
+		 * 화면 설정
+		 */
+		// 화면 크기 조절 가능
+		setResizable(true);
+		// 최소 화면 크기 설정
+		setMinimumSize(main_screen_size);
+		// 종료버튼 누를 때 자동으로 종료
+		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		// 창 제목 설정, 제목은 : MindSharing version. x.yyy
+		setTitle("MindSharing " + MindSharing.getVersionString());
+		// 화면 구성요소가 추가 될때, 위에서부터 아래로 분석하도록 수정
+		setLocationRelativeTo(null);
+		
+		/*
+		 * 화면 아이템 생성
+		 * (아마도 JMenuBar랑 JMenu 전부 클래스 전역변수로 옮겨야할듯
+		 */
+		// 메뉴바 생성
+		JMenuBar menubar = new JMenuBar();
+		
+		// 1번 메뉴 '파일'
+		JMenu m_file = new JMenu("파일");
+		
+		JMenuItem mi_file_opentext = new JMenuItem("열기");
+		m_file.add(mi_file_opentext);
+		JMenuItem mi_file_saveoutput = new JMenuItem("결과 저장");
+		m_file.add(mi_file_saveoutput);
+		JMenuItem mi_file_exit = new JMenuItem("종료");
+		/// 종료기능 시험삼아 삽입해보는 중
+		mi_file_exit.setActionCommand("exit");
+		mi_file_exit.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e)
+			{
+				if (e.getActionCommand().equals("exit"))
+				{
+					MindSharing.dbg("그래픽 화면을 종료합니다.");
+					dispose();
+					
+				}
+				// TODO Auto-generated method stub
+				
+			}
+		});
+		m_file.add(mi_file_exit);
+		
+		menubar.add(m_file);
+		
+		// 2번 메뉴 '데이터관리'
+		JMenu m_db = new JMenu("데이터");
+		menubar.add(m_db);
+
+		// 3번 메뉴 '테스트'
+		JMenu m_test = new JMenu("테스트");
+		menubar.add(m_test);
+		
+		// 4번 메뉴 '정보'
+		JMenu m_info = new JMenu("정보");
+		
+		JMenuItem mi_info_version = new JMenuItem("버전");
+		m_info.add(mi_info_version);
+		JMenuItem mi_info_credit = new JMenuItem("제작 정보");
+		m_info.add(mi_info_credit);
+		JMenuItem mi_info_help = new JMenuItem("도움말");
+		m_info.add(mi_info_help);
+		
+		menubar.add(m_info);
+		
+		
+		// 입력창: 라벨, 텍스트 상자, 버튼
+		JLabel l_input = new JLabel("분석 텍스트 입력:");
+		JTextArea ta_input = new JTextArea(3, 70);
+		JButton b_input = new JButton("분석");
+		
+		
+		/*
+		 * 화면 구성요소 모두 프레임에 추가
+		 */
+		setJMenuBar(menubar);
+		
+		JPanel topPane = new JPanel(new BorderLayout());
+		topPane.add(l_input, BorderLayout.WEST);
+		topPane.add(ta_input, BorderLayout.CENTER);
+		topPane.add(b_input, BorderLayout.EAST);
+		
+		add(topPane, BorderLayout.NORTH);
+		
+
+		/*
+		 * 패킹 후 출력
+		 */
+        pack();
+        setVisible(true);
+	}
+
+}
