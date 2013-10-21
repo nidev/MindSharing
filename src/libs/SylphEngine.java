@@ -38,6 +38,15 @@ package libs;
  */
 public class SylphEngine
 {
+	final static boolean USE_THREAD = true; // 쓰레드 사용 여부
+	final static int MAX_THREADS = 20; // 최대 쓰레드 갯수
+	final static int MAX_SUB_FRAGMENTS = 50; // 한 프래그먼트가 가질 수 있는 작은 프래그먼트 갯수
+	final static int ENGINE_VERSION_MAJOR = 0; // 엔진 버전 xx.yyy 중 xx
+	final static int ENGINE_VERSION_MINOR = 1; // 엔진 버전 xx.yyy 중 yyy
+	final static String DATABASE_FOLDER = "./database/"; // 데이터 베이스 폴더
+	
+	 
+	
 
 	public SylphEngine()
 	{
