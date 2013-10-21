@@ -1,29 +1,24 @@
 import java.awt.BorderLayout;
-import java.awt.Button;
-import java.awt.Component;
 import java.awt.Dimension;
-import java.awt.Graphics;
-import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
-import java.io.Closeable;
 
 import javax.swing.JButton;
+import javax.swing.JEditorPane;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
-import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
+import javax.swing.JTabbedPane;
+import javax.swing.JTable;
 import javax.swing.JTextArea;
-import javax.swing.border.Border;
+import javax.swing.table.AbstractTableModel;
 
 
-public class MindSharingUI extends JFrame
+public class MindSharingUI extends JFrame implements ActionListener
 {
 	Dimension main_screen_size = new Dimension(480, 600);
 
@@ -86,13 +81,12 @@ public class MindSharingUI extends JFrame
 		
 		// 2번 메뉴 '데이터관리'
 		JMenu m_db = new JMenu("데이터");
+		JMenuItem mi_db_launch = new JMenuItem("데이터 관리툴 실행");
+		m_db.add(mi_db_launch);
+		
 		menubar.add(m_db);
 
-		// 3번 메뉴 '테스트'
-		JMenu m_test = new JMenu("테스트");
-		menubar.add(m_test);
-		
-		// 4번 메뉴 '정보'
+		// 3번 메뉴 '정보'
 		JMenu m_info = new JMenu("정보");
 		
 		JMenuItem mi_info_version = new JMenuItem("버전");
@@ -104,6 +98,8 @@ public class MindSharingUI extends JFrame
 		
 		menubar.add(m_info);
 		
+		// 탭 관리자 생성
+		JTabbedPane maintab = new JTabbedPane();
 		
 		// 상단: 입력창: 라벨, 텍스트 상자, 버튼
 		JLabel l_input = new JLabel("분석 텍스트 입력:");
@@ -120,18 +116,95 @@ public class MindSharingUI extends JFrame
 		 */
 		setJMenuBar(menubar);
 		
-		// 상단: 입력부
+		// 탭1 상단: 입력부
 		JPanel topPane = new JPanel(new BorderLayout());
 		topPane.add(l_input, BorderLayout.WEST);
 		topPane.add(ta_input, BorderLayout.CENTER);
 		topPane.add(b_input, BorderLayout.EAST);
 		
-		add(topPane, BorderLayout.NORTH);
+		// 탭1 하단: 분석 출력부
+
+		//JScrollPane centerPane = new JScrollPane(ta_output, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+		// add(centerPane, BorderLayout.SOUTH);
+		JTable outputTable = new JTable(new AbstractTableModel() {
+			
+			/**
+			 * 
+			 */
+			private static final long serialVersionUID = 1L;
+			String[] columns = {"형태소", "단어 유형", "감정값", "긍정단어", "부정단어", "누계"};
+			Object[] values[] = {{"나", "명사", "0", false, false, "0"}, {"너", "명사", "0", false, true, "0"}};
+			
+			
+			@Override
+			public boolean isCellEditable(int rowIndex, int columnIndex)
+			{
+				// TODO Auto-generated method stub
+				return false;
+			}
+			
+			@Override
+			public Object getValueAt(int rowIndex, int columnIndex)
+			{
+				return values[rowIndex][columnIndex];
+			}
+			
+			@Override
+			public int getRowCount()
+			{
+				// TODO Auto-generated method stub
+				return values.length;
+			}
+			
+			@Override
+			public String getColumnName(int columnIndex)
+			{
+				return columns[columnIndex].toString();
+			}
+			
+			@Override
+			public int getColumnCount()
+			{
+				return columns.length;
+			}
+
+			@Override
+			public void setValueAt(Object aValue, int rowIndex, int columnIndex)
+			{
+				// TODO Auto-generated method stub
+				fireTableCellUpdated(rowIndex, columnIndex);
+			}
+
+			@Override
+			public Class<?> getColumnClass(int columnIndex)
+			{
+				// TODO Auto-generated method stub
+				return getValueAt(0, columnIndex).getClass();
+			}
+		});
 		
-		// 하단: 분석 출력부
-		JScrollPane centerPane = new JScrollPane(ta_output, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+		// 탭 화면 1: 로그 분석 및 결과 출력
 		
-		add(centerPane, BorderLayout.SOUTH);
+		JScrollPane scrollPane_analyze = new JScrollPane(outputTable);
+		scrollPane_analyze.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+		scrollPane_analyze.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+		
+		topPane.add(scrollPane_analyze, BorderLayout.SOUTH);
+		maintab.addTab("분석", topPane);
+		
+		// 탭 화면 2: 분석 과정 출력
+		JEditorPane logOutputPane = new JEditorPane();
+		JScrollPane scrollPane_log = new JScrollPane(logOutputPane);
+		scrollPane_log.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+		scrollPane_log.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+		
+		logOutputPane.setText("여기에 디버그 로그 출력");
+		maintab.add("로그", scrollPane_log);
+		
+		
+		
+		add(maintab, BorderLayout.CENTER);
+		// add(scrollPane, BorderLayout.CENTER);
 		
 
 		/*
@@ -139,6 +212,13 @@ public class MindSharingUI extends JFrame
 		 */
         pack();
         setVisible(true);
+	}
+
+	@Override
+	public void actionPerformed(ActionEvent e)
+	{
+		// TODO Auto-generated method stub
+		
 	}
 
 }
