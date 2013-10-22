@@ -1,3 +1,4 @@
+import libs.ELog;
 import libs.SentenceSplit;
 
 public class MindSharing
@@ -21,28 +22,18 @@ public class MindSharing
 		System.out.println(help_message);
 	}
 	
-	public static void dbg(String debug_message)
-	{
-		// println 을 간단히 실행하려고 만든 함수
-		if (USE_DEBUG)
-		{
-			System.out.print("[MindSharing] ");
-			System.out.println(debug_message);
-		}
-	}
-
 	public static void main(String[] args)
 	{
-		dbg("런처 시작");
+		ELog.d("main", "런처 시작");
 		// 매개 변수 없이 실행된 경우, 그래픽 화면 실행
 		if (args.length == 0)
 		{
-			dbg("그래픽 화면을 준비합니다.");
+			ELog.d("main", "그래픽 화면을 준비합니다.");
 			new MindSharingUI();
 		}
 		else
 		{
-			dbg("매개변수가 입력됨. 콘솔 모드로 실행합니다.");
+			ELog.d("main", "매개변수가 입력됨. 콘솔 모드로 실행합니다.");
 			// 매개 변수 입력되었는지 확인
 			if (args[0].isEmpty()) // 입력 X
 			{
@@ -56,7 +47,7 @@ public class MindSharing
 				
 			}
 		}
-		dbg("런처 종료");
+		ELog.d("main", "런처 종료");
 	}
 
 }

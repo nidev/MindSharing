@@ -44,9 +44,6 @@ public class SylphEngine
 	final static int ENGINE_VERSION_MAJOR = 0; // 엔진 버전 xx.yyy 중 xx
 	final static int ENGINE_VERSION_MINOR = 1; // 엔진 버전 xx.yyy 중 yyy
 	final static String DATABASE_FOLDER = "./database/"; // 데이터 베이스 폴더
-	
-	 
-	
 
 	public SylphEngine()
 	{

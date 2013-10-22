@@ -16,7 +16,7 @@ import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.table.AbstractTableModel;
-
+import libs.ELog;
 
 public class MindSharingUI extends JFrame implements ActionListener
 {
@@ -67,7 +67,7 @@ public class MindSharingUI extends JFrame implements ActionListener
 			{
 				if (e.getActionCommand().equals("exit"))
 				{
-					MindSharing.dbg("그래픽 화면을 종료합니다.");
+					ELog.d("graphic", "그래픽 화면을 종료합니다.");
 					dispose();
 					
 				}
@@ -198,7 +198,7 @@ public class MindSharingUI extends JFrame implements ActionListener
 		scrollPane_log.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
 		scrollPane_log.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 		
-		logOutputPane.setText("여기에 디버그 로그 출력");
+		logOutputPane.setText("여기에 디버그 로그 출력" + ELog.getFullBuffer());
 		maintab.add("로그", scrollPane_log);
 		
 		
