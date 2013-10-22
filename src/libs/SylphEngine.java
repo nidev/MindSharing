@@ -1,5 +1,16 @@
 package libs;
 
+import java.io.DataInputStream;
+import java.util.ArrayList;
+
+import libs.fragments.ContextFragment;
+import libs.fragments.SentenceFragment;
+import libs.fragments.WordFragment;
+
+/*
+ * 이 파일은 코드가 돌아가지 않더라고 큰 걱정 안해도 괜찮음.
+ */
+
 /**
  * 분석 엔진 '실프' 스케치
  * ----
@@ -9,23 +20,6 @@ package libs;
  * 함수 String .getSolutionInHtml() (BaseFragment에 없음)
  * -분석 과정과 결과를 html 형식 스트링으로 반환
  * 
- * ----
- * 클래스 BaseFragment: 분석결과 사용하는 기본 클래스. SentenceFragment, WordFragment, ContextFragment가 모두 상속함
- * 클래스 SentenceFragment: AnalysisResults에 들어가는 문장 분석 결과물들
- * 함수 ArrayList<String> .getWords()
- * 함수 String .getRawText()
- * 함수 int .getAverageEmotionVector()
- * 함수 Hash<String, int> .getEmotionVectors()
- * 함수 WordFragment .getNextFragment() // 문맥 프래그먼트는 문장을, 문장 프래그먼트는 단어를 반환한다.
- * 함수 int .lengthFragments() // 전체 프래그먼트 갯수
- * 함수 int .lengthRemainingFragments() // getNextFragment()가 가능한 앞으로 갯수 
- * 함수 boolean .isNextFragmentOK() // 
- * 함수 void .resetNextFragmentPosition()
- * 함수 void .setIgnoreThis
- * -SentenceFragment에 분석된 결과를 
- * 
- * ----
- * 클래스 SylphEngine: 엔진 클래스
  * 
  * 함수 static void .initEngine()
  * -엔진처리에 필요한 DB파일과 메모리 상태 점검
@@ -38,6 +32,7 @@ package libs;
  */
 public class SylphEngine
 {
+	final static String TAG = "Sylph";
 	final static boolean USE_THREAD = true; // 쓰레드 사용 여부
 	final static int MAX_THREADS = 20; // 최대 쓰레드 갯수
 	final static int MAX_SUB_FRAGMENTS = 50; // 한 프래그먼트가 가질 수 있는 작은 프래그먼트 갯수
@@ -47,7 +42,52 @@ public class SylphEngine
 
 	public SylphEngine()
 	{
-		// TODO Auto-generated constructor stub
 	}
-
+	
+	public static void initEngine()
+	{
+		ELog.d(TAG, "엔진 점검 중");
+		ELog.d(TAG, "엔진 버전 " + ENGINE_VERSION_MAJOR + "." + ENGINE_VERSION_MINOR);
+		ELog.d(TAG, "엔진 점검 완료");
+	}
+	
+	public ContextFragment analyze(String sourceText)
+	{
+		ContextFragment fctx = new ContextFragment();
+		
+		ArrayList<String> sentences = PhraseSplit.split(sourceText); // XXX: 소스 작업 중
+		
+		// 1단계 분해 작업
+		SentenceFragment[] fstcs = new SentenceFragment[sentences.size()];
+		for (String sentence: sentences)
+		{
+			// 문장 프래그먼트 저장 안됨
+			ArrayList<String> words = SentenceSplit.split(sentence);
+			for (String word: words)
+			{
+				// 단어 프래그먼트 저장 안됨
+				ArrayList<String> units = UnitSplit.split(word); // XXX: 소스 작업 중
+				for (String unit: units)
+				{
+					// 단어 프래그먼트에 형태소 저장안됨
+				}
+				
+			}
+			
+		}
+		
+		// 2단계 사전을 활용한 분석 작업
+		// 1. 단어 레벨까지 내려가 값을 탐색함
+		// 2. 문장 레벨로 올라와 전체 값을 계산함
+		// 3. 문단 레벨로 올라와 전체 값을 계산함
+		// 4. ContextFragment 내용 갱신
+		
+		// 
+		return fctx;
+	}
+	
+	public ContextFragment analyze(DataInputStream source)
+	{
+		return null;
+	}
 }
