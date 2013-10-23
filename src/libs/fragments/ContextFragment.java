@@ -72,8 +72,18 @@ public class ContextFragment implements BaseFragment
 	@Override
 	public void setIgnoreFlag()
 	{
-		// TODO Auto-generated method stub
+		// configureContextFragment 가 완료되었는지 설정
 		
+	}
+	
+	public boolean isFragmentReady()
+	{
+		return false;
+	}
+	
+	public void setFragmentReadyFlag()
+	{
+		// configureContextFragment 가 완료되었을 때 설정
 	}
 
 	@Override
@@ -82,5 +92,4 @@ public class ContextFragment implements BaseFragment
 		// TODO Auto-generated method stub
 		return null;
 	}
-
 }
