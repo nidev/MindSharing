@@ -1,95 +1,79 @@
 package libs.fragments;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+
+import libs.ELog;
 
 // 작업 중 //
 
-public class ContextFragment implements BaseFragment
+public class ContextFragment extends BaseFragment
 {
+	private boolean isReadyToUse = false; // 준비되면 true
+	//private long elapsed_build_time = 0; // 생성에 소요된 시간
+	//private long elapsed_analyzing_time = 0; // 분석에 소요된 시간
+	
+	private long timeOnCreation = 0; // 클래스 생성시각
+	private long startTimeOnBuild = 0; // 텍스트 분해 시작시각
+	private long endTimeOnBuild = 0; // 텍스트 분해 종료시각
+	private long startTimeOnAnalysis = 0; // 텍스트 분석 시작시각
+	private long endTimeOnAnalysis = 0; // 텍스트 분석 종료시각
+	
+	private int contextId = -1;
+	private String TAG = "CTX=";	
+	
 
 	public ContextFragment()
 	{
-		// TODO Auto-generated constructor stub
-	}
-
-	@Override
-	public ArrayList<String> getTexts()
-	{
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public ArrayList<BaseFragment> getFragments()
-	{
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public int getAverageEmotionVector()
-	{
-		// TODO Auto-generated method stub
-		return 0;
-	}
-
-	@Override
-	public HashMap<String, Integer> getEmotionVectors()
-	{
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public int lengthFragments()
-	{
-		// TODO Auto-generated method stub
-		return 0;
-	}
-
-	@Override
-	public int lengthRemainingFragments()
-	{
-		// TODO Auto-generated method stub
-		return 0;
-	}
-
-	@Override
-	public boolean isNextFragmentOK()
-	{
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public void resetNextFragmentPosition()
-	{
-		// TODO Auto-generated method stub
+		super(); // BaseFragment() 생성자 실행
+		timeOnCreation = System.currentTimeMillis();
+		contextId = hashCode();
+		TAG += contextId; // CTX= 뒤에 객체 아이디를 붙여줌
+		ELog.d(TAG, "컨텍스트 객체 생성 완료. (텍스트 없음)");
 		
-	}
-
-	@Override
-	public void setIgnoreFlag()
-	{
-		// configureContextFragment 가 완료되었는지 설정
 		
 	}
 	
-	public boolean isFragmentReady()
+	public ContextFragment(String p_sourceText, ArrayList<String> p_slices)
 	{
-		return false;
+		super(p_sourceText, p_slices); // BaseFragment() 생성자 실행
+		timeOnCreation = System.currentTimeMillis();
+		contextId = hashCode();
+		TAG += contextId; // CTX= 뒤에 객체 아이디를 붙여줌
+		ELog.d(TAG, "컨텍스트 객체 생성 완료. (텍스트 있음)");
 	}
 	
-	public void setFragmentReadyFlag()
+	public void setStartTimeOnBuild()
 	{
-		// configureContextFragment 가 완료되었을 때 설정
+		startTimeOnBuild = System.currentTimeMillis();
 	}
 
-	@Override
-	public BaseFragment getNextFragments()
+	public void setEndTimeOnBuild()
 	{
-		// TODO Auto-generated method stub
-		return null;
+		endTimeOnBuild = System.currentTimeMillis();
+	}
+	
+	public void setStartTimeOnAnalysis()
+	{
+		startTimeOnAnalysis = System.currentTimeMillis();;
+	}
+	
+	public void setEndTimeOnAnalysis()
+	{
+		endTimeOnAnalysis = System.currentTimeMillis();
+	}
+	
+	public boolean isReadyToUse()
+	{
+		return isReadyToUse;
+	}
+	
+	public void setReadyToUse()
+	{
+		isReadyToUse = true;
+	}
+	
+	public void unsetReadyToUse()
+	{
+		isReadyToUse = false;
 	}
 }

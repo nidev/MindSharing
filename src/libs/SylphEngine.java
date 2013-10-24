@@ -3,9 +3,8 @@ package libs;
 import java.io.DataInputStream;
 import java.util.ArrayList;
 
+import libs.fragments.BaseFragment;
 import libs.fragments.ContextFragment;
-import libs.fragments.SentenceFragment;
-import libs.fragments.WordFragment;
 
 /*
  * 이 파일은 코드가 돌아가지 않더라고 큰 걱정 안해도 괜찮음.
@@ -39,6 +38,10 @@ public class SylphEngine
 	final static int ENGINE_VERSION_MAJOR = 0; // 엔진 버전 xx.yyy 중 xx
 	final static int ENGINE_VERSION_MINOR = 1; // 엔진 버전 xx.yyy 중 yyy
 	final static String DATABASE_FOLDER = "./database/"; // 데이터 베이스 폴더
+	
+	final static int FILL_SENTENCE_LEVEL = 1; // fillBaseFragment에서 나누는 수준을 설정: 문장 레벨
+	final static int FILL_WORD_LEVEL = 2; // fillBaseFragment에서 나누는 수준을 설정: 단어 레벨
+	final static int FILL_UNIT_LEVEL = 4; // // fillBaseFragment에서 나누는 수준을 설정: 형태소 레벨
 
 	public SylphEngine()
 	{
@@ -51,39 +54,74 @@ public class SylphEngine
 		ELog.d(TAG, "엔진 점검 완료");
 	}
 	
-	public ContextFragment configureContextFragment(ContextFragment fctx, String sourceText) throws IllegalArgumentException
+	public BaseFragment fillBaseFragment(BaseFragment bft, int level) throws IllegalArgumentException
+	{
+		switch (level)
+		{
+		case FILL_SENTENCE_LEVEL:
+			for (String slice: bft.slicedText)
+			{
+				ArrayList<String> array = SentenceSplit.split(slice);
+				for (String key: array)
+				{
+					BaseFragment word_fragment = new BaseFragment();
+					bft.fragments.add(fillBaseFragment(word_fragment, FILL_WORD_LEVEL));
+				}
+				
+			}
+			break;
+		case FILL_WORD_LEVEL:
+			// 지금은 사용하지 않음
+			/*
+			for (String slice: bft.slicedText)
+			{
+				ArrayList<String> array = UnitSplit.split(slice);
+				for (String key: array)
+				{
+					BaseFragment word_fragment = new BaseFragment();
+					bft.fragments.add(fillBaseFragment(word_fragment, FILL_UNIT_LEVEL));
+				}
+			}
+			*/
+			break;
+		case FILL_UNIT_LEVEL:
+			// 형태소 분해된 단어에 각각 감정값을 0으로 채워주고 루프 종료
+			break;
+		default:
+			throw new IllegalArgumentException("Unacceptable Level");
+		}
+		return bft;
+	}
+	
+	public ContextFragment fillContextFragment(ContextFragment fctx) throws IllegalArgumentException
 	{
 		ELog.d(TAG, "문장을 나누고, 클래스로 입력하는 작업을 수행합니다.");
 		
-		if (sourceText.length() == 0)
+		if (fctx.sourceText.length() == 0)
 		{
 			throw new IllegalArgumentException();
 		}
 		
-		ArrayList<String> sentences = PhraseSplit.split(sourceText); // XXX: 소스 작업 중
-		
-		// 1단계 분해 작업
-		SentenceFragment[] fstcs = new SentenceFragment[sentences.size()];
-		for (String sentence: sentences)
+		try
 		{
-			// REMARK: 문장 프래그먼트 저장 안됨
-			ArrayList<String> words = SentenceSplit.split(sentence);
-			for (String word: words)
+			// 문단 분해
+			for (String slice: fctx.slicedText)
 			{
-				// REMARK: 단어 프래그먼트 저장 안됨
-				ArrayList<String> units = UnitSplit.split(word); // XXX: 소스 작업 중
-				for (String unit: units)
-				{
-					// REMARK: 단어 프래그먼트에 형태소 저장안됨
-				}
+				BaseFragment fragment = new BaseFragment(slice);
+				fillBaseFragment(fragment, FILL_SENTENCE_LEVEL);
 				
 			}
-			
+			for (BaseFragment fragment: fctx.getFragments())
+			{
+				
+			}
+			fctx.setReadyToUse(); // 컨텍스트 준비 완료 플래그 설정
 		}
-		
-		fctx.setFragmentReadyFlag(); // 컨텍스트 준비 완료 플래그 설정
-		fctx.isFragmentReady(); // 만약에 도중에 오류가 발생했다면 false가 된다.
-		
+		catch (Exception e)
+		{
+			ELog.e(TAG, "문장 분해 도중 오류가 발생했습니다.");
+			e.printStackTrace();
+		}
 		return fctx;
 		
 	}
@@ -91,18 +129,22 @@ public class SylphEngine
 	public ContextFragment analyze(String sourceText)
 	{
 		ELog.d(TAG, "텍스트 분석을 시작합니다.");
-		ContextFragment fctx = new ContextFragment();
+		ContextFragment fctx = new ContextFragment(sourceText, PhraseSplit.split(sourceText));
+		fctx = fillContextFragment(fctx);
 		
 		
-		if (fctx.isFragmentReady())
+		if (fctx.isReadyToUse())
 		{
 			// 2단계 사전을 활용한 분석 작업
-			// 1. 단어 레벨까지 내려가 값을 탐색함
-			// 2. 문장 레벨로 올라와 전체 값을 계산함
-			// 3. 문단 레벨로 올라와 전체 값을 계산함
-			// 4. ContextFragment 내용 갱신
+			// 1. 형태소 레벨로 내려가 값을 산출함
+			// 2. 단어 레벨의 전체 값을 계산함
+			// 3. 문장 레벨의 전체 값을 계산함
+			// 4. 문단 레벨의 전체 값을 계산함
+			// 5. ContextFragment 내용 갱신(작업 종료시각, 사용가능성 여부 등등)
 			
-			//
+			/*
+			 * 감정값 계산 미구현 상태
+			 */
 			return fctx;
 		}
 		else
@@ -115,6 +157,7 @@ public class SylphEngine
 	
 	public ContextFragment analyze(DataInputStream source)
 	{
+		// 파일에서 문자열 읽어온 다음, analyze(sourceText) 호출해주면 됨!
 		return null;
 	}
 }
