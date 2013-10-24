@@ -3,6 +3,8 @@ package libs.fragments;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import libs.ELog;
+
 /*
 interface BaseFragment
 {
@@ -39,17 +41,30 @@ public class BaseFragment
 	// 현재 프래그먼트 위치 (getNextFragment)에서 사용
 	public int current_fragment_id = 0;
 	
+	// 객체 ID
+	private int id = -1;
+	// 디버깅 태그
+	public String TAG = "BSF=";
+	
 	public BaseFragment()
 	{
 		fragments = new ArrayList<BaseFragment>();
 		slicedText = new ArrayList<String>();
+		id = hashCode();
+		TAG += id;
 	}
 	
 	public BaseFragment(String p_sourceText, ArrayList<String> p_slices)
 	{
-		// fragments = new ArrayList<BaseFragment>();
+		fragments = new ArrayList<BaseFragment>();
 		slicedText = p_slices;
 		sourceText = p_sourceText;
+		for (String slice: slicedText)
+		{
+			fragments.add(new BaseFragment(slice));
+		}
+		id = hashCode();
+		TAG += id;
 	}
 	
 	public BaseFragment(String p_sourceText)
@@ -58,6 +73,8 @@ public class BaseFragment
 		slicedText = new ArrayList<String>();
 		slicedText.add(p_sourceText);
 		sourceText = p_sourceText;
+		id = hashCode();
+		TAG += id;
 	}
 	
 	public String getSourceText()
@@ -123,5 +140,15 @@ public class BaseFragment
 	public void setIgnoreFlag() // 무시 설정 (아직 모름)
 	{
 		
+	}
+	
+	public void selfPrintInfo() // 자기 자신의 현재 상태를 출력하는 함수
+	{
+		ELog.d(TAG, "Self-information");
+		ELog.d(TAG, "current_fragment_id = " + current_fragment_id);
+		ELog.d(TAG, "emotionValue = " + emotionValue);
+		ELog.d(TAG, "Fragments.size() = " + fragments.size());
+		ELog.d(TAG, "slicedText.size() = " + slicedText.size());
+		ELog.printArrayList(TAG, slicedText);
 	}
 }

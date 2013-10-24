@@ -2,6 +2,7 @@ package libs;
 
 import java.io.DataInputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import libs.fragments.BaseFragment;
 import libs.fragments.ContextFragment;
@@ -61,28 +62,38 @@ public class SylphEngine
 		case FILL_SENTENCE_LEVEL:
 			for (String slice: bft.slicedText)
 			{
+				
 				ArrayList<String> array = SentenceSplit.split(slice);
 				for (String key: array)
 				{
-					BaseFragment word_fragment = new BaseFragment();
+					// ELog.d(TAG, key);
+					BaseFragment word_fragment = new BaseFragment(key);
+					
 					bft.fragments.add(fillBaseFragment(word_fragment, FILL_WORD_LEVEL));
+					// bft.selfPrintInfo();
+					// ELog.e(TAG, "---------------------------------------");
 				}
 				
 			}
 			break;
 		case FILL_WORD_LEVEL:
 			// 지금은 사용하지 않음
-			/*
 			for (String slice: bft.slicedText)
 			{
+				/*
+				 진짜로 사용할 코드
 				ArrayList<String> array = UnitSplit.split(slice);
 				for (String key: array)
 				{
 					BaseFragment word_fragment = new BaseFragment();
 					bft.fragments.add(fillBaseFragment(word_fragment, FILL_UNIT_LEVEL));
 				}
+				*/
+				// ELog.d(TAG, slice);
+				// 테스트용 코드
+				BaseFragment unit_fragment = new BaseFragment("+"+slice);
+				bft.fragments.add(unit_fragment);
 			}
-			*/
 			break;
 		case FILL_UNIT_LEVEL:
 			// 형태소 분해된 단어에 각각 감정값을 0으로 채워주고 루프 종료
@@ -108,11 +119,7 @@ public class SylphEngine
 			for (String slice: fctx.slicedText)
 			{
 				BaseFragment fragment = new BaseFragment(slice);
-				fillBaseFragment(fragment, FILL_SENTENCE_LEVEL);
-				
-			}
-			for (BaseFragment fragment: fctx.getFragments())
-			{
+				fctx.fragments.add(fillBaseFragment(fragment, FILL_SENTENCE_LEVEL));
 				
 			}
 			fctx.setReadyToUse(); // 컨텍스트 준비 완료 플래그 설정
@@ -129,12 +136,22 @@ public class SylphEngine
 	public ContextFragment analyze(String sourceText)
 	{
 		ELog.d(TAG, "텍스트 분석을 시작합니다.");
-		ContextFragment fctx = new ContextFragment(sourceText, PhraseSplit.split(sourceText));
-		fctx = fillContextFragment(fctx);
+		//ContextFragment fctx = new ContextFragment(sourceText, PhraseSplit.split(sourceText));
+		// 테스트용
+		String test_string = "오늘의 뉴스를 알려드립니다. 오늘의 날씨는 흐리다고 합니다.";
+		String[] test_array = test_string.split("[.]");
+		ArrayList<String> test_arraylist = new ArrayList<>(Arrays.asList(test_array));
 		
+		ContextFragment fctx = new ContextFragment(test_string, test_arraylist);
+
+		fctx.setStartTimeOnBuild();
 		
+		fillContextFragment(fctx);
+		
+		fctx.setEndTimeOnBuild();
 		if (fctx.isReadyToUse())
 		{
+			fctx.setStartTimeOnAnalysis();
 			// 2단계 사전을 활용한 분석 작업
 			// 1. 형태소 레벨로 내려가 값을 산출함
 			// 2. 단어 레벨의 전체 값을 계산함
@@ -145,6 +162,7 @@ public class SylphEngine
 			/*
 			 * 감정값 계산 미구현 상태
 			 */
+			fctx.setEndTimeOnAnalysis();
 			return fctx;
 		}
 		else

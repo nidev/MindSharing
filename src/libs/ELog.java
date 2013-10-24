@@ -1,7 +1,9 @@
 package libs;
 
+import java.lang.reflect.Array;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 
 
 /**
@@ -110,12 +112,22 @@ public class ELog
 		e(id, "Long integer type. value = " + String.valueOf(value));
 	}
 	
-	public static void printArray(String id, Object[] array)
+	public static void printArray(String id, String[] array)
 	{
 		d(id + "/Array", "ARRAY LENGTH = " + array.length);
 		for (int i=0; i < array.length ; i++)
 		{
 			d(id + "/Array", String.format("\t[%d] = \'%s\'", i, String.valueOf(array[i])));
+		}
+		
+	}
+	
+	public static void printArrayList(String id, List<String> arraylist)
+	{
+		d(id + "/AList", "ARRAY LENGTH = " + arraylist.size());
+		for (int i=0; i < arraylist.size() ; i++)
+		{
+			d(id + "/AList", String.format("\t[%d] = \'%s\'", i, String.valueOf(arraylist.get(i))));
 		}
 		
 	}
