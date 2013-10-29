@@ -12,7 +12,7 @@ import java.util.List;
  */
 public class ELog
 {
-	private static int BUFFER_SIZE = 128<<20; // 128kB
+	private static int BUFFER_SIZE = 16<<20; // 16kB
 	private static StringBuffer buffer = new StringBuffer(BUFFER_SIZE);
 	private static String formatString_debug = "%s: %s\r\n";
 	private static String formatString_error = "%s: *ERROR* %s\r\n";
