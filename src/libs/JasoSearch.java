@@ -8,10 +8,12 @@ public class JasoSearch
 {
 	/*
 	 * System.getProperty() 로는 자바 시스템 관련 설정 값들을 가져 올 수 있다.
+
 	 * 그 중 getProperty("user.dir")은 현재 작업 폴더를 가져오는 명령어.
 	 * 3-2-term-project 폴더 자체를 가르키므로, src폴더나 bin 폴더에 접근하려면 직접 뒤의 경로를 적어주어야한다.
 	 */
-	final static String DICTIONARY_PATH = System.getProperty("user.dir") + "\\src\\libs\\긍정 관련 단어.txt"; 
+	// 그리고 파일명은 꼭 영어로!
+	final static String DICTIONARY_PATH = System.getProperty("user.dir") + "\\src\\libs\\Positve Words.txt"; 
 	
 	public static void main(String[] args) throws IOException
 	{
