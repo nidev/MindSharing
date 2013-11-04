@@ -1,5 +1,6 @@
 package libs;
 
+import java.util.regex.*;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
@@ -17,6 +18,8 @@ public class JasoSearch
 	
 	public static void main(String[] args) throws IOException
 	{
+		String findStr = "기쁨";
+		int lineNumber = 1;               //행 번호
 		/*
 		// 프로퍼티 확인용 함수
 		Properties prop = System.getProperties();
@@ -26,29 +29,28 @@ public class JasoSearch
 		}
 		*/
 		
+		try{
 		// 버퍼 열기
 		BufferedReader in = new BufferedReader(new FileReader(DICTIONARY_PATH));
 		
 		String str;
-		while(true)
+		while((str = in.readLine()) != null)
 		{
 			// 혹시 텍스트파일이 UTF-8이 아니라 그런 것 같다.
 			// 텍스트 파일도 모두 UTF-8로 작성하거나 (즉, 이클립스 내에서 텍스트파일 작업),
 			// 윈도우즈 인코딩(MS949) 로 작성된 파일을 UTF-8로 변환하는 과정이 필요함.
-			str=in.readLine();
+			//str=in.readLine();
+			if(str.matches(findStr))
+				System.out.format("%3d: %s%n",lineNumber, str);
 			
-			if(str==null)
-			{
-				// 문자열이 없는 경우에는 종료
-				break;
-			}
-			else
-			{
-				// 있는 경우에는?
-				System.out.println(str);
-			}
+			lineNumber++;                  //행 번호 증가
 		}
 		// 버퍼 닫기
 		in.close();
+		}
+		catch (IOException e) {
+	        System.err.println(e); // 에러가 있다면 메시지 출력
+	        System.exit(1);
+	    } 
 	}
 }
