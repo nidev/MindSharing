@@ -91,7 +91,7 @@ public class SylphEngine
 				*/
 				// ELog.d(TAG, slice);
 				// 테스트용 코드
-				BaseFragment unit_fragment = new BaseFragment("+"+slice);
+				BaseFragment unit_fragment = new BaseFragment("형태소+"+slice);
 				bft.fragments.add(unit_fragment);
 			}
 			break;
@@ -136,13 +136,8 @@ public class SylphEngine
 	public ContextFragment analyze(String sourceText)
 	{
 		ELog.d(TAG, "텍스트 분석을 시작합니다.");
-		//ContextFragment fctx = new ContextFragment(sourceText, PhraseSplit.split(sourceText));
-		// 테스트용
-		String test_string = "오늘의 뉴스를 알려드립니다. 오늘의 날씨는 흐리다고 합니다.";
-		String[] test_array = test_string.split("[.]");
-		ArrayList<String> test_arraylist = new ArrayList<>(Arrays.asList(test_array));
 		
-		ContextFragment fctx = new ContextFragment(test_string, test_arraylist);
+		ContextFragment fctx = new ContextFragment(sourceText, PhraseSplit.split(sourceText));
 
 		fctx.setStartTimeOnBuild();
 		
