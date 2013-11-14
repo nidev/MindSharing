@@ -3,6 +3,7 @@ package test;
 import libs.ELog;
 import libs.SylphEngine;
 import libs.fragments.BaseFragment;
+import libs.fragments.ContextFragment;
 
 /*
  * 주석 꼼꼼히 달기:
@@ -35,7 +36,11 @@ public class EngineTest
 				recursiveSelfPrintInfo(next);
 			}
 		}
-		
+	}
+	
+	public static void recursiveSelfPrintInfo(ContextFragment ctx)
+	{
+		recursiveSelfPrintInfo((BaseFragment) ctx);
 	}
 
 	public static void main(String[] args)
@@ -51,7 +56,7 @@ public class EngineTest
 		SylphEngine engine = new SylphEngine();
 		SylphEngine.initEngine();
 		ELog.d(TAG, "엔진 객체 생성 완료");
-		recursiveSelfPrintInfo((BaseFragment) engine.analyze(EXAMPLE_TEXT));
+		recursiveSelfPrintInfo(engine.analyze(EXAMPLE_TEXT));
 		
 		ELog.d(TAG, "테스트 종료");
 	}
