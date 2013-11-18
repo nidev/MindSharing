@@ -56,7 +56,7 @@ public class EngineTest
 		SylphEngine engine = new SylphEngine();
 		SylphEngine.initEngine();
 		ELog.d(TAG, "엔진 객체 생성 완료");
-		recursiveSelfPrintInfo(engine.analyze(EXAMPLE_TEXT));
+		ContextFragment result = engine.analyze(EXAMPLE_TEXT);
 		
 		ELog.d(TAG, "테스트 종료");
 	}

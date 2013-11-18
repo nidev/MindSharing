@@ -8,6 +8,13 @@ import libs.ELog;
 
 public class ContextFragment extends BaseFragment
 {
+	/*
+	 * For-loop 레벨 정리
+	 * 레벨 fctx = getSourceText는 문단, getFragments는 문장 (타입: ContextFragment)
+	 * 레벨 hbsf = getSourceText는 문장, getFragments는 단어 (타입: BaseFragment)
+	 * 레벨 mbsf = getSourceText는 단어, getFragments는 형태소 (타입: BaseFragment)
+	 * 레벨 lbsf = getSourceText는 형태소, getFragments는 없음  (타입: BaseFragment) <- 마지막 node!
+	 */
 	private boolean isReadyToUse = false; // 준비되면 true
 	//private long elapsed_build_time = 0; // 생성에 소요된 시간
 	//private long elapsed_analyzing_time = 0; // 분석에 소요된 시간

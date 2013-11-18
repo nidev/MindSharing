@@ -1,6 +1,5 @@
 package libs;
 
-import java.lang.reflect.Array;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
@@ -12,7 +11,7 @@ import java.util.List;
  */
 public class ELog
 {
-	private static int BUFFER_SIZE = 16<<20; // 16kB
+	private static int BUFFER_SIZE = 16<<20; // 16MB
 	private static StringBuffer buffer = new StringBuffer(BUFFER_SIZE);
 	private static String formatString_debug = "%s: %s\r\n";
 	private static String formatString_error = "%s: *ERROR* %s\r\n";

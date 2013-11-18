@@ -154,9 +154,32 @@ public class SylphEngine
 			// 4. 문단 레벨의 전체 값을 계산함
 			// 5. ContextFragment 내용 갱신(작업 종료시각, 사용가능성 여부 등등)
 			
+			EmotionPositiveValue posv = new EmotionPositiveValue();
+			EmotionNegativeValue negv = new EmotionNegativeValue();
+			
+			String _TAG = "Analyzer";
+			
 			/*
-			 * 감정값 계산 미구현 상태
+			 * For-loop 레벨 정리
+			 * 레벨 fctx = SourceText는 문단, Fragments는 문장
+			 * 레벨 hbsf = SourceText는 문장, Fragments는 단어
+			 * 레벨 mbsf = SourceText는 단어, Fragments는 형태소
+			 * 레벨 lbsf = SourceText는 형태소, Fragments는 없음 
 			 */
+			for (BaseFragment hbsf : fctx.getFragments())
+			{
+				ELog.d(_TAG, "Current Level: " + hbsf.getSourceText());
+				for (BaseFragment mbsf : hbsf.getFragments())
+				{
+					ELog.d(_TAG, "Current Level: " + mbsf.getSourceText());
+					for (BaseFragment lbsf : mbsf.getFragments())
+					{
+						ELog.d(_TAG, "Current Level: " + lbsf.getSourceText());
+					}
+				}
+			}
+			
+			
 			fctx.setEndTimeOnAnalysis();
 			return fctx;
 		}

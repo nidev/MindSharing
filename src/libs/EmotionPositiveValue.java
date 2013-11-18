@@ -4,7 +4,11 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 
-public class JasoSearch
+import libs.interfaces.*;
+
+//인터페이스 구현에 필요한 자료는 src/libs/interfaces/EmotionValue.java 안에 설명되어있음!
+
+public class EmotionPositiveValue implements EmotionValue
 {
 	/*
 	 * System.getProperty() 로는 자바 시스템 관련 설정 값들을 가져 올 수 있다.
@@ -67,5 +71,26 @@ public class JasoSearch
 	        // e.printStackTrace(); // << 보통 이 함수를 오류 메시지 출력에 많이 이용. 참고로만 알아두삼.
 	        System.exit(1);
 	    } 
+	}
+
+	@Override
+	public boolean isInDictionary(String unit)
+	{
+		// 인터페이스 구현에 필요한 자료는 src/libs/interfaces/EmotionValue.java 안에 설명되어있음!
+		return false;
+	}
+
+	@Override
+	public int getConstant(String unit)
+	{
+		// 인터페이스 구현에 필요한 자료는 src/libs/interfaces/EmotionValue.java 안에 설명되어있음!
+		return 0;
+	}
+
+	@Override
+	public String lossySearch(String keyword)
+	{
+		// 인터페이스 구현에 필요한 자료는 src/libs/interfaces/EmotionValue.java 안에 설명되어있음!
+		return null;
 	}
 }
