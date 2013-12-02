@@ -15,10 +15,13 @@ import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.JTextArea;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.table.AbstractTableModel;
+
 import libs.ELog;
 
-public class MindSharingUI extends JFrame implements ActionListener
+public class MindSharingUI extends JFrame implements ActionListener, ChangeListener
 {
 	Dimension main_screen_size = new Dimension(480, 600);
 
@@ -34,6 +37,7 @@ public class MindSharingUI extends JFrame implements ActionListener
 	MindSharingUIActions ac = new MindSharingUIActions();
 	
 	// 핸들러가 필요한 UI 객체 들은 미리 전역 변수로 정의
+	JTabbedPane maintab;
 	JMenuBar menubar;
 	JTextArea ta_input;
 	JButton b_input;
@@ -44,7 +48,6 @@ public class MindSharingUI extends JFrame implements ActionListener
 	JScrollPane scrollPane_analyze;
 	JEditorPane logOutputPane;
 	
-
 	public MindSharingUI()
 	{
 		/*
@@ -101,16 +104,24 @@ public class MindSharingUI extends JFrame implements ActionListener
 		JMenu m_info = new JMenu("정보");
 		
 		JMenuItem mi_info_version = new JMenuItem("버전");
+		mi_info_version.setActionCommand(ac.MENU_INFO_VERSION);
+		mi_info_version.addActionListener(this);
 		m_info.add(mi_info_version);
+		
 		JMenuItem mi_info_credit = new JMenuItem("제작 정보");
+		mi_info_credit.setActionCommand(ac.MENU_INFO_CREDIT);
+		mi_info_credit.addActionListener(this);
 		m_info.add(mi_info_credit);
+		
 		JMenuItem mi_info_help = new JMenuItem("도움말");
+		mi_info_help.setActionCommand(ac.MENU_INFO_HELP);
+		mi_info_help.addActionListener(this);
 		m_info.add(mi_info_help);
 		
 		menubar.add(m_info);
 		
 		// 탭 관리자 생성
-		JTabbedPane maintab = new JTabbedPane();
+		maintab = new JTabbedPane();
 		
 		// 상단: 입력창: 라벨, 텍스트 상자, 버튼
 		JLabel l_input = new JLabel("분석 텍스트 입력:");
@@ -119,8 +130,10 @@ public class MindSharingUI extends JFrame implements ActionListener
 		
 		b_input = new JButton("분석");
 		b_input.setActionCommand(ac.BUTTON_ANALYZE);
+		b_input.addActionListener(this);
 		b_clear = new JButton("클리어");
 		b_clear.setActionCommand(ac.BUTTON_CLEAR);
+		b_clear.addActionListener(this);
 		
 		// 하단: 출력창: 텍스트 상자만 일단
 		ta_output = new JTextArea(40, 70);
@@ -211,6 +224,7 @@ public class MindSharingUI extends JFrame implements ActionListener
 		topPane.add(scrollPane_analyze, BorderLayout.SOUTH);
 		maintab.addTab("분석", topPane);
 		
+		
 		// 탭 화면 2: 분석 과정 출력
 		logOutputPane = new JEditorPane();
 		JScrollPane scrollPane_log = new JScrollPane(logOutputPane);
@@ -219,6 +233,8 @@ public class MindSharingUI extends JFrame implements ActionListener
 		
 		logOutputPane.setText("여기에 디버그 로그 출력" + ELog.getFullBuffer());
 		maintab.add("로그", scrollPane_log);
+		
+		maintab.addChangeListener(this);
 		
 		
 		
@@ -236,9 +252,28 @@ public class MindSharingUI extends JFrame implements ActionListener
 	@Override
 	public void actionPerformed(ActionEvent e)
 	{
-		// TODO Auto-generated method stub
+		// 버튼이나 메뉴가, setActionCommand로 연결된 경우에, 발생된 이벤트가 이쪽을 통하여 나온다.
+		// 다른 창을 띄우는 것도 가능하고, 호출 작업도 가능함.
 		ELog.addTimelineToBuffer();
 		ELog.d(TAG, "다음과 같은 이벤트가 수신되었습니다: " + e.getActionCommand());
+	}
+
+	@Override
+	public void stateChanged(ChangeEvent e)
+	{
+		// 탭 위치 변경 이벤트를 처리하기 위한 것
+		// 로그 탭의 경우, 계속 가져와 갱신하는 쓰레드(thread)가 필요하기 때문에, 여기에서 생성하고 종료할 수 있다.
+		ELog.d(TAG, "현재 열려있는 탭은 " + (maintab.getSelectedIndex() == 0 ? "분석":"로그") + " 탭입니다.");
+		if (maintab.getSelectedIndex() == 1)
+		{
+			ELog.d(TAG, "새 로그를 가져오는 쓰레드를 시작합니다.");
+			// 쓰레드 시작 코드
+		}
+		else
+		{
+			ELog.d(TAG, "새 로그를 가져오는 쓰레드를 중단합니다.");
+			// 쓰레드 종료 코드
+		}
 	}
 
 }
