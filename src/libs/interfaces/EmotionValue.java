@@ -25,7 +25,8 @@ public interface EmotionValue
 	 * 기쁨이라는 단어가 있으므로 true를 리턴한다.
 	 * 반대로 isInDictionary("슬픔")을 입력하면, 슬픔이라는 데이터가 없으므로 false를 반환한다.
 	 */
-	public boolean isInDictionary(String unit); 
+
+	public boolean isInDictionary(String unit);
 	
 	// 해당 단어에 해당하는 감정 값을 가져온다.
 	/*

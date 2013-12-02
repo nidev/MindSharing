@@ -26,9 +26,16 @@ public class EmotionPositiveValue implements EmotionValue
 	
 	public static void main(String[] args) throws IOException
 	{
+		isInDictionary();
+	}
+
+	@Override
+	public boolean isInDictionary(String unit)
+	{
+		// 인터페이스 구현에 필요한 자료는 src/libs/interfaces/EmotionValue.java 안에 설명되어있음!
+		String findStr = "기쁨,1";
+		int lineNumber = 1;
 		
-		String findStr = "기쁨";
-		int lineNumber = 1;               //행 번호
 		/*
 		// 테스트용: 프로퍼티 확인용 함수
 		Properties prop = System.getProperties();
@@ -55,6 +62,7 @@ public class EmotionPositiveValue implements EmotionValue
 				if(str.matches(findStr)) 
 				{
 					System.out.format("%3d: %s%n",lineNumber, str);
+					System.out.println("a");
 				}
 				else
 				{
@@ -70,14 +78,12 @@ public class EmotionPositiveValue implements EmotionValue
 	        System.err.println(e); // 에러가 있다면 메시지 출력
 	        // e.printStackTrace(); // << 보통 이 함수를 오류 메시지 출력에 많이 이용. 참고로만 알아두삼.
 	        System.exit(1);
-	    } 
-	}
-
-	@Override
-	public boolean isInDictionary(String unit)
-	{
-		// 인터페이스 구현에 필요한 자료는 src/libs/interfaces/EmotionValue.java 안에 설명되어있음!
-		return false;
+	    }
+		
+		if(findStr == "기쁨,1")
+			return true;
+		else
+			return false;
 	}
 
 	@Override
