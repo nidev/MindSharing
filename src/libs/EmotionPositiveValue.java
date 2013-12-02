@@ -31,7 +31,7 @@ public class EmotionPositiveValue implements EmotionValue
 	public boolean isInDictionary(String unit)
 	{
 		// 인터페이스 구현에 필요한 자료는 src/libs/interfaces/EmotionValue.java 안에 설명되어있음!
-		String findStr = "기쁨,1";
+		String findStr = "사교,1";
 		int lineNumber = 1;
 		
 		/*
@@ -60,11 +60,9 @@ public class EmotionPositiveValue implements EmotionValue
 				if(str.matches(findStr)) 
 				{
 					System.out.format("%3d: %s%n",lineNumber, str);
-					System.out.println("a");
-				}
-				else
-				{
-					// 만약 어떤 처리가 필요하다면
+					in.close();
+					ELog.d("긍정값", str);
+					return true;
 				}
 				lineNumber++;                  //행 번호 증가
 			}
@@ -77,11 +75,8 @@ public class EmotionPositiveValue implements EmotionValue
 	        // e.printStackTrace(); // << 보통 이 함수를 오류 메시지 출력에 많이 이용. 참고로만 알아두삼.
 	        System.exit(1);
 	    }
-		
-		if(findStr == "기쁨,1")
-			return true;
-		else
-			return false;
+		ELog.d("긍정사전","없음" );
+		return false;
 	}
 
 	@Override
