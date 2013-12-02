@@ -1,7 +1,5 @@
 package libs;
 
-import java.io.IOException;
-
 import libs.interfaces.EmotionValue;
 
 
@@ -20,11 +18,9 @@ public class EmotionNegativeValue implements EmotionValue
 
 	final static String DICTIONARY_PATH = System.getProperty("user.dir") + "\\src\\libs\\Positve Words.txt"; 
 	
-	public static void main(String[] args) throws IOException
-	{
-		// 직접 코딩해볼 수 있도록 비워둠
-	}
-
+	// 주의: main() 함수 여기에다가 작성하지 말자!
+	// main()으로 호출해볼 수 있는 곳: src의 'test' 폴더 안에 있는 실행기들!
+	
 	@Override
 	public boolean isInDictionary(String unit)
 	{
