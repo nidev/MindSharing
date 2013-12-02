@@ -26,6 +26,18 @@ public class MindSharingUI extends JFrame implements ActionListener
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
+	
+	// 핸들러가 필요한 UI 객체 들은 미리 전역 변수로 정의
+	JMenuBar menubar;
+	JTextArea ta_input;
+	JButton b_input;
+	JButton b_clear;
+	JTextArea ta_output;
+	JPanel topPane;
+	JTable outputTable;
+	JScrollPane scrollPane_analyze;
+	JEditorPane logOutputPane;
+	
 
 	public MindSharingUI()
 	{
@@ -48,7 +60,7 @@ public class MindSharingUI extends JFrame implements ActionListener
 		 * (아마도 JMenuBar랑 JMenu 전부 클래스 전역변수로 옮겨야할듯
 		 */
 		// 메뉴바 생성
-		JMenuBar menubar = new JMenuBar();
+		menubar = new JMenuBar();
 		
 		// 1번 메뉴 '파일'
 		JMenu m_file = new JMenu("파일");
@@ -103,12 +115,15 @@ public class MindSharingUI extends JFrame implements ActionListener
 		
 		// 상단: 입력창: 라벨, 텍스트 상자, 버튼
 		JLabel l_input = new JLabel("분석 텍스트 입력:");
-		JTextArea ta_input = new JTextArea(3, 70);
+		ta_input = new JTextArea(3, 40);
 		ta_input.setText("분석할 텍스트는 여기에 입력");
-		JButton b_input = new JButton("분석");
+		b_input = new JButton("분석");
+		//b_input.setSize(100, 40);
+		b_clear = new JButton("클리어");
+		//b_clear.setSize(100, 40);
 		
 		// 하단: 출력창: 텍스트 상자만 일단
-		JTextArea ta_output = new JTextArea(40, 70);
+		ta_output = new JTextArea(40, 70);
 		ta_output.setText("분석된 아웃풋은 일단 여기에 출력");
 		
 		/*
@@ -117,23 +132,27 @@ public class MindSharingUI extends JFrame implements ActionListener
 		setJMenuBar(menubar);
 		
 		// 탭1 상단: 입력부
-		JPanel topPane = new JPanel(new BorderLayout());
+		topPane = new JPanel(new BorderLayout());
+		
 		topPane.add(l_input, BorderLayout.WEST);
 		topPane.add(ta_input, BorderLayout.CENTER);
-		topPane.add(b_input, BorderLayout.EAST);
+		
+		JPanel top_buttonPane = new JPanel(new BorderLayout());
+		top_buttonPane.add(b_input, BorderLayout.CENTER);
+		top_buttonPane.add(b_clear, BorderLayout.SOUTH);
+		topPane.add(top_buttonPane, BorderLayout.EAST);
+		topPane.validate();
 		
 		// 탭1 하단: 분석 출력부
 
-		//JScrollPane centerPane = new JScrollPane(ta_output, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-		// add(centerPane, BorderLayout.SOUTH);
-		JTable outputTable = new JTable(new AbstractTableModel() {
+		outputTable = new JTable(new AbstractTableModel() {
 			
 			/**
 			 * 
 			 */
 			private static final long serialVersionUID = 1L;
-			String[] columns = {"형태소", "단어 유형", "감정값", "긍정단어", "부정단어", "누계"};
-			Object[] values[] = {{"나", "명사", "0", false, false, "0"}, {"너", "명사", "0", false, true, "0"}};
+			String[] columns = {"단어", "감정값", "긍정/부정", "강조(x2)", "감소(x0.5) ", "누적 감정값"};
+			Object[] values[] = {{"삶", "0", "긍정", false, false, "0"}, {"구속", "0", "부정", false, true, "0"}};
 			
 			
 			@Override
@@ -185,7 +204,7 @@ public class MindSharingUI extends JFrame implements ActionListener
 		
 		// 탭 화면 1: 로그 분석 및 결과 출력
 		
-		JScrollPane scrollPane_analyze = new JScrollPane(outputTable);
+		scrollPane_analyze = new JScrollPane(outputTable);
 		scrollPane_analyze.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
 		scrollPane_analyze.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 		
@@ -193,7 +212,7 @@ public class MindSharingUI extends JFrame implements ActionListener
 		maintab.addTab("분석", topPane);
 		
 		// 탭 화면 2: 분석 과정 출력
-		JEditorPane logOutputPane = new JEditorPane();
+		logOutputPane = new JEditorPane();
 		JScrollPane scrollPane_log = new JScrollPane(logOutputPane);
 		scrollPane_log.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
 		scrollPane_log.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
