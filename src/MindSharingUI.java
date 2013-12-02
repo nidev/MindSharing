@@ -27,6 +27,12 @@ public class MindSharingUI extends JFrame implements ActionListener
 	 */
 	private static final long serialVersionUID = 1L;
 	
+	// ELog 태그
+	String TAG = "UI";
+	
+	// Action command 들
+	MindSharingUIActions ac = new MindSharingUIActions();
+	
 	// 핸들러가 필요한 UI 객체 들은 미리 전역 변수로 정의
 	JMenuBar menubar;
 	JTextArea ta_input;
@@ -66,27 +72,18 @@ public class MindSharingUI extends JFrame implements ActionListener
 		JMenu m_file = new JMenu("파일");
 		
 		JMenuItem mi_file_opentext = new JMenuItem("열기");
+		mi_file_opentext.setActionCommand(ac.MENU_FILE_OPEN);
+		mi_file_opentext.addActionListener(this);
 		m_file.add(mi_file_opentext);
+		
 		JMenuItem mi_file_saveoutput = new JMenuItem("결과 저장");
+		mi_file_saveoutput.setActionCommand(ac.MENU_FILE_SAVE_RESULTS);
+		mi_file_saveoutput.addActionListener(this);
 		m_file.add(mi_file_saveoutput);
+
 		JMenuItem mi_file_exit = new JMenuItem("종료");
-		/// 종료기능 시험삼아 삽입해보는 중
-		mi_file_exit.setActionCommand("exit");
-		mi_file_exit.addActionListener(new ActionListener() {
-			
-			@Override
-			public void actionPerformed(ActionEvent e)
-			{
-				if (e.getActionCommand().equals("exit"))
-				{
-					ELog.d("graphic", "그래픽 화면을 종료합니다.");
-					dispose();
-					
-				}
-				// TODO Auto-generated method stub
-				
-			}
-		});
+		mi_file_exit.setActionCommand(ac.MENU_FILE_EXIT);
+		mi_file_exit.addActionListener(this);
 		m_file.add(mi_file_exit);
 		
 		menubar.add(m_file);
@@ -94,6 +91,8 @@ public class MindSharingUI extends JFrame implements ActionListener
 		// 2번 메뉴 '데이터관리'
 		JMenu m_db = new JMenu("데이터");
 		JMenuItem mi_db_launch = new JMenuItem("데이터 관리툴 실행");
+		mi_db_launch.setActionCommand(ac.MENU_DATA_LAUNCH_TOOL);
+		mi_db_launch.addActionListener(this);
 		m_db.add(mi_db_launch);
 		
 		menubar.add(m_db);
@@ -117,10 +116,11 @@ public class MindSharingUI extends JFrame implements ActionListener
 		JLabel l_input = new JLabel("분석 텍스트 입력:");
 		ta_input = new JTextArea(3, 40);
 		ta_input.setText("분석할 텍스트는 여기에 입력");
+		
 		b_input = new JButton("분석");
-		//b_input.setSize(100, 40);
+		b_input.setActionCommand(ac.BUTTON_ANALYZE);
 		b_clear = new JButton("클리어");
-		//b_clear.setSize(100, 40);
+		b_clear.setActionCommand(ac.BUTTON_CLEAR);
 		
 		// 하단: 출력창: 텍스트 상자만 일단
 		ta_output = new JTextArea(40, 70);
@@ -232,12 +232,13 @@ public class MindSharingUI extends JFrame implements ActionListener
         pack();
         setVisible(true);
 	}
-
+	
 	@Override
 	public void actionPerformed(ActionEvent e)
 	{
 		// TODO Auto-generated method stub
-		
+		ELog.addTimelineToBuffer();
+		ELog.d(TAG, "다음과 같은 이벤트가 수신되었습니다: " + e.getActionCommand());
 	}
 
 }
