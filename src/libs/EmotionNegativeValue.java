@@ -1,7 +1,11 @@
 package libs;
 
-import libs.interfaces.EmotionValue;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.StringTokenizer;
 
+import libs.interfaces.EmotionValue;
 
 public class EmotionNegativeValue implements EmotionValue
 {
@@ -25,7 +29,54 @@ public class EmotionNegativeValue implements EmotionValue
 	public boolean isInDictionary(String unit)
 	{
 		// 인터페이스 구현에 필요한 자료는 src/libs/interfaces/EmotionValue.java 안에 설명되어있음!
-		return false;
+				String findStr = "사교";
+				int lineNumber = 1;
+				
+				/*
+				// 테스트용: 프로퍼티 확인용 함수
+				Properties prop = System.getProperties();
+				for (Object obj: prop.keySet())
+				{
+					ELog.d(obj.toString(), obj.hashCode());
+				}
+				*/
+				
+				try
+				{
+					// 버퍼 열기
+					BufferedReader in = new BufferedReader(new FileReader(DICTIONARY_PATH));
+					
+					String str;
+					while((str = in.readLine()) != null)
+					{
+						// IF-ELSE: 만약 매치되지 않았을 때는 어떤 일이 일어나는걸까?
+						// while 문을 빠져나간 다음에, 결과가 있었는지 없었는지 boolean 변수로 확인시켜줄 수 있다면,
+						// 상황에 알맞는 처리를 해줄 수 있을듯.
+						
+						// matches() 메소드는 패턴을 필요로 하는데, '기쁨'이라는 단어만으로는 '기쁨,1'이 있는 줄을 매칭할 수 없을지도 모른다.
+						// findStr에 기쁨,1 을 넣어보고 돌려서, 출력이 나오는지 확인하고, 어떻게 고칠지 고민해보자.
+						StringTokenizer s = new StringTokenizer(str,",");
+						String s1=s.nextToken();
+						if(s1.matches(findStr))
+						{
+							System.out.format("%3d: %s%n",lineNumber, str);
+							in.close();
+							ELog.d("긍정값", s.nextToken());
+							return true;
+						}
+						lineNumber++;                  //행 번호 증가
+					}
+					// 버퍼 닫기
+					in.close();
+				}
+				catch (IOException e)
+				{
+			        System.err.println(e); // 에러가 있다면 메시지 출력
+			        // e.printStackTrace(); // << 보통 이 함수를 오류 메시지 출력에 많이 이용. 참고로만 알아두삼.
+			        System.exit(1);
+			    }
+				ELog.d("긍정사전","없음" );
+				return false;
 	}
 
 	@Override
