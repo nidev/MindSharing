@@ -2,6 +2,8 @@ import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.TimerTask;
 
 import javax.swing.JButton;
 import javax.swing.JEditorPane;
@@ -10,6 +12,7 @@ import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
@@ -20,14 +23,46 @@ import javax.swing.event.ChangeListener;
 import javax.swing.table.AbstractTableModel;
 
 import libs.ELog;
+import libs.SylphEngine;
+import libs.fragments.ContextFragment;
+
+
 
 public class MindSharingUI extends JFrame implements ActionListener, ChangeListener
 {
+	// 화면 크기 지정
 	Dimension main_screen_size = new Dimension(480, 600);
-
-	/**
-	 * 
-	 */
+	
+	// Fragment 정보를 테이블에 옮겨 적기 위한 ArrayList용 객체 정의
+	private class FragmentRow
+	{
+		String unit; // 감정 단어
+		int value; // 감정 값
+		int signal; // 긍정 1, 부정 -1, 중립 0
+		boolean amplify; // 감정 강조
+		boolean minimize; // 감정 축소
+		int accumulate; // 누적 값
+	}
+	
+	// 로그 자동 갱신용 쓰레드 작성
+	TimerTask logUpdate = new TimerTask() {
+		@Override
+		public void run()
+		{
+			try
+			{
+				Thread.sleep(200);
+			}
+			catch (InterruptedException e)
+			{
+				ELog.e(TAG, "로그 자동 갱신 타이머 실행 도중 오류가 발생했습니다.");
+			}
+			
+			logOutputPane.setText(ELog.getFullBuffer());
+		}
+	};
+	
+	// 시리얼라이징 ID
 	private static final long serialVersionUID = 1L;
 	
 	// ELog 태그
@@ -47,6 +82,9 @@ public class MindSharingUI extends JFrame implements ActionListener, ChangeListe
 	JTable outputTable;
 	JScrollPane scrollPane_analyze;
 	JEditorPane logOutputPane;
+	
+	// 테이블에 Fragment 객체에서 정보를 추출해 담음
+	ArrayList<FragmentRow> table = new ArrayList<FragmentRow>();
 	
 	public MindSharingUI()
 	{
@@ -126,7 +164,7 @@ public class MindSharingUI extends JFrame implements ActionListener, ChangeListe
 		// 상단: 입력창: 라벨, 텍스트 상자, 버튼
 		JLabel l_input = new JLabel("분석 텍스트 입력:");
 		ta_input = new JTextArea(3, 40);
-		ta_input.setText("분석할 텍스트는 여기에 입력");
+		ta_input.setToolTipText("분석할 텍스트는 여기에 입력");
 		
 		b_input = new JButton("분석");
 		b_input.setActionCommand(ac.BUTTON_ANALYZE);
@@ -171,7 +209,6 @@ public class MindSharingUI extends JFrame implements ActionListener, ChangeListe
 			@Override
 			public boolean isCellEditable(int rowIndex, int columnIndex)
 			{
-				// TODO Auto-generated method stub
 				return false;
 			}
 			
@@ -231,7 +268,7 @@ public class MindSharingUI extends JFrame implements ActionListener, ChangeListe
 		scrollPane_log.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
 		scrollPane_log.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 		
-		logOutputPane.setText("여기에 디버그 로그 출력" + ELog.getFullBuffer());
+		//logOutputPane.setText("여기에 디버그 로그 출력" + ELog.getFullBuffer());
 		maintab.add("로그", scrollPane_log);
 		
 		maintab.addChangeListener(this);
@@ -256,6 +293,42 @@ public class MindSharingUI extends JFrame implements ActionListener, ChangeListe
 		// 다른 창을 띄우는 것도 가능하고, 호출 작업도 가능함.
 		ELog.addTimelineToBuffer();
 		ELog.d(TAG, "다음과 같은 이벤트가 수신되었습니다: " + e.getActionCommand());
+		String cmd = e.getActionCommand();
+		if (cmd == null)
+		{
+			// null이 리턴될 수 있는 경우는?
+		}
+		else
+		{
+			if (cmd.equals(ac.BUTTON_CLEAR))
+			{
+				ta_input.setText("");
+			}
+			else if (cmd.equals(ac.BUTTON_ANALYZE))
+			{
+				ELog.addTimelineToBuffer();
+				ELog.d(TAG, "분석 버튼을 눌렀습니다.");
+				SylphEngine engine = new SylphEngine();
+				SylphEngine.initEngine();
+				if (ta_input.getText().length() == 0)
+				{
+					JOptionPane.showMessageDialog(this, "텍스트가 입력되어있지 않습니다.");
+				}
+				else
+				{
+					ContextFragment cf = engine.analyze(ta_input.getText());
+				}
+			}
+			else if (cmd.equals(ac.MENU_INFO_VERSION))
+			{
+				;
+			}
+			else
+			{
+				ELog.e(TAG, "아직 구현되지 않은 기능입니다: " + cmd);
+			}
+
+		}
 	}
 
 	@Override
@@ -266,8 +339,9 @@ public class MindSharingUI extends JFrame implements ActionListener, ChangeListe
 		ELog.d(TAG, "현재 열려있는 탭은 " + (maintab.getSelectedIndex() == 0 ? "분석":"로그") + " 탭입니다.");
 		if (maintab.getSelectedIndex() == 1)
 		{
+			// ELog 로그 불러오기
 			ELog.d(TAG, "새 로그를 가져오는 쓰레드를 시작합니다.");
-			// 쓰레드 시작 코드
+			logOutputPane.setText(ELog.getFullBuffer());
 		}
 		else
 		{
