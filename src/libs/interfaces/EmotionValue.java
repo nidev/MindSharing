@@ -27,7 +27,6 @@ public interface EmotionValue
 	 */
 
 	public boolean isInDictionary(String unit);
-	
 	// 해당 단어에 해당하는 감정 값을 가져온다.
 	/*
 	 * 예)
