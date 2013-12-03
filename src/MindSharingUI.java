@@ -3,6 +3,7 @@ import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
+import java.util.Timer;
 import java.util.TimerTask;
 
 import javax.swing.JButton;
@@ -20,10 +21,12 @@ import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import javax.swing.event.TableModelListener;
 import javax.swing.table.AbstractTableModel;
 
 import libs.ELog;
 import libs.SylphEngine;
+import libs.fragments.BaseFragment;
 import libs.fragments.ContextFragment;
 
 
@@ -33,19 +36,9 @@ public class MindSharingUI extends JFrame implements ActionListener, ChangeListe
 	// 화면 크기 지정
 	Dimension main_screen_size = new Dimension(480, 600);
 	
-	// Fragment 정보를 테이블에 옮겨 적기 위한 ArrayList용 객체 정의
-	private class FragmentRow
-	{
-		String unit; // 감정 단어
-		int value; // 감정 값
-		int signal; // 긍정 1, 부정 -1, 중립 0
-		boolean amplify; // 감정 강조
-		boolean minimize; // 감정 축소
-		int accumulate; // 누적 값
-	}
-	
 	// 로그 자동 갱신용 쓰레드 작성
-	TimerTask logUpdate = new TimerTask() {
+	private class LogUpdate extends TimerTask
+	{
 		@Override
 		public void run()
 		{
@@ -60,7 +53,8 @@ public class MindSharingUI extends JFrame implements ActionListener, ChangeListe
 			
 			logOutputPane.setText(ELog.getFullBuffer());
 		}
-	};
+	}; 
+	Timer t = null;
 	
 	// 시리얼라이징 ID
 	private static final long serialVersionUID = 1L;
@@ -70,6 +64,9 @@ public class MindSharingUI extends JFrame implements ActionListener, ChangeListe
 	
 	// Action command 들
 	MindSharingUIActions ac = new MindSharingUIActions();
+	
+	// 테이블 모델
+	AbstractTableModel outputTableModel;
 	
 	// 핸들러가 필요한 UI 객체 들은 미리 전역 변수로 정의
 	JTabbedPane maintab;
@@ -84,7 +81,7 @@ public class MindSharingUI extends JFrame implements ActionListener, ChangeListe
 	JEditorPane logOutputPane;
 	
 	// 테이블에 Fragment 객체에서 정보를 추출해 담음
-	ArrayList<FragmentRow> table = new ArrayList<FragmentRow>();
+	ArrayList<Object[]> rows = new ArrayList<Object[]>();
 	
 	public MindSharingUI()
 	{
@@ -192,19 +189,27 @@ public class MindSharingUI extends JFrame implements ActionListener, ChangeListe
 		top_buttonPane.add(b_input, BorderLayout.CENTER);
 		top_buttonPane.add(b_clear, BorderLayout.SOUTH);
 		topPane.add(top_buttonPane, BorderLayout.EAST);
-		topPane.validate();
+		topPane.invalidate();
 		
 		// 탭1 하단: 분석 출력부
-
-		outputTable = new JTable(new AbstractTableModel() {
-			
+		outputTableModel = new AbstractTableModel() {
 			/**
 			 * 
 			 */
 			private static final long serialVersionUID = 1L;
 			String[] columns = {"단어", "감정값", "긍정/부정", "강조(x2)", "감소(x0.5) ", "누적 감정값"};
-			Object[] values[] = {{"삶", "0", "긍정", false, false, "0"}, {"구속", "0", "부정", false, true, "0"}};
 			
+			@Override
+			public void setValueAt(Object aValue, int rowIndex, int columnIndex)
+			{
+				// 구현할 필요 없음
+			}
+			
+			@Override
+			public void removeTableModelListener(TableModelListener l)
+			{
+				// 구현할 필요 없음
+			}
 			
 			@Override
 			public boolean isCellEditable(int rowIndex, int columnIndex)
@@ -215,20 +220,19 @@ public class MindSharingUI extends JFrame implements ActionListener, ChangeListe
 			@Override
 			public Object getValueAt(int rowIndex, int columnIndex)
 			{
-				return values[rowIndex][columnIndex];
+				return rows.get(rowIndex)[columnIndex];
 			}
 			
 			@Override
 			public int getRowCount()
 			{
-				// TODO Auto-generated method stub
-				return values.length;
+				return rows.size();
 			}
 			
 			@Override
 			public String getColumnName(int columnIndex)
 			{
-				return columns[columnIndex].toString();
+				return columns[columnIndex];
 			}
 			
 			@Override
@@ -236,22 +240,20 @@ public class MindSharingUI extends JFrame implements ActionListener, ChangeListe
 			{
 				return columns.length;
 			}
-
-			@Override
-			public void setValueAt(Object aValue, int rowIndex, int columnIndex)
-			{
-				// TODO Auto-generated method stub
-				fireTableCellUpdated(rowIndex, columnIndex);
-			}
-
+			
 			@Override
 			public Class<?> getColumnClass(int columnIndex)
 			{
-				// TODO Auto-generated method stub
-				return getValueAt(0, columnIndex).getClass();
+				return rows.get(0)[columnIndex].getClass();
 			}
-		});
-		
+			
+			@Override
+			public void addTableModelListener(TableModelListener l)
+			{
+				;
+			}
+		};
+		outputTable = new JTable(outputTableModel);		
 		// 탭 화면 1: 로그 분석 및 결과 출력
 		
 		scrollPane_analyze = new JScrollPane(outputTable);
@@ -286,6 +288,14 @@ public class MindSharingUI extends JFrame implements ActionListener, ChangeListe
         setVisible(true);
 	}
 	
+	public Object[] getFragmentRow(String p_unit, int p_value, int p_signal, boolean p_amplify, boolean p_minimize, int p_accumulate)
+	{
+		// Fragment 정보를 테이블에 옮겨 적기 위한 ArrayList용 객체 정의
+		// (형태소, 감정값, 긍정/부정, 감정 강화, 감정 축소, 누적값)
+		Object[] row = {p_unit, p_value, p_signal, p_amplify, p_minimize, p_accumulate};
+		return row;
+	}
+		
 	@Override
 	public void actionPerformed(ActionEvent e)
 	{
@@ -316,7 +326,21 @@ public class MindSharingUI extends JFrame implements ActionListener, ChangeListe
 				}
 				else
 				{
+					rows.clear();
 					ContextFragment cf = engine.analyze(ta_input.getText());
+					for (BaseFragment bsf: cf.getFragments())
+					{
+						for (BaseFragment _bsf: bsf.getFragments())
+						{
+							rows.add(getFragmentRow(_bsf.sourceText, _bsf.emotionValue, _bsf.emotionValue, false, false, 0));
+							ELog.e(TAG, rows.size());
+						}
+					}
+					outputTable.invalidate();
+					outputTable.repaint();
+					maintab.repaint();
+					
+					//outputTableModel.fireTableRowsInserted(0, rows.size());;
 				}
 			}
 			else if (cmd.equals(ac.MENU_INFO_VERSION))
@@ -330,6 +354,16 @@ public class MindSharingUI extends JFrame implements ActionListener, ChangeListe
 
 		}
 	}
+	
+	public void startLogViewThread()
+	{
+		
+	}
+	
+	public void stopLogViewThread()
+	{
+		
+	}
 
 	@Override
 	public void stateChanged(ChangeEvent e)
@@ -341,11 +375,22 @@ public class MindSharingUI extends JFrame implements ActionListener, ChangeListe
 		{
 			// ELog 로그 불러오기
 			ELog.d(TAG, "새 로그를 가져오는 쓰레드를 시작합니다.");
-			logOutputPane.setText(ELog.getFullBuffer());
+			if (t != null)
+			{
+				t.cancel();
+			}
+			Timer t = new Timer();
+			t.schedule(new LogUpdate(), 0, 200);
 		}
 		else
 		{
 			ELog.d(TAG, "새 로그를 가져오는 쓰레드를 중단합니다.");
+			Timer t = new Timer();
+			if (t != null)
+			{
+				t.cancel();
+				t = null;
+			}
 			// 쓰레드 종료 코드
 		}
 	}
