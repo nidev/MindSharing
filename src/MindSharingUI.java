@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import javax.print.attribute.standard.Finishings;
 import javax.swing.JButton;
 import javax.swing.JEditorPane;
 import javax.swing.JFrame;
@@ -15,6 +16,7 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTable;
@@ -44,14 +46,22 @@ public class MindSharingUI extends JFrame implements ActionListener, ChangeListe
 		{
 			try
 			{
-				Thread.sleep(200);
+				Thread.sleep(500);
 			}
 			catch (InterruptedException e)
 			{
-				ELog.e(TAG, "로그 자동 갱신 타이머 실행 도중 오류가 발생했습니다.");
+				ELog.e(TAG, "로그 자동 갱신 타이머 실행 도중 오류가 발생했습니다. 타이머는 취소됩니다.");
+				cancel();
 			}
-			
-			logOutputPane.setText(ELog.getFullBuffer());
+			// 최적화 필요함
+			// getFullBuffer() 로 스트링 버퍼를 모두 문자열로 합성하는데 많은 자원이 소모됨
+			if (logOutputPane.getText().length() != ELog.getFullBuffer().length())
+			{
+				logOutputPane.setText(ELog.getFullBuffer());
+				// 새 로그가 발생한 경우, 스크롤바를 아래로 내린다.
+				JScrollBar scbar = scrollPane_log.getVerticalScrollBar();
+				scbar.setValue(scbar.getMaximum());
+			}
 		}
 	}; 
 	Timer t = null;
@@ -74,11 +84,11 @@ public class MindSharingUI extends JFrame implements ActionListener, ChangeListe
 	JTextArea ta_input;
 	JButton b_input;
 	JButton b_clear;
-	JTextArea ta_output;
 	JPanel topPane;
 	JTable outputTable;
 	JScrollPane scrollPane_analyze;
-	JEditorPane logOutputPane;
+	JTextArea logOutputPane;
+	JScrollPane scrollPane_log;
 	
 	// 테이블에 Fragment 객체에서 정보를 추출해 담음
 	ArrayList<Object[]> rows = new ArrayList<Object[]>();
@@ -160,7 +170,8 @@ public class MindSharingUI extends JFrame implements ActionListener, ChangeListe
 		
 		// 상단: 입력창: 라벨, 텍스트 상자, 버튼
 		JLabel l_input = new JLabel("분석 텍스트 입력:");
-		ta_input = new JTextArea(3, 40);
+		ta_input = new JTextArea(4, 20);
+		ta_input.setWrapStyleWord(true);
 		ta_input.setToolTipText("분석할 텍스트는 여기에 입력");
 		
 		b_input = new JButton("분석");
@@ -169,10 +180,6 @@ public class MindSharingUI extends JFrame implements ActionListener, ChangeListe
 		b_clear = new JButton("클리어");
 		b_clear.setActionCommand(ac.BUTTON_CLEAR);
 		b_clear.addActionListener(this);
-		
-		// 하단: 출력창: 텍스트 상자만 일단
-		ta_output = new JTextArea(40, 70);
-		ta_output.setText("분석된 아웃풋은 일단 여기에 출력");
 		
 		/*
 		 * 화면 구성요소 모두 프레임에 추가
@@ -265,13 +272,18 @@ public class MindSharingUI extends JFrame implements ActionListener, ChangeListe
 		
 		
 		// 탭 화면 2: 분석 과정 출력
-		logOutputPane = new JEditorPane();
-		JScrollPane scrollPane_log = new JScrollPane(logOutputPane);
+		logOutputPane = new JTextArea();
+		logOutputPane.setWrapStyleWord(true);
+		scrollPane_log = new JScrollPane(logOutputPane);
 		scrollPane_log.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
 		scrollPane_log.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 		
 		//logOutputPane.setText("여기에 디버그 로그 출력" + ELog.getFullBuffer());
 		maintab.add("로그", scrollPane_log);
+		
+		// 탭 화면 3: 설정
+		JLabel cfgPane = new JLabel("이곳에서 엔진 설정을 조율할 수 있습니다.");
+		maintab.add("Mind Sharing 설정", cfgPane);
 		
 		maintab.addChangeListener(this);
 		
@@ -346,6 +358,11 @@ public class MindSharingUI extends JFrame implements ActionListener, ChangeListe
 			else if (cmd.equals(ac.MENU_INFO_VERSION))
 			{
 				;
+			}
+			else if (cmd.equals(ac.MENU_FILE_EXIT))
+			{
+				ELog.d(TAG, "Mind Sharing을 종료합니다.");
+				dispose();
 			}
 			else
 			{
