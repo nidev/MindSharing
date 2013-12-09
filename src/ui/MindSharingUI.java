@@ -1,10 +1,13 @@
 package ui;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
+import java.util.Locale;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -28,9 +31,11 @@ import javax.swing.table.AbstractTableModel;
 
 import libs.ELog;
 import libs.SylphEngine;
-import libs.fragments.BaseFragment;
 import libs.fragments.ContextFragment;
 import libs.fragments.EmotionFragment;
+
+import org.math.plot.Plot2DPanel;
+import org.math.plot.plotObjects.Label;
 
 
 
@@ -91,6 +96,10 @@ public class MindSharingUI extends JFrame implements ActionListener, ChangeListe
 	JScrollPane scrollPane_analyze;
 	JTextArea logOutputPane;
 	JScrollPane scrollPane_log;
+	
+	// PlotPanel 생성 (JPanel 호환)
+	Plot2DPanel plot = new Plot2DPanel();
+
 	
 	// 테이블에 Fragment 객체에서 정보를 추출해 담음
 	ArrayList<Object[]> rows = new ArrayList<Object[]>();
@@ -272,8 +281,15 @@ public class MindSharingUI extends JFrame implements ActionListener, ChangeListe
 		topPane.add(scrollPane_analyze, BorderLayout.SOUTH);
 		maintab.addTab("분석", topPane);
 		
+		// 탭 화면 2: 그래프 출력 화면
+		plot.setVisible(true);
+		plot.setLocale(Locale.KOREAN);
+		plot.setFont(Font.getFont("Gulim"));
+		plot.setFixedBounds(0, 0, 20);
+		plot.setFixedBounds(1, -5, 5);
+		maintab.add("그래프", plot);
 		
-		// 탭 화면 2: 분석 과정 출력
+		// 탭 화면 3: 로그 출력
 		logOutputPane = new JTextArea();
 		logOutputPane.setWrapStyleWord(true);
 		scrollPane_log = new JScrollPane(logOutputPane);
@@ -283,7 +299,7 @@ public class MindSharingUI extends JFrame implements ActionListener, ChangeListe
 		//logOutputPane.setText("여기에 디버그 로그 출력" + ELog.getFullBuffer());
 		maintab.add("로그", scrollPane_log);
 		
-		// 탭 화면 3: 설정
+		// 탭 화면 4: 설정
 		JLabel cfgPane = new JLabel("이곳에서 엔진 설정을 조율할 수 있습니다.");
 		maintab.add("Mind Sharing 설정", cfgPane);
 		
@@ -313,6 +329,8 @@ public class MindSharingUI extends JFrame implements ActionListener, ChangeListe
 	@Override
 	public void actionPerformed(ActionEvent e)
 	{
+		int i, j;
+		
 		// 버튼이나 메뉴가, setActionCommand로 연결된 경우에, 발생된 이벤트가 이쪽을 통하여 나온다.
 		// 다른 창을 띄우는 것도 가능하고, 호출 작업도 가능함.
 		ELog.addTimelineToBuffer();
@@ -330,7 +348,17 @@ public class MindSharingUI extends JFrame implements ActionListener, ChangeListe
 			}
 			else if (cmd.equals(ac.BUTTON_ANALYZE))
 			{
+				//ArrayList<Double> y_emotionvalue = new ArrayList<Double>();
+				//ArrayList<Double> x_position = new ArrayList<Double>();
+				double[] y_emotionvalue = null;
+				double[] x_position = null;
+				ArrayList<String> x_description = new ArrayList<String>();
+				
 				ELog.addTimelineToBuffer();
+				// 현재 그려진 도트 모두 삭제
+				plot.removeAllPlots();
+				ELog.d(TAG, "그래프 화면을 초기화합니다.");
+
 				ELog.d(TAG, "분석 버튼을 눌렀습니다.");
 				SylphEngine engine = new SylphEngine();
 				SylphEngine.initEngine();
@@ -343,19 +371,36 @@ public class MindSharingUI extends JFrame implements ActionListener, ChangeListe
 					rows.clear();
 					ContextFragment cf = engine.analyze(ta_input.getText());
 					
-					ELog.e(TAG, rows.size());
+					y_emotionvalue = new double[cf.getEmotionFragmentArray().size()];
+					x_position = new double[cf.getEmotionFragmentArray().size()];
+					i = 0;
+					
 					
 					for (EmotionFragment ef: cf.getEmotionFragmentArray())
 					{
-						ef.selfPrintInfo();
+						y_emotionvalue[i] = (double)ef.emotionValue;
+						x_description.add(ef.sourceText);
+						x_position[i] = (double) i;
+						i++;
 						rows.add(getFragmentRow(ef.sourceText, ef.emotionValue, ef.emotionValue, false, false, 0));
 					}
 					outputTable.invalidate();
 					outputTable.repaint();
 					maintab.repaint();
-					
-					//outputTableModel.fireTableRowsInserted(0, rows.size());;
 				}
+				
+				//double[] x_p = {0.0, 0.0};
+				//double[] y_p = {5.0, -5.0};
+				//plot.addScatterPlot("",  x_p,  y_p);
+				plot.addScatterPlot("분석 결과", x_position, y_emotionvalue);
+				for (i = 0 ; i < x_description.size(); i++)
+				{
+					Label label = new Label(x_description.get(i), i, y_emotionvalue[i]);
+					label.setFont(getFont());
+					label.setText(x_description.get(i));
+					plot.addPlotable(label);;
+				}
+				
 			}
 			else if (cmd.equals(ac.MENU_INFO_VERSION))
 			{
@@ -389,8 +434,9 @@ public class MindSharingUI extends JFrame implements ActionListener, ChangeListe
 	{
 		// 탭 위치 변경 이벤트를 처리하기 위한 것
 		// 로그 탭의 경우, 계속 가져와 갱신하는 쓰레드(thread)가 필요하기 때문에, 여기에서 생성하고 종료할 수 있다.
-		ELog.d(TAG, "현재 열려있는 탭은 " + (maintab.getSelectedIndex() == 0 ? "분석":"로그") + " 탭입니다.");
-		if (maintab.getSelectedIndex() == 1)
+		String[] tabName = {"분석", "그래프", "로그", "설정"};
+		ELog.d(TAG, "현재 열려있는 탭은 " + (tabName[maintab.getSelectedIndex()]) + " 탭입니다.");
+		if (maintab.getSelectedIndex() == 2)
 		{
 			// ELog 로그 불러오기
 			ELog.d(TAG, "새 로그를 가져오는 쓰레드를 시작합니다.");
