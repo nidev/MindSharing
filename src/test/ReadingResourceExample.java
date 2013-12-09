@@ -3,6 +3,7 @@
  */
 package test;
 
+
 /**
  * JAR(Java Archived Resource) 형태로 압축했을 때는, 절대 경로로 사전에 접근할 수 없기 때문에,
  * 패키지 내에서도 접근할 수 있는 방법을 사용해야하는데, 그 방법이 this.class.getResourceAsStream이다.
