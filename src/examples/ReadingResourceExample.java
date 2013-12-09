@@ -1,7 +1,9 @@
 /**
  * MindSharing Project
  */
-package example;
+
+
+package examples;
 
 
 /**
@@ -18,7 +20,8 @@ public class ReadingResourceExample
 	{
 		try
 		{
-			System.out.println(ReadingResourceExample.class.getResourceAsStream("/libs/Positve Words.txt").toString());
+			System.out.println("아래 출력에 null 이라고 나오지 않으면 정상적으로 인식된 것!");
+			System.out.println(ReadingResourceExample.class.getResourceAsStream("/libs/Positive Words.txt").toString());
 			//ReadingResourceExample.class.getre
 		}
 		catch (Exception e)

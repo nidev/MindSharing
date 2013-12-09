@@ -1,7 +1,7 @@
 /**
  * MindSharing Project
  */
-package example;
+package examples;
 
 /**
  * @author 작성자
