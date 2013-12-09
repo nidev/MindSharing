@@ -34,6 +34,12 @@ public class MindSharing
 		}
 		else
 		{
+			/*
+			 * TODO: 구현할 것
+			 * -no-gui 옵션: 콘솔 모드로만 동작함(실행시 미구현이라고 출력하고 프로그램 종료)
+			 * -help: 도움말 메시지 출력(printHelp() 함수를 수정해서 이 주석에 있는 옵션 3가지를 설명해줌)
+			 * -version: 버전 메시지 출력(getVersionString() 을 사용함)
+			 */
 			ELog.d("main", "매개변수가 입력됨. 콘솔 모드로 실행합니다.");
 			// 매개 변수 입력되었는지 확인
 			if (args[0].isEmpty()) // 입력 X
@@ -44,7 +50,6 @@ public class MindSharing
 			}
 			else // 입력 O
 			{
-				SentenceSplit.split(args[0]);
 				
 			}
 		}
