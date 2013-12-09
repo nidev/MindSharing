@@ -90,6 +90,35 @@ public class EmotionPositiveValue implements EmotionValue
 	public String lossySearch(String keyword)
 	{
 		// 인터페이스 구현에 필요한 자료는 src/libs/interfaces/EmotionValue.java 안에 설명되어있음!
+		String findStr = "사교,1";
+		try
+		{
+			// 버퍼 열기
+			BufferedReader in = new BufferedReader(new FileReader(DICTIONARY_PATH));
+			
+			String str;
+			while((str = in.readLine()) != null)
+			{
+				if(str.matches(findStr)) 
+				{
+					System.out.format("%s%n", str);
+					in.close();
+				}
+				else if(str.matches(findStr) == false)
+				{
+					
+				}
+			}
+			// 버퍼 닫기
+			in.close();
+		}
+		catch (IOException e)
+		{
+	        System.err.println(e); // 에러가 있다면 메시지 출력
+	        // e.printStackTrace(); // << 보통 이 함수를 오류 메시지 출력에 많이 이용. 참고로만 알아두삼.
+	        System.exit(1);
+	    }
+		
 		return null;
 	}
 }
