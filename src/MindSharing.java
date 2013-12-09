@@ -1,6 +1,5 @@
-import ui.MindSharingUI;
 import libs.ELog;
-import libs.SentenceSplit;
+import ui.MindSharingUI;
 
 public class MindSharing
 {
