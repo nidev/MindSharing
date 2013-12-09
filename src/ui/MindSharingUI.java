@@ -1,7 +1,6 @@
 package ui;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
@@ -329,7 +328,7 @@ public class MindSharingUI extends JFrame implements ActionListener, ChangeListe
 	@Override
 	public void actionPerformed(ActionEvent e)
 	{
-		int i, j;
+		int i;
 		
 		// 버튼이나 메뉴가, setActionCommand로 연결된 경우에, 발생된 이벤트가 이쪽을 통하여 나온다.
 		// 다른 창을 띄우는 것도 가능하고, 호출 작업도 가능함.

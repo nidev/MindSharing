@@ -1,7 +1,6 @@
 package libs.fragments;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 
 import libs.ELog;
 
