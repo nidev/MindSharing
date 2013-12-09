@@ -1,3 +1,5 @@
+package ui;
+
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
@@ -6,9 +8,7 @@ import java.util.ArrayList;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import javax.print.attribute.standard.Finishings;
 import javax.swing.JButton;
-import javax.swing.JEditorPane;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
@@ -93,7 +93,7 @@ public class MindSharingUI extends JFrame implements ActionListener, ChangeListe
 	// 테이블에 Fragment 객체에서 정보를 추출해 담음
 	ArrayList<Object[]> rows = new ArrayList<Object[]>();
 	
-	public MindSharingUI()
+	public MindSharingUI(String sw_title)
 	{
 		/*
 		 * 화면 설정
@@ -105,7 +105,7 @@ public class MindSharingUI extends JFrame implements ActionListener, ChangeListe
 		// 종료버튼 누를 때 자동으로 종료
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		// 창 제목 설정, 제목은 : MindSharing version. x.yyy
-		setTitle("MindSharing " + MindSharing.getVersionString());
+		setTitle("MindSharing " + sw_title);
 		// 화면 구성요소가 추가 될때, 위에서부터 아래로 분석하도록 수정
 		setLocationRelativeTo(null);
 		

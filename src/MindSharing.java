@@ -1,3 +1,4 @@
+import ui.MindSharingUI;
 import libs.ELog;
 import libs.SentenceSplit;
 
@@ -29,7 +30,7 @@ public class MindSharing
 		if (args.length == 0)
 		{
 			ELog.d("main", "그래픽 화면을 준비합니다.");
-			new MindSharingUI();
+			new MindSharingUI(getVersionString());
 		}
 		else
 		{
