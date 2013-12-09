@@ -1,7 +1,7 @@
 /**
  * MindSharing Project
  */
-package test;
+package example;
 
 
 /**
