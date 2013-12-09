@@ -389,9 +389,6 @@ public class MindSharingUI extends JFrame implements ActionListener, ChangeListe
 					maintab.repaint();
 				}
 				
-				//double[] x_p = {0.0, 0.0};
-				//double[] y_p = {5.0, -5.0};
-				//plot.addScatterPlot("",  x_p,  y_p);
 				plot.addScatterPlot("분석 결과", x_position, y_emotionvalue);
 				for (i = 0 ; i < x_description.size(); i++)
 				{
@@ -403,7 +400,6 @@ public class MindSharingUI extends JFrame implements ActionListener, ChangeListe
 					label.setText(x_description.get(i));
 					plot.addPlotable(label);;
 				}
-				
 			}
 			else if (cmd.equals(ac.MENU_INFO_VERSION))
 			{
