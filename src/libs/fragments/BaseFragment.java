@@ -12,9 +12,7 @@ interface BaseFragment
 	public String getSourceText(); // 작업 전 본문 가져오기
 	public ArrayList<String> getSlicedText(); // 나눠진 본문 가져오기
 	public ArrayList<?> getFragments(); // 프래그먼트 가져오기
-	public int getAverageEmotionVector(); // 평균 감정값 리턴
 	
-	public HashMap<String, Integer> getEmotionVectors(); // 분석 결과가 저장된 HashMap 전체 리턴
 	public int lengthFragments(); // HashMap 길이 리턴
 	public int lengthRemainingFragments(); // HashMap 전체 길이에서 nextFragmentId 를 뺀 값
 	public boolean isNextFragmentOK(); // 다음 프래그먼트를 가져올 수 있는지 여부 출력
@@ -34,10 +32,6 @@ public class BaseFragment
 	public ArrayList<String> slicedText = null;
 	// 원본 텍스트
 	public String sourceText = "";
-	// 계산된 감정 평균값
-	public int emotionValue = 0;
-	// 분석 결과 저장을 위한 HashMap
-	public HashMap<String, Integer> text_to_emotion_map = null;
 	// 현재 프래그먼트 위치 (getNextFragment)에서 사용
 	public int current_fragment_id = 0;
 	
@@ -94,22 +88,6 @@ public class BaseFragment
 		
 	}
 	
-	public int getAverageEmotionVector() // 평균 감정값 리턴
-	{
-		return emotionValue;
-		
-	}
-	
-	public HashMap<String, Integer> getEmotionVectors() // 분석 결과가 저장된 HashMap 전체 리턴
-	{
-		HashMap<String, Integer> emotion_map = new HashMap<String, Integer>();
-		for (BaseFragment fragment : fragments)
-		{
-			emotion_map.put(fragment.getSourceText(), fragment.getAverageEmotionVector());
-		}
-		return emotion_map;
-	}
-	
 	public int lengthFragments() // HashMap 길이 리턴
 	{
 		return fragments.size();
@@ -146,7 +124,6 @@ public class BaseFragment
 	{
 		ELog.d(TAG, "Self-information");
 		ELog.d(TAG, "current_fragment_id = " + current_fragment_id);
-		ELog.d(TAG, "emotionValue = " + emotionValue);
 		ELog.d(TAG, "Fragments.size() = " + fragments.size());
 		ELog.d(TAG, "slicedText.size() = " + slicedText.size());
 		ELog.printArrayList(TAG, slicedText);

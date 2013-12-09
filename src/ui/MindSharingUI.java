@@ -30,6 +30,7 @@ import libs.ELog;
 import libs.SylphEngine;
 import libs.fragments.BaseFragment;
 import libs.fragments.ContextFragment;
+import libs.fragments.EmotionFragment;
 
 
 
@@ -46,7 +47,8 @@ public class MindSharingUI extends JFrame implements ActionListener, ChangeListe
 		{
 			try
 			{
-				Thread.sleep(500);
+				// 갱신 속도를 250ms 로 변경함.
+				Thread.sleep(250);
 			}
 			catch (InterruptedException e)
 			{
@@ -340,13 +342,13 @@ public class MindSharingUI extends JFrame implements ActionListener, ChangeListe
 				{
 					rows.clear();
 					ContextFragment cf = engine.analyze(ta_input.getText());
-					for (BaseFragment bsf: cf.getFragments())
+					
+					ELog.e(TAG, rows.size());
+					
+					for (EmotionFragment ef: cf.getEmotionFragmentArray())
 					{
-						for (BaseFragment _bsf: bsf.getFragments())
-						{
-							rows.add(getFragmentRow(_bsf.sourceText, _bsf.emotionValue, _bsf.emotionValue, false, false, 0));
-							ELog.e(TAG, rows.size());
-						}
+						ef.selfPrintInfo();
+						rows.add(getFragmentRow(ef.sourceText, ef.emotionValue, ef.emotionValue, false, false, 0));
 					}
 					outputTable.invalidate();
 					outputTable.repaint();

@@ -6,6 +6,7 @@ import java.util.Arrays;
 
 import libs.fragments.BaseFragment;
 import libs.fragments.ContextFragment;
+import libs.fragments.EmotionFragment;
 
 /*
  * 이 파일은 코드가 돌아가지 않더라고 큰 걱정 안해도 괜찮음.
@@ -78,25 +79,9 @@ public class SylphEngine
 			break;
 		case FILL_WORD_LEVEL:
 			// 지금은 사용하지 않음
-			for (String slice: bft.slicedText)
-			{
-				/*
-				 진짜로 사용할 코드
-				ArrayList<String> array = UnitSplit.split(slice);
-				for (String key: array)
-				{
-					BaseFragment word_fragment = new BaseFragment();
-					bft.fragments.add(fillBaseFragment(word_fragment, FILL_UNIT_LEVEL));
-				}
-				*/
-				// ELog.d(TAG, slice);
-				// 테스트용 코드
-				BaseFragment unit_fragment = new BaseFragment("형태소+"+slice);
-				bft.fragments.add(unit_fragment);
-			}
 			break;
 		case FILL_UNIT_LEVEL:
-			// 형태소 분해된 단어에 각각 감정값을 0으로 채워주고 루프 종료
+			// 지금은 사용하지 않음
 			break;
 		default:
 			throw new IllegalArgumentException("Unacceptable Level");
@@ -120,7 +105,6 @@ public class SylphEngine
 			{
 				BaseFragment fragment = new BaseFragment(slice);
 				fctx.fragments.add(fillBaseFragment(fragment, FILL_SENTENCE_LEVEL));
-				
 			}
 			fctx.setReadyToUse(); // 컨텍스트 준비 완료 플래그 설정
 		}
@@ -148,14 +132,18 @@ public class SylphEngine
 		{
 			fctx.setStartTimeOnAnalysis();
 			// 2단계 사전을 활용한 분석 작업
-			// 1. 형태소 레벨로 내려가 값을 산출함
+			// (생략) 1. 형태소 레벨로 내려가 값을 산출함
 			// 2. 단어 레벨의 전체 값을 계산함
 			// 3. 문장 레벨의 전체 값을 계산함
 			// 4. 문단 레벨의 전체 값을 계산함
 			// 5. ContextFragment 내용 갱신(작업 종료시각, 사용가능성 여부 등등)
 			
+			
+			// 감정값 사전 객체 초기화
 			EmotionPositiveValue posv = new EmotionPositiveValue();
 			EmotionNegativeValue negv = new EmotionNegativeValue();
+			// 감정 프래그먼트 어레이리스트 초기화
+			fctx.newEmotionFragmentArray();
 			
 			String _TAG = "Analyzer";
 			
@@ -168,17 +156,54 @@ public class SylphEngine
 			 */
 			for (BaseFragment hbsf : fctx.getFragments())
 			{
-				ELog.d(_TAG, "Current Level: " + hbsf.getSourceText());
+				ELog.d(_TAG, "Join to sentence level: " + hbsf.getSourceText());
 				for (BaseFragment mbsf : hbsf.getFragments())
 				{
+					/*
 					ELog.d(_TAG, "Current Level: " + mbsf.getSourceText());
 					for (BaseFragment lbsf : mbsf.getFragments())
 					{
-						ELog.d(_TAG, "Current Level: " + lbsf.getSourceText());
+					*/
+					String word = mbsf.getSourceText();
+					ELog.d(_TAG, "Join to word level: " + word);
+					
+					EmotionFragment ef = new EmotionFragment(word);
+					
+					if (posv.isInDictionary(word))
+					{
+						ef.emotionValue = posv.getConstant(word);
 					}
+					else
+					{
+						String search_result = posv.lossySearch(word);
+						if (search_result != null)
+						{
+							ef.emotionValue = posv.getConstant(word);
+						}
+						else
+						{
+							// 긍정 단어에서 탐색을 실패했으므로, 부정 단어에서 탐색 시작
+							if (negv.isInDictionary(word))
+							{
+								ef.emotionValue = negv.getConstant(word);
+							}
+							else
+							{
+								String search_result_negv = negv.lossySearch(word);
+								if (search_result_negv != null)
+								{
+									ef.emotionValue = negv.getConstant(search_result_negv);
+								}
+								else
+								{
+									ef.emotionValue = 0;
+								}
+							}
+						}
+					}
+					fctx.emotion_fragments.add(ef);
 				}
 			}
-			
 			
 			fctx.setEndTimeOnAnalysis();
 			return fctx;

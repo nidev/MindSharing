@@ -26,7 +26,10 @@ public class ContextFragment extends BaseFragment
 	private long endTimeOnAnalysis = 0; // 텍스트 분석 종료시각
 	
 	private int contextId = -1;
-	private String TAG = "CTX=";	
+	private String TAG = "CTX=";
+	
+	// 감정값 전용 어레이 리스트 추가
+	public ArrayList<EmotionFragment> emotion_fragments = null;
 	
 
 	public ContextFragment()
@@ -36,8 +39,6 @@ public class ContextFragment extends BaseFragment
 		contextId = hashCode();
 		TAG += contextId; // CTX= 뒤에 객체 아이디를 붙여줌
 		ELog.d(TAG, "컨텍스트 객체 생성 완료. (텍스트 없음)");
-		
-		
 	}
 	
 	public ContextFragment(String p_sourceText, ArrayList<String> p_slices)
@@ -82,5 +83,19 @@ public class ContextFragment extends BaseFragment
 	public void unsetReadyToUse()
 	{
 		isReadyToUse = false;
+	}
+	
+	public ArrayList<EmotionFragment> getEmotionFragmentArray() throws NullPointerException
+	{
+		if (emotion_fragments == null)
+		{
+			throw new NullPointerException();
+		}
+		return emotion_fragments;
+	}
+	
+	public void newEmotionFragmentArray()
+	{
+		emotion_fragments = new ArrayList<EmotionFragment>();
 	}
 }
