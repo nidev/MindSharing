@@ -177,21 +177,21 @@ public class SylphEngine
 						String search_result = posv.lossySearch(word);
 						if (search_result != null)
 						{
-							ef.emotionValue = posv.getConstant(word);
+							ef.emotionValue = posv.getConstant(search_result);
 						}
 						else
 						{
 							// 긍정 단어에서 탐색을 실패했으므로, 부정 단어에서 탐색 시작
 							if (negv.isInDictionary(word))
 							{
-								ef.emotionValue = negv.getConstant(word);
+								ef.emotionValue = -1 * negv.getConstant(word);
 							}
 							else
 							{
 								String search_result_negv = negv.lossySearch(word);
 								if (search_result_negv != null)
 								{
-									ef.emotionValue = negv.getConstant(search_result_negv);
+									ef.emotionValue = -1 * negv.getConstant(search_result_negv);
 								}
 								else
 								{

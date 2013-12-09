@@ -356,6 +356,7 @@ public class MindSharingUI extends JFrame implements ActionListener, ChangeListe
 				ELog.addTimelineToBuffer();
 				// 현재 그려진 도트 모두 삭제
 				plot.removeAllPlots();
+				plot.removeAllPlotables();
 				ELog.d(TAG, "그래프 화면을 초기화합니다.");
 
 				ELog.d(TAG, "분석 버튼을 눌렀습니다.");
@@ -394,7 +395,10 @@ public class MindSharingUI extends JFrame implements ActionListener, ChangeListe
 				plot.addScatterPlot("분석 결과", x_position, y_emotionvalue);
 				for (i = 0 ; i < x_description.size(); i++)
 				{
-					Label label = new Label(x_description.get(i), i, y_emotionvalue[i]);
+					double new_y = 0.0;
+					if (y_emotionvalue[i] > 0) new_y = y_emotionvalue[i] - 0.3; 
+					if (y_emotionvalue[i] < 0) new_y = y_emotionvalue[i] + 0.3;
+					Label label = new Label(x_description.get(i), i, new_y);
 					label.setFont(getFont());
 					label.setText(x_description.get(i));
 					plot.addPlotable(label);;
