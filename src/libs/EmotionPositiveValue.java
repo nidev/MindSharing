@@ -3,6 +3,7 @@ package libs;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.StringTokenizer;
 
 import libs.interfaces.*;
 
@@ -28,85 +29,60 @@ public class EmotionPositiveValue implements EmotionValue
 	// main()으로 호출해볼 수 있는 곳: src의 'test' 폴더 안에 있는 실행기들!
 	
 	@Override
-	public boolean isInDictionary(String unit)
+	public boolean isInDictionary(String unit)//사전에 단어가 있는가?
 	{
-		// 인터페이스 구현에 필요한 자료는 src/libs/interfaces/EmotionValue.java 안에 설명되어있음!
-		String findStr = "사교,1";
-		int lineNumber = 1;
-		
-		/*
-		// 테스트용: 프로퍼티 확인용 함수
-		Properties prop = System.getProperties();
-		for (Object obj: prop.keySet())
-		{
-			ELog.d(obj.toString(), obj.hashCode());
-		}
-		*/
-		
-		try
-		{
-			// 버퍼 열기
-			BufferedReader in = new BufferedReader(new FileReader(DICTIONARY_PATH));
-			
-			String str;
-			while((str = in.readLine()) != null)
-			{
-				// IF-ELSE: 만약 매치되지 않았을 때는 어떤 일이 일어나는걸까?
-				// while 문을 빠져나간 다음에, 결과가 있었는지 없었는지 boolean 변수로 확인시켜줄 수 있다면,
-				// 상황에 알맞는 처리를 해줄 수 있을듯.
-				
-				// matches() 메소드는 패턴을 필요로 하는데, '기쁨'이라는 단어만으로는 '기쁨,1'이 있는 줄을 매칭할 수 없을지도 모른다.
-				// findStr에 기쁨,1 을 넣어보고 돌려서, 출력이 나오는지 확인하고, 어떻게 고칠지 고민해보자.
-				if(str.matches(findStr)) 
-				{
-					System.out.format("%3d: %s%n",lineNumber, str);
-					in.close();
-					ELog.d("긍정값", str);
-					return true;
-				}
-				lineNumber++;                  //행 번호 증가
-			}
-			// 버퍼 닫기
-			in.close();
-		}
-		catch (IOException e)
-		{
-	        System.err.println(e); // 에러가 있다면 메시지 출력
-	        // e.printStackTrace(); // << 보통 이 함수를 오류 메시지 출력에 많이 이용. 참고로만 알아두삼.
-	        System.exit(1);
-	    }
-		ELog.d("긍정사전","없음" );
-		return false;
+		if(findWords(unit) == null)
+			return false;
+		else
+			return true;
 	}
 
-	@Override
-	public int getConstant(String unit)
+	public int getConstant(String unit)//단어가 있을때 감정값, 단어가 없을때 감정값 0
 	{
-		// 인터페이스 구현에 필요한 자료는 src/libs/interfaces/EmotionValue.java 안에 설명되어있음!
-		return 0;
+		if(findWords(unit) == null)
+		{
+			return 0;
+		}
+		else
+		{
+			StringTokenizer s = new StringTokenizer(findWords(unit),",");
+			s.nextToken();
+			int i=Integer.valueOf(s.nextToken());
+			return i;
+		}
 	}
-
+	
 	@Override
 	public String lossySearch(String keyword)
 	{
+		while(keyword.length()!=0)
+		{
+			if(isInDictionary(keyword)==true)
+				return keyword;
+			else if(isInDictionary(keyword)==false)
+			{
+				keyword=delLastChar(keyword);
+			}
+		}
 		// 인터페이스 구현에 필요한 자료는 src/libs/interfaces/EmotionValue.java 안에 설명되어있음!
-		String findStr = "사교,1";
+		return null;
+	}
+	public String findWords(String unit)//단어검색
+	{
 		try
 		{
-			// 버퍼 열기
+			//버퍼 열기
 			BufferedReader in = new BufferedReader(new FileReader(DICTIONARY_PATH));
 			
 			String str;
 			while((str = in.readLine()) != null)
 			{
-				if(str.matches(findStr)) 
+				StringTokenizer s = new StringTokenizer(str,",");
+				String Estr=s.nextToken();
+				if(Estr.matches(unit))
 				{
-					System.out.format("%s%n", str);
 					in.close();
-				}
-				else if(str.matches(findStr) == false)
-				{
-					
+					return str;
 				}
 			}
 			// 버퍼 닫기
@@ -115,10 +91,40 @@ public class EmotionPositiveValue implements EmotionValue
 		catch (IOException e)
 		{
 	        System.err.println(e); // 에러가 있다면 메시지 출력
-	        // e.printStackTrace(); // << 보통 이 함수를 오류 메시지 출력에 많이 이용. 참고로만 알아두삼.
 	        System.exit(1);
 	    }
-		
-		return null;
+		return null;//단어 없으면 null 리턴
+	}
+	
+	public String lastChar(String keyword)// 단어의  끝글자 리턴
+	{
+		String lastC = keyword.substring(keyword.length()-1);
+		return  lastC;
+	}
+	public String elseChar(String keyword)
+	{
+		String elseC = keyword.substring(0,keyword.length()-1);
+		return elseC;
+	}
+	public String delLastChar(String keyword)
+	{
+		char temp[] = new char[1];
+		temp = lastChar(keyword).toCharArray();
+	
+		int sub[] = new int[3];
+		for(int i=0;i<3;i++)
+			sub[i]=0;
+
+        sub[0] = (temp[0] - 0xAC00) / (21*28); //초성의 위치
+        sub[1] = ((temp[0] - 0xAC00) % (21*28)) / 28; //중성의 위치
+        sub[2] = (temp[0] -0xAC00) % (28);//종성의 위치
+        if(sub[2] != 0)
+        {
+	        char[] ch = new char[1];
+	        ch[0] = (char) (0xAC00 + (sub[0]*21*28) + (sub[1]*28));
+	        return elseChar(keyword)+ch[0];
+        }
+        else
+        	return elseChar(keyword);
 	}
 }

@@ -20,7 +20,7 @@ public class EmotionNegativeValue implements EmotionValue
 	// 텍스트 파일도 모두 UTF-8로 작성하거나 (즉, 이클립스 내에서 텍스트파일 작업),
 	// 윈도우즈 인코딩(MS949) 로 작성된 파일을 UTF-8로 변환하는 과정이 필요함.
 
-	final static String DICTIONARY_PATH = System.getProperty("user.dir") + "\\src\\libs\\Positve Words.txt"; 
+	final static String DICTIONARY_PATH = System.getProperty("user.dir") + "\\src\\libs\\Negative Words.txt"; 
 	
 	// 주의: main() 함수 여기에다가 작성하지 말자!
 	// main()으로 호출해볼 수 있는 곳: src의 'test' 폴더 안에 있는 실행기들!
@@ -34,7 +34,6 @@ public class EmotionNegativeValue implements EmotionValue
 			return true;
 	}
 
-	@Override
 	public int getConstant(String unit)//단어가 있을때 감정값, 단어가 없을때 감정값 0
 	{
 		if(findWords(unit) == null)
@@ -49,86 +48,24 @@ public class EmotionNegativeValue implements EmotionValue
 			return i;
 		}
 	}
-
+	
 	@Override
-	public String lossySearch(String keyword)
+	public String lossySearch(String keyword)//종성을 제거해가면서 사전에 단어가 있는지 검사하고 단어가 있다면 리턴
 	{
-		
-		
+		while(keyword.length()!=0)
+		{
+			if(isInDictionary(keyword)==true)
+				return keyword;
+			else if(isInDictionary(keyword)==false)
+			{
+				keyword=delLastChar(keyword);
+			}
+		}
 		// 인터페이스 구현에 필요한 자료는 src/libs/interfaces/EmotionValue.java 안에 설명되어있음!
-		//한글 초성
-	    final char[] first = {'ㄱ', 'ㄲ', 'ㄴ', 'ㄷ', 'ㄸ', 'ㄹ', 'ㅁ', 'ㅂ',
-	        'ㅃ', 'ㅅ', 'ㅆ', 'ㅇ', 'ㅈ', 'ㅉ', 'ㅊ', 'ㅋ', 'ㅌ', 'ㅍ', 'ㅎ'};
-	    //한글 중성
-	    final char[] middle = {'ㅏ', 'ㅐ', 'ㅑ', 'ㅒ', 'ㅓ', 'ㅔ', 'ㅕ', 'ㅖ', 
-	        'ㅗ', 'ㅘ', 'ㅙ', 'ㅚ', 'ㅛ', 'ㅜ', 'ㅝ', 'ㅞ', 'ㅟ', 'ㅠ', 'ㅡ',
-	        'ㅢ', 'ㅣ'};
-	    //한글 종성
-	    final char[] last = {' ', 'ㄱ', 'ㄲ', 'ㄳ', 'ㄴ', 'ㄵ', 'ㄶ', 'ㄷ', 
-	        'ㄹ', 'ㄺ', 'ㄻ', 'ㄼ', 'ㄽ', 'ㄾ', 'ㄿ', 'ㅀ', 'ㅁ',
-	        'ㅂ', 'ㅄ', 'ㅅ', 'ㅆ', 'ㅇ', 'ㅈ', 'ㅊ', 'ㅋ', 'ㅌ', 'ㅍ', 'ㅎ'};
-	    /**
-	    *한글 한 글자(char)를 받아 초성, 중성, 종성의 위치를 int[]로 반환 한다.
-	    *@param char : 한글 한 글자
-	    *@return int[] : 한글 초, 중, 종성의 위치( ex:가 0,0,0 )
-	    */
-	    public int[] split(char c){
-	        int sub[] = new int[3];
-	        sub[0] = (c - 0xAC00) / (21*28); //초성의 위치
-	        sub[1] = ((c - 0xAC00) % (21*28)) / 28; //중성의 위치
-	        sub[2] = (c -0xAC00) % (28);//종성의 위치
-	        return sub;
-	    }
-	    
-	    /**
-	     *한글 한 글자를 구성 할 초성, 중성, 종성을 받아 조합 후 char[]로 반환 한다.
-	     *@param int[] : 한글 초, 중, 종성의 위치( ex:가 0,0,0 )
-	     *@return char[] : 한글 한 글자
-	     */
-	     public char[] combine(int[] sub){
-	         char[] ch = new char[1];
-	         ch[0] = (char) (0xAC00 + (sub[0]*21*28) + (sub[1]*28) + sub[2]);
-	         return ch;
-	     }
-	     
-	     /**
-	     *한글 초,중,종성 분리/조합 테스트 메소드
-	     */
-	     public void doSomething(){
-	         int[] x = null;
-	         String str = "그래도 살만한 세상이다. 아?? 구랗쥐 구람";
-	         int loop =  str.length();
-	         char c;
-	         System.out.println( "============한글 분리============" );
-	         for( int i = 0; i < loop; i++ ){
-	             c = str.charAt( i );
-	             if( c >= 0xAC00 ){
-	                 x = split( c );
-	                 System.out.println( str.substring( i, i+1) + " : 초=" + first[x[0]] 
-	                         + "\t중="+middle[x[1]]);
-	                         //+ "\t종="+last[x[2]] );
-	             }else{
-	                 System.out.println( str.substring( i, i+1) );
-	             }
-	         }
-	         System.out.println( "\r\n============한글 조합============" );
-	         System.out.println( "0,0,0 : " +
-	                     new String( combine( new int[]{0,0,0} ) ) );
-	         System.out.println( "2,0,0 : " + 
-	                     new String( combine( new int[]{2,0,0} ) ) );
-	         System.out.println( "3,0,0 : " + 
-	                     new String( combine( new int[]{3,0,0} ) ) );
-	         System.out.println( "11,11,12 : " + 
-	                     new String( combine( new int[]{11,11,10} ) ) );
-	         System.out.println( "10,11,12 : " + 
-	                     new String( combine( new int[]{10,11,14} ) ) );
-	     }
-		//return null;
+		return null;
 	}
 	public String findWords(String unit)//단어검색
 	{
-		String findStr = "사교";
-
 		try
 		{
 			//버퍼 열기
@@ -139,7 +76,7 @@ public class EmotionNegativeValue implements EmotionValue
 			{
 				StringTokenizer s = new StringTokenizer(str,",");
 				String Estr=s.nextToken();
-				if(Estr.matches(findStr))
+				if(Estr.matches(unit))
 				{
 					in.close();
 					return str;
@@ -154,5 +91,37 @@ public class EmotionNegativeValue implements EmotionValue
 	        System.exit(1);
 	    }
 		return null;//단어 없으면 null 리턴
+	}
+	
+	public String lastChar(String keyword)// 단어의  끝글자 리턴
+	{
+		String lastC = keyword.substring(keyword.length()-1);
+		return  lastC;
+	}
+	public String elseChar(String keyword)
+	{
+		String elseC = keyword.substring(0,keyword.length()-1);
+		return elseC;
+	}
+	public String delLastChar(String keyword)
+	{
+		char temp[] = new char[1];
+		temp = lastChar(keyword).toCharArray();
+	
+		int sub[] = new int[3];
+		for(int i=0;i<3;i++)
+			sub[i]=0;
+
+        sub[0] = (temp[0] - 0xAC00) / (21*28); //초성의 위치
+        sub[1] = ((temp[0] - 0xAC00) % (21*28)) / 28; //중성의 위치
+        sub[2] = (temp[0] -0xAC00) % (28);//종성의 위치
+        if(sub[2] != 0)
+        {
+	        char[] ch = new char[1];
+	        ch[0] = (char) (0xAC00 + (sub[0]*21*28) + (sub[1]*28));
+	        return elseChar(keyword)+ch[0];
+        }
+        else
+        	return elseChar(keyword);
 	}
 }

@@ -1,5 +1,6 @@
 package test;
 
+import libs.ELog;
 import libs.EmotionPositiveValue;
 
 public class EmotionPositiveValueTest
@@ -12,7 +13,7 @@ public class EmotionPositiveValueTest
 		 * 실행기는 따로 만들고, 생성할 객체는 다른 파일로 뺀다!
 		 */
 		EmotionPositiveValue ep = new EmotionPositiveValue();
-		ep.isInDictionary("Test");
+		ELog.d("단어검색 결과.", ep.lossySearch(""));
 
 	}
 
