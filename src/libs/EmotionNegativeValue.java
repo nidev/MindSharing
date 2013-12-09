@@ -26,70 +26,133 @@ public class EmotionNegativeValue implements EmotionValue
 	// main()으로 호출해볼 수 있는 곳: src의 'test' 폴더 안에 있는 실행기들!
 	
 	@Override
-	public boolean isInDictionary(String unit)
+	public boolean isInDictionary(String unit)//사전에 단어가 있는가?
 	{
-		// 인터페이스 구현에 필요한 자료는 src/libs/interfaces/EmotionValue.java 안에 설명되어있음!
-				String findStr = "사교";
-				int lineNumber = 1;
-				
-				/*
-				// 테스트용: 프로퍼티 확인용 함수
-				Properties prop = System.getProperties();
-				for (Object obj: prop.keySet())
-				{
-					ELog.d(obj.toString(), obj.hashCode());
-				}
-				*/
-				
-				try
-				{
-					// 버퍼 열기
-					BufferedReader in = new BufferedReader(new FileReader(DICTIONARY_PATH));
-					
-					String str;
-					while((str = in.readLine()) != null)
-					{
-						// IF-ELSE: 만약 매치되지 않았을 때는 어떤 일이 일어나는걸까?
-						// while 문을 빠져나간 다음에, 결과가 있었는지 없었는지 boolean 변수로 확인시켜줄 수 있다면,
-						// 상황에 알맞는 처리를 해줄 수 있을듯.
-						
-						// matches() 메소드는 패턴을 필요로 하는데, '기쁨'이라는 단어만으로는 '기쁨,1'이 있는 줄을 매칭할 수 없을지도 모른다.
-						// findStr에 기쁨,1 을 넣어보고 돌려서, 출력이 나오는지 확인하고, 어떻게 고칠지 고민해보자.
-						StringTokenizer s = new StringTokenizer(str,",");
-						String s1=s.nextToken();
-						if(s1.matches(findStr))
-						{
-							System.out.format("%3d: %s%n",lineNumber, str);
-							in.close();
-							ELog.d("긍정값", s.nextToken());
-							return true;
-						}
-						lineNumber++;                  //행 번호 증가
-					}
-					// 버퍼 닫기
-					in.close();
-				}
-				catch (IOException e)
-				{
-			        System.err.println(e); // 에러가 있다면 메시지 출력
-			        // e.printStackTrace(); // << 보통 이 함수를 오류 메시지 출력에 많이 이용. 참고로만 알아두삼.
-			        System.exit(1);
-			    }
-				ELog.d("긍정사전","없음" );
-				return false;
+		if(findWords(unit) == null)
+			return false;
+		else
+			return true;
 	}
 
 	@Override
-	public int getConstant(String unit)
+	public int getConstant(String unit)//단어가 있을때 감정값, 단어가 없을때 감정값 0
 	{
-		// 인터페이스 구현에 필요한 자료는 src/libs/interfaces/EmotionValue.java 안에 설명되어있음!
-		return 0;
+		if(findWords(unit) == null)
+		{
+			return 0;
+		}
+		else
+		{
+			StringTokenizer s = new StringTokenizer(findWords(unit),",");
+			s.nextToken();
+			int i=Integer.valueOf(s.nextToken());
+			return i;
+		}
 	}
 
 	@Override
 	public String lossySearch(String keyword)
 	{
+		
+		
 		// 인터페이스 구현에 필요한 자료는 src/libs/interfaces/EmotionValue.java 안에 설명되어있음!
-		return null;
+		//한글 초성
+	    final char[] first = {'ㄱ', 'ㄲ', 'ㄴ', 'ㄷ', 'ㄸ', 'ㄹ', 'ㅁ', 'ㅂ',
+	        'ㅃ', 'ㅅ', 'ㅆ', 'ㅇ', 'ㅈ', 'ㅉ', 'ㅊ', 'ㅋ', 'ㅌ', 'ㅍ', 'ㅎ'};
+	    //한글 중성
+	    final char[] middle = {'ㅏ', 'ㅐ', 'ㅑ', 'ㅒ', 'ㅓ', 'ㅔ', 'ㅕ', 'ㅖ', 
+	        'ㅗ', 'ㅘ', 'ㅙ', 'ㅚ', 'ㅛ', 'ㅜ', 'ㅝ', 'ㅞ', 'ㅟ', 'ㅠ', 'ㅡ',
+	        'ㅢ', 'ㅣ'};
+	    //한글 종성
+	    final char[] last = {' ', 'ㄱ', 'ㄲ', 'ㄳ', 'ㄴ', 'ㄵ', 'ㄶ', 'ㄷ', 
+	        'ㄹ', 'ㄺ', 'ㄻ', 'ㄼ', 'ㄽ', 'ㄾ', 'ㄿ', 'ㅀ', 'ㅁ',
+	        'ㅂ', 'ㅄ', 'ㅅ', 'ㅆ', 'ㅇ', 'ㅈ', 'ㅊ', 'ㅋ', 'ㅌ', 'ㅍ', 'ㅎ'};
+	    /**
+	    *한글 한 글자(char)를 받아 초성, 중성, 종성의 위치를 int[]로 반환 한다.
+	    *@param char : 한글 한 글자
+	    *@return int[] : 한글 초, 중, 종성의 위치( ex:가 0,0,0 )
+	    */
+	    public int[] split(char c){
+	        int sub[] = new int[3];
+	        sub[0] = (c - 0xAC00) / (21*28); //초성의 위치
+	        sub[1] = ((c - 0xAC00) % (21*28)) / 28; //중성의 위치
+	        sub[2] = (c -0xAC00) % (28);//종성의 위치
+	        return sub;
+	    }
+	    
+	    /**
+	     *한글 한 글자를 구성 할 초성, 중성, 종성을 받아 조합 후 char[]로 반환 한다.
+	     *@param int[] : 한글 초, 중, 종성의 위치( ex:가 0,0,0 )
+	     *@return char[] : 한글 한 글자
+	     */
+	     public char[] combine(int[] sub){
+	         char[] ch = new char[1];
+	         ch[0] = (char) (0xAC00 + (sub[0]*21*28) + (sub[1]*28) + sub[2]);
+	         return ch;
+	     }
+	     
+	     /**
+	     *한글 초,중,종성 분리/조합 테스트 메소드
+	     */
+	     public void doSomething(){
+	         int[] x = null;
+	         String str = "그래도 살만한 세상이다. 아?? 구랗쥐 구람";
+	         int loop =  str.length();
+	         char c;
+	         System.out.println( "============한글 분리============" );
+	         for( int i = 0; i < loop; i++ ){
+	             c = str.charAt( i );
+	             if( c >= 0xAC00 ){
+	                 x = split( c );
+	                 System.out.println( str.substring( i, i+1) + " : 초=" + first[x[0]] 
+	                         + "\t중="+middle[x[1]]);
+	                         //+ "\t종="+last[x[2]] );
+	             }else{
+	                 System.out.println( str.substring( i, i+1) );
+	             }
+	         }
+	         System.out.println( "\r\n============한글 조합============" );
+	         System.out.println( "0,0,0 : " +
+	                     new String( combine( new int[]{0,0,0} ) ) );
+	         System.out.println( "2,0,0 : " + 
+	                     new String( combine( new int[]{2,0,0} ) ) );
+	         System.out.println( "3,0,0 : " + 
+	                     new String( combine( new int[]{3,0,0} ) ) );
+	         System.out.println( "11,11,12 : " + 
+	                     new String( combine( new int[]{11,11,10} ) ) );
+	         System.out.println( "10,11,12 : " + 
+	                     new String( combine( new int[]{10,11,14} ) ) );
+	     }
+		//return null;
+	}
+	public String findWords(String unit)//단어검색
+	{
+		String findStr = "사교";
+
+		try
+		{
+			//버퍼 열기
+			BufferedReader in = new BufferedReader(new FileReader(DICTIONARY_PATH));
+			
+			String str;
+			while((str = in.readLine()) != null)
+			{
+				StringTokenizer s = new StringTokenizer(str,",");
+				String Estr=s.nextToken();
+				if(Estr.matches(findStr))
+				{
+					in.close();
+					return str;
+				}
+			}
+			// 버퍼 닫기
+			in.close();
+		}
+		catch (IOException e)
+		{
+	        System.err.println(e); // 에러가 있다면 메시지 출력
+	        System.exit(1);
+	    }
+		return null;//단어 없으면 null 리턴
 	}
 }

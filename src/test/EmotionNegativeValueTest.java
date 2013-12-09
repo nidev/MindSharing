@@ -1,5 +1,6 @@
 package test;
 
+import libs.ELog;
 import libs.EmotionNegativeValue;
 
 public class EmotionNegativeValueTest
@@ -12,7 +13,9 @@ public class EmotionNegativeValueTest
 		 * 실행기는 따로 만들고, 생성할 객체는 다른 파일로 뺀다!
 		 */
 		EmotionNegativeValue np = new EmotionNegativeValue();
-		np.isInDictionary("Test");
+		ELog.d("사전에 있다 없다.", np.isInDictionary("Test"));
+		ELog.d("감정수치.", np.getConstant("Test"));
+		ELog.d("단어찾기.", np.findWords("Test"));
 
 	}
 
