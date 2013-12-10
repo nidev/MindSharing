@@ -64,10 +64,12 @@ public class MindSharingUI extends JFrame implements ActionListener, ChangeListe
 			if (logOutputPane.getText().length() != ELog.getFullBuffer().length())
 			{
 				logOutputPane.setText(ELog.getFullBuffer());
-				// 새 로그가 발생한 경우, 스크롤바를 아래로 내린다.
-				JScrollBar scbar = scrollPane_log.getVerticalScrollBar();
-				scbar.setValue(scbar.getMaximum());
 			}
+			// 새 로그가 발생한 경우, 스크롤바를 아래로 내린다.
+			JScrollBar scbar = scrollPane_log.getVerticalScrollBar();
+			scbar.setValue(scbar.getMaximum());
+			logOutputPane.repaint();
+			
 		}
 	}; 
 	Timer t = null;
@@ -111,7 +113,7 @@ public class MindSharingUI extends JFrame implements ActionListener, ChangeListe
 		// 화면 크기 조절 가능
 		setResizable(true);
 		// 최소 화면 크기 설정
-		setMinimumSize(main_screen_size);
+		//setMinimumSize(main_screen_size);
 		// 종료버튼 누를 때 자동으로 종료
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		// 창 제목 설정, 제목은 : MindSharing version. x.yyy
@@ -179,8 +181,8 @@ public class MindSharingUI extends JFrame implements ActionListener, ChangeListe
 		maintab = new JTabbedPane();
 		
 		// 상단: 입력창: 라벨, 텍스트 상자, 버튼
-		JLabel l_input = new JLabel("분석 텍스트 입력:");
-		ta_input = new JTextArea(4, 20);
+		JLabel l_input = new JLabel("분석 텍스트 입력");
+		ta_input = new JTextArea();
 		ta_input.setWrapStyleWord(true);
 		ta_input.setToolTipText("분석할 텍스트는 여기에 입력");
 		
@@ -206,7 +208,7 @@ public class MindSharingUI extends JFrame implements ActionListener, ChangeListe
 		top_buttonPane.add(b_input, BorderLayout.CENTER);
 		top_buttonPane.add(b_clear, BorderLayout.SOUTH);
 		topPane.add(top_buttonPane, BorderLayout.EAST);
-		topPane.invalidate();
+		//topPane.invalidate();
 		
 		// 탭1 하단: 분석 출력부
 		outputTableModel = new AbstractTableModel() {
@@ -369,6 +371,10 @@ public class MindSharingUI extends JFrame implements ActionListener, ChangeListe
 				else
 				{
 					rows.clear();
+					
+					//SwingWorker<T, V>
+					//ProgressMonitor pm = new ProgressMonitor(this, "데이터 처리 중입니다. 잠시 기다려주세요.", "", 0, 100);
+					// 분석 시작
 					ContextFragment cf = engine.analyze(ta_input.getText());
 					
 					y_emotionvalue = new double[cf.getEmotionFragmentArray().size()];
@@ -378,6 +384,7 @@ public class MindSharingUI extends JFrame implements ActionListener, ChangeListe
 					
 					for (EmotionFragment ef: cf.getEmotionFragmentArray())
 					{
+						
 						y_emotionvalue[i] = (double)ef.emotionValue;
 						x_description.add(ef.sourceText);
 						x_position[i] = (double) i;
@@ -403,7 +410,27 @@ public class MindSharingUI extends JFrame implements ActionListener, ChangeListe
 			}
 			else if (cmd.equals(ac.MENU_INFO_VERSION))
 			{
-				;
+				JOptionPane.showMessageDialog(this, getTitle() + "\n자연어 감정 단어 분석 도구");
+			}
+			else if (cmd.equals(ac.MENU_DATA_LAUNCH_TOOL))
+			{
+				JOptionPane.showMessageDialog(this, "데이터 관리 도구는 준비 중인 기능입니다.");
+			}
+			else if (cmd.equals(ac.MENU_FILE_SAVE_RESULTS))
+			{
+				JOptionPane.showMessageDialog(this, "출력 저장 기능은 준비 중인 기능입니다.");
+			}
+			else if (cmd.equals(ac.MENU_FILE_OPEN))
+			{
+				JOptionPane.showMessageDialog(this, "텍스트 파일을 열어 분석할 텍스트를 입력할 수 있습니다.");
+			}
+			else if (cmd.equals(ac.MENU_INFO_CREDIT))
+			{
+				JOptionPane.showMessageDialog(this, "** 수고한 조원들 **\n\n한글 처리 모듈 및 사전 작성: 박윤장, 이충환\n그래픽 도구 제작 및 엔진 제작: 윤창범");
+			}
+			else if (cmd.equals(ac.MENU_INFO_HELP))
+			{
+				JOptionPane.showMessageDialog(this, "간편 도움말:\n입력창에 텍스트를 입력하고 분석 버튼을 누르면 분석이 가능합니다.");
 			}
 			else if (cmd.equals(ac.MENU_FILE_EXIT))
 			{
@@ -420,12 +447,21 @@ public class MindSharingUI extends JFrame implements ActionListener, ChangeListe
 	
 	public void startLogViewThread()
 	{
-		
+		if (t != null)
+		{
+			t.cancel();
+		}
+		t = new Timer();
+		t.schedule(new LogUpdate(), 0, 200);
 	}
 	
 	public void stopLogViewThread()
 	{
-		
+		if (t != null)
+		{
+			t.cancel();
+			t = null;
+		}
 	}
 
 	@Override
@@ -439,23 +475,12 @@ public class MindSharingUI extends JFrame implements ActionListener, ChangeListe
 		{
 			// ELog 로그 불러오기
 			ELog.d(TAG, "새 로그를 가져오는 쓰레드를 시작합니다.");
-			if (t != null)
-			{
-				t.cancel();
-			}
-			Timer t = new Timer();
-			t.schedule(new LogUpdate(), 0, 200);
+			startLogViewThread();
 		}
 		else
 		{
 			ELog.d(TAG, "새 로그를 가져오는 쓰레드를 중단합니다.");
-			Timer t = new Timer();
-			if (t != null)
-			{
-				t.cancel();
-				t = null;
-			}
-			// 쓰레드 종료 코드
+			stopLogViewThread();
 		}
 	}
 
