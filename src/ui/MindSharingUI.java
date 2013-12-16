@@ -10,6 +10,7 @@ import java.util.Locale;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -30,6 +31,7 @@ import javax.swing.table.AbstractTableModel;
 
 import libs.ELog;
 import libs.SylphEngine;
+import libs.fragments.BaseFragment;
 import libs.fragments.ContextFragment;
 import libs.fragments.EmotionFragment;
 
@@ -72,6 +74,37 @@ public class MindSharingUI extends JFrame implements ActionListener, ChangeListe
 			
 		}
 	}; 
+	
+	// 그래프 그릴때 사용할 구조체
+	private class PlotInfo
+	{
+		double x;
+		double y;
+		String title;
+		
+		public PlotInfo(double _x, double _y, String _title)
+		{
+			x = _x;
+			y = _y;
+			title = _title;
+		}
+		
+		public double getX()
+		{
+			return x;
+		}
+		
+		public double getY()
+		{
+			return y;
+		}
+		
+		public String getTitle()
+		{
+			return title;
+		}
+	}
+	
 	Timer t = null;
 	
 	// 시리얼라이징 ID
@@ -181,9 +214,12 @@ public class MindSharingUI extends JFrame implements ActionListener, ChangeListe
 		maintab = new JTabbedPane();
 		
 		// 상단: 입력창: 라벨, 텍스트 상자, 버튼
-		JLabel l_input = new JLabel("분석 텍스트 입력");
+		JLabel l_input = new JLabel("텍스트");
 		ta_input = new JTextArea();
+		// 스크롤 옆으로 안생기게 아래로 넘기려면 반드시 아래 두가지를 true로 해야한다. (워드랩 기능)
 		ta_input.setWrapStyleWord(true);
+		ta_input.setLineWrap(true);
+		
 		ta_input.setToolTipText("분석할 텍스트는 여기에 입력");
 		
 		b_input = new JButton("분석");
@@ -199,10 +235,13 @@ public class MindSharingUI extends JFrame implements ActionListener, ChangeListe
 		setJMenuBar(menubar);
 		
 		// 탭1 상단: 입력부
-		topPane = new JPanel(new BorderLayout());
-		
+		topPane = new JPanel();
+		topPane.setLayout(new BorderLayout());
 		topPane.add(l_input, BorderLayout.WEST);
-		topPane.add(ta_input, BorderLayout.CENTER);
+		
+		// 테스트
+		JScrollPane jsp_input = new JScrollPane(ta_input);
+		topPane.add(jsp_input, BorderLayout.CENTER);
 		
 		JPanel top_buttonPane = new JPanel(new BorderLayout());
 		top_buttonPane.add(b_input, BorderLayout.CENTER);
@@ -211,12 +250,14 @@ public class MindSharingUI extends JFrame implements ActionListener, ChangeListe
 		//topPane.invalidate();
 		
 		// 탭1 하단: 분석 출력부
+		
+		// 테이블에 물려놓을 모델러
 		outputTableModel = new AbstractTableModel() {
 			/**
 			 * 
 			 */
 			private static final long serialVersionUID = 1L;
-			String[] columns = {"단어", "감정값", "긍정/부정", "강조(x2)", "감소(x0.5) ", "누적 감정값"};
+			String[] columns = {"단어", "감정값", "유형", "강조 어휘", "축소 어휘", "누적값(긍,부)"};
 			
 			@Override
 			public void setValueAt(Object aValue, int rowIndex, int columnIndex)
@@ -286,8 +327,8 @@ public class MindSharingUI extends JFrame implements ActionListener, ChangeListe
 		plot.setVisible(true);
 		plot.setLocale(Locale.KOREAN);
 		plot.setFont(Font.getFont("Gulim"));
-		plot.setFixedBounds(0, 0, 20);
-		plot.setFixedBounds(1, -5, 5);
+		//plot.setFixedBounds(0, -3, 20);
+		//plot.setAxisScales("LIN", "LIN", "LIN");
 		maintab.add("그래프", plot);
 		
 		// 탭 화면 3: 로그 출력
@@ -309,8 +350,6 @@ public class MindSharingUI extends JFrame implements ActionListener, ChangeListe
 		
 		
 		add(maintab, BorderLayout.CENTER);
-		// add(scrollPane, BorderLayout.CENTER);
-		
 
 		/*
 		 * 패킹 후 출력
@@ -319,11 +358,11 @@ public class MindSharingUI extends JFrame implements ActionListener, ChangeListe
         setVisible(true);
 	}
 	
-	public Object[] getFragmentRow(String p_unit, int p_value, int p_signal, boolean p_amplify, boolean p_minimize, int p_accumulate)
+	public Object[] getFragmentRow(String p_unit, int p_value, String p_signal, boolean p_amplify, boolean p_minimize, String p_accumulate_tuple)
 	{
 		// Fragment 정보를 테이블에 옮겨 적기 위한 ArrayList용 객체 정의
 		// (형태소, 감정값, 긍정/부정, 감정 강화, 감정 축소, 누적값)
-		Object[] row = {p_unit, p_value, p_signal, p_amplify, p_minimize, p_accumulate};
+		Object[] row = {p_unit, p_value, p_signal, p_amplify, p_minimize, p_accumulate_tuple};
 		return row;
 	}
 		
@@ -349,12 +388,6 @@ public class MindSharingUI extends JFrame implements ActionListener, ChangeListe
 			}
 			else if (cmd.equals(ac.BUTTON_ANALYZE))
 			{
-				//ArrayList<Double> y_emotionvalue = new ArrayList<Double>();
-				//ArrayList<Double> x_position = new ArrayList<Double>();
-				double[] y_emotionvalue = null;
-				double[] x_position = null;
-				ArrayList<String> x_description = new ArrayList<String>();
-				
 				ELog.addTimelineToBuffer();
 				// 현재 그려진 도트 모두 삭제
 				plot.removeAllPlots();
@@ -370,42 +403,98 @@ public class MindSharingUI extends JFrame implements ActionListener, ChangeListe
 				}
 				else
 				{
+					// 현재 테이블에 출력된 데이터를 제거한다.
 					rows.clear();
 					
-					//SwingWorker<T, V>
-					//ProgressMonitor pm = new ProgressMonitor(this, "데이터 처리 중입니다. 잠시 기다려주세요.", "", 0, 100);
+					// 그래프 그릴 때 필요한 정보를 담는 어레이리스트를 초기화한다.
+					ArrayList<PlotInfo> plots = new ArrayList<PlotInfo>();
+					
 					// 분석 시작
 					ContextFragment cf = engine.analyze(ta_input.getText());
 					
-					y_emotionvalue = new double[cf.getEmotionFragmentArray().size()];
-					x_position = new double[cf.getEmotionFragmentArray().size()];
-					i = 0;
+					int neg=0, pos=0;
 					
+					// 그래프 출력에 사용할 기준
+					int order = 0;
 					
-					for (EmotionFragment ef: cf.getEmotionFragmentArray())
+					for (BaseFragment hbsf: cf.getFragments())
 					{
-						
-						y_emotionvalue[i] = (double)ef.emotionValue;
-						x_description.add(ef.sourceText);
-						x_position[i] = (double) i;
-						i++;
-						rows.add(getFragmentRow(ef.sourceText, ef.emotionValue, ef.emotionValue, false, false, 0));
+						for (BaseFragment mbsf: hbsf.getFragments())
+						{
+							//y_emotionvalue[i] = (double)ef.emotionValue;
+							//x_description.add(ef.sourceText);
+							
+							//(n, 0) 에는 처리되기 이전의 단어를 출력한다.
+							PlotInfo o = new PlotInfo(order, 0, mbsf.sourceText);
+							
+							rows.add(getFragmentRow(mbsf.sourceText, 0, "----", false, false, String.format("(%d, %d)", pos, neg)));
+							plots.add(o);
+							
+							if (mbsf.lengthFragments() > 0)
+							{
+								// 감정 정보를 갖고 있는 경우
+								while (mbsf.isNextFragmentOK())
+								{
+									EmotionFragment ef = (EmotionFragment) mbsf.getNextFragments();
+									// 내부에서 발견한 감정 어휘는 약간 오른쪽으로 밀어준다.
+									PlotInfo epi = new PlotInfo(order, ef.emotionValue, ef.getSourceText());
+									ELog.e(TAG, String.format("%f, %f = %s", epi.x, epi.y, epi.title));
+									plots.add(epi);
+									
+									String emotion_tag;
+									if (ef.emotionValue > 0)
+									{
+										emotion_tag = "긍정어휘";
+										pos += ef.emotionValue;
+									}
+									else if (ef.emotionValue < 0)
+									{
+										emotion_tag = "부정어휘";
+										neg += ef.emotionValue;
+									}
+									else
+									{
+										emotion_tag = "----";
+									}
+									rows.add(getFragmentRow("=> " + ef.sourceText, ef.emotionValue, emotion_tag, false, false, String.format("(%d, %d)", pos, neg)));
+								}
+								
+							}
+							else
+							{
+								// 감정 정보가 없는 경우
+								// 스킵
+							}
+							order++;
+						}
 					}
 					outputTable.invalidate();
 					outputTable.repaint();
 					maintab.repaint();
-				}
-				
-				plot.addScatterPlot("분석 결과", x_position, y_emotionvalue);
-				for (i = 0 ; i < x_description.size(); i++)
-				{
-					double new_y = 0.0;
-					if (y_emotionvalue[i] > 0) new_y = y_emotionvalue[i] - 0.3; 
-					if (y_emotionvalue[i] < 0) new_y = y_emotionvalue[i] + 0.3;
-					Label label = new Label(x_description.get(i), i, new_y);
-					label.setFont(getFont());
-					label.setText(x_description.get(i));
-					plot.addPlotable(label);;
+					
+					// 분석 결과 그래프 그리기
+					
+					double x_p[] = new double[plots.size()];
+					double y_p[] = new double[plots.size()];
+					String y_t[] = new String[plots.size()];
+					
+					for (i = 0 ; i < plots.size() ; i++)
+					{
+						x_p[i] = plots.get(i).x;
+						y_p[i] = plots.get(i).y;
+						y_t[i] = plots.get(i).title;
+					}
+					plot.addLinePlot("분석 결과", x_p, y_p);
+					for (i = 0 ; i < plots.size(); i++)
+					{
+						double new_y = 0.0;
+						if (y_p[i] > 0) new_y = y_p[i] - 0.1; 
+						if (y_p[i] < 0) new_y = y_p[i] + 0.1;
+						Label label = new Label(y_t[i], x_p[i], new_y);
+						label.setFont(getFont());
+						label.setText(y_t[i]);
+						plot.addPlotable(label);;
+					}
 				}
 			}
 			else if (cmd.equals(ac.MENU_INFO_VERSION))

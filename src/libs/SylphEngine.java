@@ -154,7 +154,7 @@ public class SylphEngine
 			 */
 			for (BaseFragment hbsf : fctx.getFragments())
 			{
-				ELog.d(_TAG, "Join to sentence level: " + hbsf.getSourceText());
+				ELog.d(_TAG, "문장 분석 단계: " + hbsf.getSourceText());
 				for (BaseFragment mbsf : hbsf.getFragments())
 				{
 					/*
@@ -165,7 +165,7 @@ public class SylphEngine
 					 * (단, 글의 흐름을 바꾸는 어휘는 이후에 고려할 것)
 					 */
 					String word = mbsf.getSourceText();
-					ELog.d(_TAG, "Join to word level: " + word);
+					ELog.d(_TAG, "단어 분석 단계: " + word);
 					
 					EmotionFragment ef = new EmotionFragment(word);
 					
@@ -210,6 +210,7 @@ public class SylphEngine
 					// 더이상의 하위 노드가 없기 때문에, EmotionFragment 안에는 sourceText와 emotionValue 만 설정되어야한다.
 					if (ef.emotionValue != 0)
 					{
+						ELog.d(_TAG, String.format("-- 감정 관련 어휘 [%s] 값 [%s]", ef.sourceText, ef.emotionValue));
 						mbsf.fragments.add(ef);
 					}
 				}
