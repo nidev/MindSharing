@@ -193,6 +193,8 @@ public class SylphEngine
 							else
 							{
 								String search_result_negv = negv.lossySearch(word);
+								ELog.d(_TAG, String.format("-- 감정 관련 어휘 [%s] 값 [%s]", ef.sourceText, ef.emotionValue));
+								
 								if (search_result_negv != null)
 								{
 									ef.sourceText = search_result;
