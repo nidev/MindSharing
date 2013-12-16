@@ -141,9 +141,8 @@ public class SylphEngine
 			// 감정값 사전 객체 초기화
 			EmotionPositiveValue posv = new EmotionPositiveValue();
 			EmotionNegativeValue negv = new EmotionNegativeValue();
-			// 감정 프래그먼트 어레이리스트 초기화
-			fctx.newEmotionFragmentArray();
-			
+
+			// ELog 디버그 출력 태그
 			String _TAG = "Analyzer";
 			
 			/*
@@ -159,10 +158,12 @@ public class SylphEngine
 				for (BaseFragment mbsf : hbsf.getFragments())
 				{
 					/*
-					ELog.d(_TAG, "Current Level: " + mbsf.getSourceText());
-					for (BaseFragment lbsf : mbsf.getFragments())
-					{
-					*/
+					 * 사전에서 부정이든 긍정이든 감정값을 찾아내면,
+					 * 그 단어는 해당 단어 프로그먼트 안의 감정 프래그먼트를 가질 수 있게 된다.
+					 * 이 외의 단어 프래그먼트 안에는 감정 값을 가질 수 없다.
+					 * 
+					 * (단, 글의 흐름을 바꾸는 어휘는 이후에 고려할 것)
+					 */
 					String word = mbsf.getSourceText();
 					ELog.d(_TAG, "Join to word level: " + word);
 					
@@ -170,6 +171,7 @@ public class SylphEngine
 					
 					if (posv.isInDictionary(word))
 					{
+						ef.sourceText = word;
 						ef.emotionValue = posv.getConstant(word);
 					}
 					else
@@ -177,6 +179,7 @@ public class SylphEngine
 						String search_result = posv.lossySearch(word);
 						if (search_result != null)
 						{
+							ef.sourceText = search_result;
 							ef.emotionValue = posv.getConstant(search_result);
 						}
 						else
@@ -184,6 +187,7 @@ public class SylphEngine
 							// 긍정 단어에서 탐색을 실패했으므로, 부정 단어에서 탐색 시작
 							if (negv.isInDictionary(word))
 							{
+								ef.sourceText = word;
 								ef.emotionValue = -1 * negv.getConstant(word);
 							}
 							else
@@ -191,6 +195,7 @@ public class SylphEngine
 								String search_result_negv = negv.lossySearch(word);
 								if (search_result_negv != null)
 								{
+									ef.sourceText = search_result;
 									ef.emotionValue = -1 * negv.getConstant(search_result_negv);
 								}
 								else
@@ -200,7 +205,13 @@ public class SylphEngine
 							}
 						}
 					}
-					fctx.emotion_fragments.add(ef);
+					
+					// EmotionFragment에 값이 반영 되어있으면, 그 단어의 서브 프래그먼트로 EmotionFragment를 추가해준다.
+					// 더이상의 하위 노드가 없기 때문에, EmotionFragment 안에는 sourceText와 emotionValue 만 설정되어야한다.
+					if (ef.emotionValue != 0)
+					{
+						mbsf.fragments.add(ef);
+					}
 				}
 			}
 			

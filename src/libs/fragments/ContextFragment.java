@@ -28,10 +28,6 @@ public class ContextFragment extends BaseFragment
 	private int contextId = -1;
 	private String TAG = "CTX=";
 	
-	// 감정값 전용 어레이 리스트 추가
-	public ArrayList<EmotionFragment> emotion_fragments = null;
-	
-
 	public ContextFragment()
 	{
 		super(); // BaseFragment() 생성자 실행
@@ -83,19 +79,5 @@ public class ContextFragment extends BaseFragment
 	public void unsetReadyToUse()
 	{
 		isReadyToUse = false;
-	}
-	
-	public ArrayList<EmotionFragment> getEmotionFragmentArray() throws NullPointerException
-	{
-		if (emotion_fragments == null)
-		{
-			throw new NullPointerException();
-		}
-		return emotion_fragments;
-	}
-	
-	public void newEmotionFragmentArray()
-	{
-		emotion_fragments = new ArrayList<EmotionFragment>();
 	}
 }

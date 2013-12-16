@@ -70,12 +70,21 @@ public class EmotionPositiveValue implements EmotionValue
 			String str;
 			while((str = in.readLine()) != null)
 			{
-				StringTokenizer s = new StringTokenizer(str,",");
-				String Estr=s.nextToken();
-				if(Estr.matches(unit))
+				// !로 시작하는 줄은 읽지 않는다. (사전에 주석을 달기 위함)
+				if (str.startsWith("!"))
 				{
-					in.close();
-					return str;
+					continue;
+				}
+				StringTokenizer s = new StringTokenizer(str,",");
+				// 토큰 갯수가 남아있는지 체크한다. 이게 남아있지 않으면, 사전 파일에서 빈 줄 발견시 사망하게 됨.
+				if (s.hasMoreElements())
+				{
+					String Estr=s.nextToken();
+					if(Estr.matches(unit))
+					{
+						in.close();
+						return str;
+					}
 				}
 			}
 			// 버퍼 닫기
