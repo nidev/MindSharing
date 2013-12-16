@@ -10,7 +10,6 @@ import java.util.Locale;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
