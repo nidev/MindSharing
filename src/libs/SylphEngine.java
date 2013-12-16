@@ -197,7 +197,7 @@ public class SylphEngine
 								
 								if (search_result_negv != null)
 								{
-									ef.sourceText = search_result;
+									ef.sourceText = search_result_negv;
 									ef.emotionValue = -1 * negv.getConstant(search_result_negv);
 								}
 								else
