@@ -80,7 +80,7 @@ public class EmotionPositiveValue implements EmotionValue
 				if (s.hasMoreElements())
 				{
 					String Estr=s.nextToken();
-					if(Estr.matches(unit))
+					if(unit.matches(Estr))
 					{
 						in.close();
 						return str;
