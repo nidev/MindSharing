@@ -1,4 +1,4 @@
-package libs.interfaces;
+package jnu.mindsharing.legacy.libs.interfaces;
 
 /*
  * 감정값 탐색용 라이브러리 인터페이스 선언

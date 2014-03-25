@@ -1,4 +1,4 @@
-package ui;
+package jnu.mindsharing.legacy.ui;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
@@ -28,11 +28,11 @@ import javax.swing.event.ChangeListener;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.AbstractTableModel;
 
-import libs.ELog;
-import libs.SylphEngine;
-import libs.fragments.BaseFragment;
-import libs.fragments.ContextFragment;
-import libs.fragments.EmotionFragment;
+import jnu.mindsharing.legacy.libs.ELog;
+import jnu.mindsharing.legacy.libs.SylphEngine;
+import jnu.mindsharing.legacy.libs.fragments.BaseFragment;
+import jnu.mindsharing.legacy.libs.fragments.ContextFragment;
+import jnu.mindsharing.legacy.libs.fragments.EmotionFragment;
 
 import org.math.plot.Plot2DPanel;
 import org.math.plot.plotObjects.Label;

@@ -1,1 +1,22 @@
-** PROJECT **
+** 구버전(Legacy version) 실행방법
+
+  2014년 3월부터 패키지 구조가 바뀌므로, 구버전 MindSharing 프로그램은 다음과 같이 실행이 가능하다.
+
+  cmd.exe 를 실행한 후, MindSharing.jar 파일을 받아왔다면, MindSharing.jar 파일이 있는 곳에서
+
+java -classpath MindSharing.jar jnu.mindsharing.legacy.MindSharing
+
+  를 입력하고 엔터를 누르면 예전 화면을 실행할 수 있다.
+
+** 신버전 실행방법
+
+  엔진 테스트 시에는, 
+
+java -classpath MindSharing.jar jnu.mindsharing.enginetest
+
+  서버+엔진 가동시에는,
+
+java -classpath MindSharing.jar jnu.mindsharing.appserver
+
+  를 실행할 수 있다.
+

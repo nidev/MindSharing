@@ -1,4 +1,4 @@
-package libs.fragments;
+package jnu.mindsharing.legacy.libs.fragments;
 
 import java.util.HashMap;
 

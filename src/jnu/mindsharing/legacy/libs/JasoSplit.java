@@ -1,4 +1,4 @@
-package libs;
+package jnu.mindsharing.legacy.libs;
 
 
 public class JasoSplit {

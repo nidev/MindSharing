@@ -1,8 +1,8 @@
-package libs.fragments;
+package jnu.mindsharing.legacy.libs.fragments;
 
 import java.util.ArrayList;
 
-import libs.ELog;
+import jnu.mindsharing.legacy.libs.ELog;
 
 // 작업 중 //
 

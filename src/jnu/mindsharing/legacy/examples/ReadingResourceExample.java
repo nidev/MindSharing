@@ -3,7 +3,7 @@
  */
 
 
-package examples;
+package jnu.mindsharing.legacy.examples;
 
 
 /**

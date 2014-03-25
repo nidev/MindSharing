@@ -1,11 +1,11 @@
-package libs;
+package jnu.mindsharing.legacy.libs;
 
 import java.io.DataInputStream;
 import java.util.ArrayList;
 
-import libs.fragments.BaseFragment;
-import libs.fragments.ContextFragment;
-import libs.fragments.EmotionFragment;
+import jnu.mindsharing.legacy.libs.fragments.BaseFragment;
+import jnu.mindsharing.legacy.libs.fragments.ContextFragment;
+import jnu.mindsharing.legacy.libs.fragments.EmotionFragment;
 
 /*
  * 이 파일은 코드가 돌아가지 않더라고 큰 걱정 안해도 괜찮음.

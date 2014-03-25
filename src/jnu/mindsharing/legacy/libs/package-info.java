@@ -5,7 +5,7 @@
  * @author nidev
  *
  */
-package libs;
+package jnu.mindsharing.legacy.libs;
 
 /*
  * 패키지 구성요소

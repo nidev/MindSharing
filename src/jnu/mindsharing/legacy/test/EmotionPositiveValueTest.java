@@ -1,7 +1,7 @@
-package test;
+package jnu.mindsharing.legacy.test;
 
-import libs.ELog;
-import libs.EmotionPositiveValue;
+import jnu.mindsharing.legacy.libs.ELog;
+import jnu.mindsharing.legacy.libs.EmotionPositiveValue;
 
 public class EmotionPositiveValueTest
 {

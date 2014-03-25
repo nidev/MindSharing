@@ -1,4 +1,4 @@
-package ui;
+package jnu.mindsharing.legacy.ui;
 /*
  * Swing(자바의 GUI 도구)은 버튼 클릭이나 메뉴 선택 등의 이벤트를 ActionCommand라는 시스템을 통해서
  * 주고 받는다.

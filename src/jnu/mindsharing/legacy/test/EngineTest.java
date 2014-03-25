@@ -1,9 +1,9 @@
-package test;
+package jnu.mindsharing.legacy.test;
 
-import libs.ELog;
-import libs.SylphEngine;
-import libs.fragments.BaseFragment;
-import libs.fragments.ContextFragment;
+import jnu.mindsharing.legacy.libs.ELog;
+import jnu.mindsharing.legacy.libs.SylphEngine;
+import jnu.mindsharing.legacy.libs.fragments.BaseFragment;
+import jnu.mindsharing.legacy.libs.fragments.ContextFragment;
 
 /*
  * 주석 꼼꼼히 달기:

@@ -1,4 +1,4 @@
-package libs;
+package jnu.mindsharing.legacy.libs;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;

@@ -1,4 +1,4 @@
-package libs; // 외부에서 작업해왔어도, 패키지 이름은 우리에게 맞춰서~
+package jnu.mindsharing.legacy.libs; // 외부에서 작업해왔어도, 패키지 이름은 우리에게 맞춰서~
 
 import java.util.ArrayList;
 import java.util.StringTokenizer;

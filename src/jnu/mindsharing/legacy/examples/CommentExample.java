@@ -1,7 +1,7 @@
 /**
  * MindSharing Project
  */
-package examples;
+package jnu.mindsharing.legacy.examples;
 
 /**
  * @author 작성자

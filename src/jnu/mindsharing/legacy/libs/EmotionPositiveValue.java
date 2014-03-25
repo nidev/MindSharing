@@ -1,17 +1,17 @@
-package libs;
+package jnu.mindsharing.legacy.libs;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.StringTokenizer;
 
-import libs.interfaces.EmotionValue;
+import jnu.mindsharing.legacy.libs.interfaces.EmotionValue;
 
 //인터페이스 구현에 필요한 자료는 src/libs/interfaces/EmotionValue.java 안에 설명되어있음!
 
 public class EmotionPositiveValue implements EmotionValue
 {
-	final static String DICTIONARY_PATH = "/libs/Positive Words.txt"; 
+	final static String DICTIONARY_PATH = "/jnu/mindsharing/legacy/libs/Positive Words.txt"; 
 
 	// 주의: main() 함수 여기에다가 작성하지 말자!
 	// main()으로 호출해볼 수 있는 곳: src의 'test' 폴더 안에 있는 실행기들!

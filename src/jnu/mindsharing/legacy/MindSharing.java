@@ -1,5 +1,7 @@
-import libs.ELog;
-import ui.MindSharingUI;
+package jnu.mindsharing.legacy;
+
+import jnu.mindsharing.legacy.libs.ELog;
+import jnu.mindsharing.legacy.ui.MindSharingUI;
 
 public class MindSharing
 {

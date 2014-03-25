@@ -1,4 +1,4 @@
-package libs;
+package jnu.mindsharing.legacy.libs;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -13,7 +13,7 @@ public class EmotionNegativeValue extends EmotionPositiveValue
 	 * 'extends EmotionPositiveValue' 라는 키워드는 무슨 짓을 해버렸길래 이곳에 아무 내용이 없어도,
 	 * 코드가 정상적으로 동작할 수 있는걸까?
 	 */
-	final static String DICTIONARY_PATH = "/libs/Negative Words.txt"; 
+	final static String DICTIONARY_PATH = "/jnu/mindsharing/legacy/libs/Negative Words.txt"; 
 
 	// findWords 는 사전 파일 경로에 따라 다르게 동작하므로,
 	// NegativeValue에서도 새로 구현을 해주는 게 맞는 것 같다.
