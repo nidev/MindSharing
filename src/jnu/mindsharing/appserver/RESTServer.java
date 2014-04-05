@@ -1,0 +1,115 @@
+/**
+ * 
+ */
+package jnu.mindsharing.appserver;
+
+import java.util.concurrent.ConcurrentMap;
+
+import jnu.mindsharing.chainengine.ChainEngine;
+import jnu.mindsharing.utility.ApplicationInfo;
+
+import org.restlet.Component;
+import org.restlet.Request;
+import org.restlet.Response;
+import org.restlet.Restlet;
+import org.restlet.Server;
+import org.restlet.data.MediaType;
+import org.restlet.data.Method;
+import org.restlet.data.Protocol;
+import org.restlet.resource.Get;
+import org.restlet.resource.ServerResource;
+import org.restlet.routing.Router;
+
+/**
+ * @author nidev
+ *
+ */
+public class RESTServer extends ServerResource implements ApplicationInfo
+{
+	final String versionCode = "happy";
+	final int versionNumber = 1;
+	private ChainEngine engineObject;
+	private Server srv;
+
+	@Override
+	public String getVersionCode()
+	{
+		return versionCode;
+	}
+
+	@Override
+	public int getVersionNumber()
+	{
+		return versionNumber;
+	}
+
+	@Override
+	public String getLicenseInfo()
+	{
+		return "RESTServer.java utilizes Restlet Framework (http://restlet.org/download/legal) under LGPL License.";
+	}
+	
+	public void run(ChainEngine ce) throws Exception
+	{
+		engineObject = ce;
+		
+		Component component = new Component();
+		component.getServers().add(Protocol.HTTP, 8182);
+
+		Restlet rtTest = new Restlet(getContext()) {
+			@Override
+			public void handle(Request req, Response res)
+			{
+				res.setEntity(req.toString(), MediaType.TEXT_PLAIN);
+			}
+		};
+		
+		Restlet rtAnalyzer = new Restlet(getContext()) {
+			@Override
+			public void handle(Request req, Response res)
+			{
+				if (req.getMethod() == Method.POST)
+				{
+					//res.setEntity(req.toString(), MediaType.TEXT_PLAIN);
+					// 분석기로 넘어가는 코드는 약 이쯤...?
+				}
+				else
+				{
+					res.setEntity("Method POST required", MediaType.TEXT_PLAIN);
+				}
+			}
+		};
+		
+		Restlet rtSendResult = new Restlet(getContext()) {
+			@Override
+			public void handle(Request req, Response res)
+			{
+				if (req.getMethod() == Method.GET)
+				{
+					ConcurrentMap<String, Object> attrs = req.getAttributes();
+					res.setEntity("Requested id is : " + attrs.get("id").toString(), MediaType.TEXT_PLAIN);
+				}
+			}
+		};
+		
+		component.getDefaultHost().attach("/new", rtAnalyzer);
+		component.getDefaultHost().attach("/get/{id}", rtSendResult);
+		component.getDefaultHost().attach("/test", rtTest);
+		component.getDefaultHost().attach("/", RESTServer.class);
+		component.start();
+	}
+	
+	public boolean isStarted()
+	{
+		return srv.isStarted();
+	}
+	
+	@Get
+    public String toString()
+	{
+        return "GET /test : For testing purpose\r\nPOST /new : Invoke new task of analizing. Returning id.\r\nGET /get/id : Get results of a certain job.";
+    }
+
+
+
+}
