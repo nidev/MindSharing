@@ -3,8 +3,11 @@
  */
 package jnu.mindsharing.appserver;
 
+import java.io.IOException;
+import java.net.URLDecoder;
 import java.util.concurrent.ConcurrentMap;
 
+import jnu.mindsharing.chainengine.CEResultObject;
 import jnu.mindsharing.chainengine.ChainEngine;
 import jnu.mindsharing.utility.ApplicationInfo;
 
@@ -16,9 +19,9 @@ import org.restlet.Server;
 import org.restlet.data.MediaType;
 import org.restlet.data.Method;
 import org.restlet.data.Protocol;
+import org.restlet.representation.Representation;
 import org.restlet.resource.Get;
 import org.restlet.resource.ServerResource;
-import org.restlet.routing.Router;
 
 /**
  * @author nidev
@@ -28,6 +31,7 @@ public class RESTServer extends ServerResource implements ApplicationInfo
 {
 	final String versionCode = "happy";
 	final int versionNumber = 1;
+	private String TAG = "REST";
 	private ChainEngine engineObject;
 	private Server srv;
 
@@ -47,6 +51,11 @@ public class RESTServer extends ServerResource implements ApplicationInfo
 	public String getLicenseInfo()
 	{
 		return "RESTServer.java utilizes Restlet Framework (http://restlet.org/download/legal) under LGPL License.";
+	}
+	
+	public ChainEngine getEngine()
+	{
+		return engineObject;
 	}
 	
 	public void run(ChainEngine ce) throws Exception
@@ -70,12 +79,30 @@ public class RESTServer extends ServerResource implements ApplicationInfo
 			{
 				if (req.getMethod() == Method.POST)
 				{
-					//res.setEntity(req.toString(), MediaType.TEXT_PLAIN);
-					// 분석기로 넘어가는 코드는 약 이쯤...?
+					Representation entity = req.getEntity();
+					String rawBody[] = null;
+					String body = null;
+					try
+					{
+						rawBody = entity.getText().split("=");
+						body = URLDecoder.decode(rawBody[1], "UTF-8");
+						// 디코드 이후에 분석 코드!
+						CEResultObject ceres = getEngine().analyze(body);
+						res.setEntity(ceres.toJSON(), MediaType.TEXT_PLAIN);
+					}
+					catch (IOException e)
+					{
+						res.setEntity("{error:1, msg:'Malformed url-encoded text'}", MediaType.TEXT_PLAIN);
+					}
+					
+					if (body != null)
+					{
+						res.setEntity(body, MediaType.TEXT_PLAIN);
+					}
 				}
 				else
 				{
-					res.setEntity("Method POST required", MediaType.TEXT_PLAIN);
+					res.setEntity("{error:1, msg:'Method POST required'}", MediaType.TEXT_PLAIN);
 				}
 			}
 		};
@@ -109,7 +136,4 @@ public class RESTServer extends ServerResource implements ApplicationInfo
 	{
         return "GET /test : For testing purpose\r\nPOST /new : Invoke new task of analizing. Returning id.\r\nGET /get/id : Get results of a certain job.";
     }
-
-
-
 }

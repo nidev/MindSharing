@@ -38,7 +38,8 @@ public class Bootstrap extends ServerResource
 			P.e(TAG, "데이터베이스를 사용할 수 없습니다.");
 			System.exit(-1);
 		}
-		chainEngine.createKKMAAnalyzer();
+		//으어아으 나중에
+		//chainEngine.createKKMAAnalyzer();
 		P.d(TAG, "API 서버 시작");
 		try
 		{
