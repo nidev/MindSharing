@@ -1,7 +1,7 @@
 /**
  * 
  */
-package jnu.mindsharing.appserver;
+package jnu.mindsharing.hq;
 
 import java.io.IOException;
 import java.net.URLDecoder;
@@ -9,7 +9,7 @@ import java.util.concurrent.ConcurrentMap;
 
 import jnu.mindsharing.chainengine.CEResultObject;
 import jnu.mindsharing.chainengine.ChainEngine;
-import jnu.mindsharing.utility.ApplicationInfo;
+import jnu.mindsharing.common.ApplicationInfo;
 
 import org.restlet.Component;
 import org.restlet.Request;
@@ -34,7 +34,24 @@ public class RESTServer extends ServerResource implements ApplicationInfo
 	private String TAG = "REST";
 	private ChainEngine engineObject;
 	private Server srv;
+	private int current_requests = 0;
+	private int max_requests = 5;
 
+	private synchronized void addReq()
+	{
+		current_requests += 1;
+	}
+	
+	private synchronized void subReq()
+	{
+		current_requests -= 1;
+	}
+	
+	private synchronized boolean isMaxReq()
+	{
+		return current_requests >= max_requests;
+	}
+	
 	@Override
 	public String getVersionCode()
 	{
@@ -77,6 +94,8 @@ public class RESTServer extends ServerResource implements ApplicationInfo
 			@Override
 			public void handle(Request req, Response res)
 			{
+				addReq();
+				
 				if (req.getMethod() == Method.POST)
 				{
 					Representation entity = req.getEntity();
@@ -86,24 +105,27 @@ public class RESTServer extends ServerResource implements ApplicationInfo
 					{
 						rawBody = entity.getText().split("=");
 						body = URLDecoder.decode(rawBody[1], "UTF-8");
-						// 디코드 이후에 분석 코드!
-						CEResultObject ceres = getEngine().analyze(body);
-						res.setEntity(ceres.toJSON(), MediaType.TEXT_PLAIN);
+						if (body != null)
+						{
+							CEResultObject ceres = getEngine().analyze(body);
+							res.setEntity(ceres.toJSON(), MediaType.TEXT_PLAIN);
+						}
+						else
+						{
+							res.setEntity("{error:1, msg:'No data'}", MediaType.TEXT_PLAIN);
+						}
+						
 					}
 					catch (IOException e)
 					{
 						res.setEntity("{error:1, msg:'Malformed url-encoded text'}", MediaType.TEXT_PLAIN);
-					}
-					
-					if (body != null)
-					{
-						res.setEntity(body, MediaType.TEXT_PLAIN);
 					}
 				}
 				else
 				{
 					res.setEntity("{error:1, msg:'Method POST required'}", MediaType.TEXT_PLAIN);
 				}
+				subReq();
 			}
 		};
 		

@@ -1,4 +1,4 @@
-package jnu.mindsharing.utility;
+package jnu.mindsharing.common;
 
 public interface ApplicationInfo
 {

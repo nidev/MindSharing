@@ -5,4 +5,4 @@
  * @author nidev
  *
  */
-package jnu.mindsharing.utility;
+package jnu.mindsharing.common;

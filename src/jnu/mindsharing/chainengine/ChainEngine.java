@@ -5,8 +5,8 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.List;
 
-import jnu.mindsharing.utility.ApplicationInfo;
-import jnu.mindsharing.utility.P;
+import jnu.mindsharing.common.ApplicationInfo;
+import jnu.mindsharing.common.P;
 
 import org.snu.ids.ha.ma.MExpression;
 import org.snu.ids.ha.ma.MorphemeAnalyzer;
@@ -107,7 +107,7 @@ public class ChainEngine implements ApplicationInfo
 				{
 					Sentence snt = snts.get(i);
 					P.b();
-					P.d(TAG, "[%d/%d] 현재 문장: %s", i, snts.size(), snt.getSentence());
+					P.d(TAG, "[%d/%d] 알고리즘 호출. 현재 문장: %s", i, snts.size(), snt.getSentence());
 					EmotionAlgorithm easub = new EmotionAlgorithm(eabase);
 					easub.listen(snt);
 					if (easub.currentEmotionRate() == 0)
@@ -115,6 +115,7 @@ public class ChainEngine implements ApplicationInfo
 						// 변화가 발생하지 않음.
 						P.d(TAG, " => 이 문장은 사용하지 않습니다.");
 					}
+					else
 					{
 						// 변화 발생시, 새로 학습한 내용을 받아들임.
 						eabase = easub;

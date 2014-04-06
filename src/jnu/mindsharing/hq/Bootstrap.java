@@ -1,10 +1,10 @@
 /**
  * 
  */
-package jnu.mindsharing.appserver;
+package jnu.mindsharing.hq;
 
 import jnu.mindsharing.chainengine.ChainEngine;
-import jnu.mindsharing.utility.P;
+import jnu.mindsharing.common.P;
 
 import org.restlet.resource.ServerResource;
 
@@ -39,7 +39,7 @@ public class Bootstrap extends ServerResource
 			System.exit(-1);
 		}
 		//으어아으 나중에
-		//chainEngine.createKKMAAnalyzer();
+		chainEngine.createKKMAAnalyzer();
 		P.d(TAG, "API 서버 시작");
 		try
 		{

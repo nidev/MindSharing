@@ -5,4 +5,4 @@
  * @author nidev
  *
  */
-package jnu.mindsharing.appserver;
+package jnu.mindsharing.hq;
