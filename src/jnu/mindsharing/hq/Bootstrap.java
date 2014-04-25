@@ -27,9 +27,9 @@ public class Bootstrap extends ServerResource
 		RESTServer restServer = new RESTServer(); // TODO: passing chainEngine
 		
 		P.d(TAG, "API 서버 버전\t= %d (%s)", restServer.getVersionNumber(), restServer.getVersionCode());
-		P.d(TAG, "API 서버 라이브러리 저작권 정보: %s", restServer.getLicenseInfo());
+		P.d(TAG, "내부 라이브러리: %s", restServer.getLicenseInfo());
 		P.d(TAG, "체인 엔진 버전\t= %d (%s)", chainEngine.getVersionNumber(), chainEngine.getVersionCode());
-		P.d(TAG, "체인 엔진 라이브러리 저작권 정보: %s", chainEngine.getLicenseInfo());
+		P.d(TAG, "내부 라이브러리: %s", chainEngine.getLicenseInfo());
 		P.b();
 		P.d(TAG, "메모리 부족으로 프로그램이 종료될 경우, -xm512M 옵션을 추가하여 재가동하십시오.");
 		P.d(TAG, "사전 로딩 및 데이터베이스 연결 작업을 수행합니다.");

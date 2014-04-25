@@ -7,7 +7,7 @@ import java.io.IOException;
 import java.net.URLDecoder;
 import java.util.concurrent.ConcurrentMap;
 
-import jnu.mindsharing.chainengine.CEResultObject;
+import jnu.mindsharing.chainengine.ResultProcessor;
 import jnu.mindsharing.chainengine.ChainEngine;
 import jnu.mindsharing.common.ApplicationInfo;
 
@@ -67,7 +67,7 @@ public class RESTServer extends ServerResource implements ApplicationInfo
 	@Override
 	public String getLicenseInfo()
 	{
-		return "RESTServer.java utilizes Restlet Framework (http://restlet.org/download/legal) under LGPL License.";
+		return "Restlet Framework (http://restlet.org/download/legal)를 LGPL License하에 사용합니다.";
 	}
 	
 	public ChainEngine getEngine()
@@ -113,7 +113,7 @@ public class RESTServer extends ServerResource implements ApplicationInfo
 						body = URLDecoder.decode(rawBody[1], "UTF-8");
 						if (body != null)
 						{
-							CEResultObject ceres = getEngine().analyze(body);
+							ResultProcessor ceres = getEngine().analyze(body);
 							res.setEntity(ceres.toJSON(), MediaType.TEXT_PLAIN);
 						}
 						else
