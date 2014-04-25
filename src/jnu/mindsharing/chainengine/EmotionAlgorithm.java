@@ -1,114 +1,116 @@
 package jnu.mindsharing.chainengine;
 
+import java.sql.Connection;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.List;
 
+import jnu.mindsharing.common.EParagraph;
+import jnu.mindsharing.common.ESentence;
+import jnu.mindsharing.common.EmoUnit;
 import jnu.mindsharing.common.P;
 
-import org.snu.ids.ha.ma.Eojeol;
-import org.snu.ids.ha.ma.Sentence;
+import org.snu.ids.ha.ma.MExpression;
+import org.snu.ids.ha.ma.MorphemeAnalyzer;
 
-public class EmotionAlgorithm
+public class EmotionAlgorithm extends ArrayList<EParagraph>
 {
-	// Constants
-	// 3가지 긍정 감정축과 3가지 부정 감정축
-	private String[] emotkeys = {"rise", "create", "develop", "fall", "destroy", "cease"};
-	// Learning history
-	private HashMap<String, Long> emotable;
-	private ArrayList<Long> emoflow;
-	private ArrayList<String> learned_word;
-	private String TAG = "EmoAl";
+	private static final long serialVersionUID = -6004998827195979333L;
 	
-	public EmotionAlgorithm()
-	{
-		// 초기 상태로 시작함. 아무런 상태를 갖지않음.
-		emotable = new HashMap<String, Long>();
-		for (String emotkey: emotkeys)
-		{
-			emotable.put(emotkey, 0L);
-		}
-		emoflow = new ArrayList<Long>();
-		learned_word = new ArrayList<String>();
-	}
+	private String TAG = "Algorithm";
+	EmoUnit internal;
+	private MorphemeAnalyzer ma;
+	private Connection db;
 	
-	public EmotionAlgorithm(EmotionAlgorithm ea)
+	public EmotionAlgorithm(MorphemeAnalyzer hostMA, Connection mindsharing_db)
 	{
-		// 학습된 결과를 가져와서 재학습함
-		// TODO: 값과 배운 문장을 기억함
-		emotable = new HashMap<String, Long>();
-		for (String emotkey: emotkeys)
-		{
-			emotable.put(emotkey, ea.emotable.get(emotkey));
-		}
-		emoflow = new ArrayList<Long>();
-		emoflow.addAll(ea.emoflow);
-		learned_word = new ArrayList<String>();
-		learned_word.addAll(ea.learned_word);
-		TAG = "EmoAl:Successor";
+		// TODO: null 체크
+		ma = hostMA;
+		db = mindsharing_db;
+		
+		internal = new EmoUnit();
 	}
 	
 	public void reset()
 	{
-		// TODO: 여지까지 배운 값들을 모두 잊음
-		for (String emotkey: emotkeys)
-		{
-			emotable.put(emotkey, 0L);
-		}
-		emoflow.clear();
-		learned_word.clear();
+		internal.defaultTable();
 	}
 	
-	public long currentEmotionRate()
+	public int createNewParagraph(String text)
 	{
-		// TODO: 계산 공식 추가
-		// 일단은 가장 심플한 방법으로 계산한다.
-		long sum = 0;
-		for (long value :emotable.values())
-		{
-			sum += Math.abs(value);
-		}
-		return sum;
+		// Return: index
+		add(new EParagraph(text));
+		return size()-1;
 	}
 	
-	public void listen(Sentence se, String target)
+	public EParagraph findEParagraphByText(String text)
 	{
-		Pepero ppr = new Pepero(se);
-		while (!ppr.kissed())
+		for (EParagraph ep: this)
 		{
-			Eojeol token = ppr.readFront();
-			P.d(TAG, "어절 : %s", token.toString());
-			if (target != null)
+			if (ep.getWholeText().equals(text)) // md5나 CRC같은 해시를 사용하지 않으면 비교가 느릴듯.
 			{
-				// 주어: 키워드, 목적어: 키워드
-				// 키워드의 흐름
-			}
-			else
-			{
-				// 주어: 나, 목적어: 나
-				//일반 흐름
+				return ep;
 			}
 		}
+		return null;
 	}
 	
-	public void listen(Sentence se)
+	public void addESentenceTo(int paragraph_index, ESentence es)
 	{
-		listen(se, null);
+		get(paragraph_index).add(es);
 	}
 	
-	public void symphathize(EmotionAlgorithm ea)
+	public void process(int paragraph_index) throws Exception
 	{
-		// 공감 함수
-		// 이 것은 다른 알고리즘이 학습한 감정만을 가져온다.
-		// 지금까지 발생했던 어휘와 이력을 가져오는 new EmotionAlgorithm(object_EmotionAlgorithm)과는 다름
-		for (String emotkey: emotkeys)
+		// phase 1: 문장마다 형태소 분석 후 단어 분리
+		for (ESentence es: get(paragraph_index))
 		{
-			emotable.put(emotkey, ea.emotable.get(emotkey));
+			List<MExpression> aresults = ma.analyze(es.getWholeText());
+			aresults = ma.postProcess(aresults);
+			aresults = ma.leaveJustBest(aresults);
+			
+			// TODO: 주어목적어 후보군 생성 작업이 이루어지지않음
+			for(int i=0; i < aresults.size(); i++)
+			{
+				/*
+				 * TODO: 반드시 코드 동작을 검증하기 바람.
+				 * 꼬꼬마 형태소 분석기는 중간 결과를 활용하기 매우 어렵게 되어있음.
+				 */
+				MExpression mexp = aresults.get(i);
+				P.d(TAG, "형태소 분석기 어휘 : %s" , mexp.getExp());
+				
+			}
 		}
 	}
 	
-	public CEResultObject toCEResultObject()
+
+	
+	public void processAll() throws Exception
 	{
-		CEResultObject cer = new CEResultObject();
-		return cer;
+		int index = 0;
+		for (index = 0; index < size(); index++)
+		{
+			process(index);
+		}
+		
+	}
+	
+	
+	public ResultProcessor extractResultProcessor(EParagraph epr)
+	{
+		ResultProcessor resp = new ResultProcessor(epr);
+		return resp;
+	}
+	
+	public void displayEStatus()
+	{
+		P.d(TAG, "총 문단 %d개", size());
+		for (EParagraph ep : this)
+		{
+			P.d(TAG, "==> 문단 (%x): 문장 d개", ep.hashCode(), ep.length());
+			for (ESentence es : ep)
+			{
+				P.d(TAG, "====> 문장 (%x): 내부 문장수 %d개 감정 단어 %d개", es.length(), es.eUnitLength());
+			}
+		}
 	}
 }

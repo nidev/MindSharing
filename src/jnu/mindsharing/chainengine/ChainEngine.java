@@ -3,30 +3,29 @@ package jnu.mindsharing.chainengine;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.List;
+import java.util.ArrayList;
 
 import jnu.mindsharing.common.ApplicationInfo;
+import jnu.mindsharing.common.ESentence;
 import jnu.mindsharing.common.P;
+import jnu.mindsharing.legacy.libs.PhraseSplit;
 
-import org.snu.ids.ha.ma.MExpression;
 import org.snu.ids.ha.ma.MorphemeAnalyzer;
-import org.snu.ids.ha.ma.Sentence;
-import org.snu.ids.ha.util.Timer;
 
 public class ChainEngine implements ApplicationInfo
 {
 	final String versionCode = "chronicle";
-	final String dbURI = "jdbc:mysql://localhost/mindsharing";
+	final String dbURI = "mindsharing_db:mysql://localhost/mindsharing";
 	final int versionNumber = 1;
 	private MorphemeAnalyzer kkmaMA;
-	private Connection jdbc;
+	private Connection mindsharing_db;
 	
 	private String TAG = "Engine";
 
 	public ChainEngine()
 	{
 		kkmaMA = null;
-		jdbc = null;
+		mindsharing_db = null;
 	}
 	
 	@Override
@@ -44,7 +43,7 @@ public class ChainEngine implements ApplicationInfo
 	@Override
 	public String getLicenseInfo()
 	{
-		return "ChainEngine.java utilizes 세종 꼬꼬마 형태소 분석기(http://kkma.snu.ac.kr/), including JAR file into the engine.";
+		return "세종 꼬꼬마 형태소 분석기(http://kkma.snu.ac.kr/) / JSON.simple(http://code.google.com/p/json-simple/) JAR를 사용하였습니다.";
 	}
 	
 	public boolean connectMysql()
@@ -52,9 +51,8 @@ public class ChainEngine implements ApplicationInfo
 		P.d(TAG, "데이터베이스 연결 중입니다. (%s)", dbURI);
 		try
 		{
-			jdbc = DriverManager.getConnection(dbURI, "mindsharing", "mindsharing");
-			P.d(TAG, "데이터베이스를 확인하였습니다.");
-			jdbc.close();
+			mindsharing_db = DriverManager.getConnection(dbURI, "mindsharing", "mindsharing");
+			P.d(TAG, "데이터베이스를 확인하였습니다. 종료 전까지 연결이 유지됩니다.");
 			return true;
 		}
 		catch (SQLException e)
@@ -74,63 +72,52 @@ public class ChainEngine implements ApplicationInfo
 		kkmaMA.createLogger(null); // 형태소 분석기의 출력을 표준 출력으로 만듦
 	}
 	
-	public CEResultObject analyze(String source)
+	public ArrayList<String> splitIntoSentences(String source)
 	{
-		if (kkmaMA == null || jdbc == null)
+		return PhraseSplit.split(source);
+	}
+	
+	public ResultProcessor analyze(String source_paragraph)
+	{
+		if (kkmaMA == null || mindsharing_db == null)
 		{
 			P.e(TAG, "엔진이 준비되어있지 않습니다. 분석 루틴을 호출할 수 없습니다.");
 			return null;
 		}
-		else
+		// TODO: 사전 정제작업?
+		// purifier.rb 의 자바 버전!
+		// 문장 단위 전처리 작업 시작
+		EmotionAlgorithm eprocess = new EmotionAlgorithm(kkmaMA, mindsharing_db);
+		
+		try
 		{
-			// TODO: 사전 정제작업?
-			// purifier.rb 의 자바 버전!
-			P.d(TAG, "형태소 분해 작업을 시행합니다.");
-			try
+			P.d(TAG, "알고리즘에 필요한 문장 정보를 제공하는 중입니다.");
+			// 나중에 문단 수가 늘어나면 for 문으로 확장할 것.
+			int current_para = 0; 
+			current_para = eprocess.createNewParagraph(source_paragraph);
+			for (String sentence: splitIntoSentences(source_paragraph))
 			{
-				Timer timer = new Timer();
-				timer.start();
-				List<MExpression> ret = kkmaMA.analyze(source);
-				timer.stop();
-				timer.printMsg("분해작업 소요시간");
-				
-				P.d(TAG, "형태소를 정제합니다.");
-
-				ret = kkmaMA.postProcess(ret);
-				ret = kkmaMA.leaveJustBest(ret);
-
-				List<Sentence> snts = kkmaMA.divideToSentences(ret);
-				
-				// 감정 처리 알고리즘을 담은 클래스 생성
-				EmotionAlgorithm eabase = new EmotionAlgorithm();
-				for(int i=0; i < snts.size(); i++)
-				{
-					Sentence snt = snts.get(i);
-					P.b();
-					P.d(TAG, "[%d/%d] 알고리즘 호출. 현재 문장: %s", i, snts.size(), snt.getSentence());
-					EmotionAlgorithm easub = new EmotionAlgorithm(eabase);
-					easub.listen(snt);
-					if (easub.currentEmotionRate() == 0)
-					{
-						// 변화가 발생하지 않음.
-						P.d(TAG, " => 이 문장은 사용하지 않습니다.");
-					}
-					else
-					{
-						// 변화 발생시, 새로 학습한 내용을 받아들임.
-						eabase = easub;
-					}
-				}
-				
-				return eabase.toCEResultObject();
-				//kkmaMA.closeLogger();
+				eprocess.addESentenceTo(current_para, new ESentence(sentence));
 			}
-			catch (Exception e)
-			{
-				e.printStackTrace();
-				return null;
-			}
+			
+			eprocess.processAll();
+			
+			return eprocess.extractResultProcessor(eprocess.get(current_para));
+			
+			/*
+			Timer timer = new Timer();
+			timer.start();
+			List<MExpression> ret = kkmaMA.analyze(source);
+			timer.stop();
+			timer.printMsg("분해작업 소요시간");
+			P.d(TAG, "형태소를 정제합니다.");
+			*/
+			//kkmaMA.closeLogger();
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace();
+			return null;
 		}
 	}
-
 }
