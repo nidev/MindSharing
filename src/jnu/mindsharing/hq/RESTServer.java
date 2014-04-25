@@ -75,6 +75,12 @@ public class RESTServer extends ServerResource implements ApplicationInfo
 		return engineObject;
 	}
 	
+	public static String glueJSONPCallback(Request req, String json_data)
+	{
+		String callback_function_body = "%s(%s)";
+		return String.format(callback_function_body, req.getResourceRef().getQueryAsForm().getFirstValue("callback"), json_data);
+	}
+	
 	public void run(ChainEngine ce) throws Exception
 	{
 		engineObject = ce;
@@ -112,18 +118,18 @@ public class RESTServer extends ServerResource implements ApplicationInfo
 						}
 						else
 						{
-							res.setEntity("{error:1, msg:'No data'}", MediaType.TEXT_PLAIN);
+							res.setEntity(glueJSONPCallback(req, "{error:1, msg:'No data'}"), MediaType.TEXT_PLAIN);
 						}
 						
 					}
 					catch (IOException e)
 					{
-						res.setEntity("{error:1, msg:'Malformed url-encoded text'}", MediaType.TEXT_PLAIN);
+						res.setEntity(glueJSONPCallback(req, "{error:1, msg:'Malformed url-encoded text'}"), MediaType.TEXT_PLAIN);
 					}
 				}
 				else
 				{
-					res.setEntity("{error:1, msg:'Method POST required'}", MediaType.TEXT_PLAIN);
+					res.setEntity(glueJSONPCallback(req, "{error:1, msg:'Method POST required'}"), MediaType.TEXT_PLAIN);
 				}
 				subReq();
 			}
@@ -141,6 +147,21 @@ public class RESTServer extends ServerResource implements ApplicationInfo
 			}
 		};
 		
+		Restlet rtJSONExample = new Restlet(getContext()) {
+			@Override
+			public void handle(Request req, Response res)
+			{
+				if (req.getMethod() == Method.GET)
+				{
+					String json_data = "{\"name\": \"Charlie\", \"age\": 24, \"grades\": {\"1\": \"A\", \"2\":\"B\", \"3\":\"C\", \"4\":\"D\"}}";
+					
+					res.setEntity(glueJSONPCallback(req, json_data), MediaType.APPLICATION_JSON);
+				}
+			}
+		};
+		
+		
+		component.getDefaultHost().attach("/json_example", rtJSONExample);
 		component.getDefaultHost().attach("/new", rtAnalyzer);
 		component.getDefaultHost().attach("/get/{id}", rtSendResult);
 		component.getDefaultHost().attach("/test", rtTest);
@@ -156,6 +177,6 @@ public class RESTServer extends ServerResource implements ApplicationInfo
 	@Get
     public String toString()
 	{
-        return "GET /test : For testing purpose\r\nPOST /new : Invoke new task of analizing. Returning id.\r\nGET /get/id : Get results of a certain job.";
+        return "GET /test : For testing purpose\r\nGET /json_example : Get an example of JSON\r\nPOST /new : Invoke new task of analizing. Returning id.\r\nGET /get/id : Get results of a certain job.";
     }
 }
