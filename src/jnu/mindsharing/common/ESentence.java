@@ -10,8 +10,6 @@ public class ESentence extends ArrayList<EmoUnit> implements EmoSkeleton
 	/*
 	 * 이 자체가 EmoUnit을 저장할 수 있는 ArrayList이다. 잊지 말 것.
 	 */
-	public HashMap<String, EmoUnit> emotions; 
-
 	public ESentence(String text)
 	{
 		originalText = text;
@@ -36,9 +34,11 @@ public class ESentence extends ArrayList<EmoUnit> implements EmoSkeleton
 		return size();
 	}
 	
-	public int eUnitLength()
+	@Override
+	public boolean add(EmoUnit e)
 	{
-		return emotions.size();
+		P.d("ESentence", "[EmoUnit.add()] %s:%s", e.getOrigin(), e.getTag().toString());
+		return super.add(e);
 	}
 
 }
