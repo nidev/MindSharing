@@ -15,7 +15,7 @@ import org.snu.ids.ha.ma.MorphemeAnalyzer;
 public class ChainEngine implements ApplicationInfo
 {
 	final String versionCode = "chronicle";
-	final String dbURI = "mindsharing_db:mysql://localhost/mindsharing";
+	final String dbURI = "jdbc:mysql://localhost/mindsharing";
 	final int versionNumber = 1;
 	private MorphemeAnalyzer kkmaMA;
 	private Connection mindsharing_db;
