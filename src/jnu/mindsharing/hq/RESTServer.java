@@ -114,22 +114,23 @@ public class RESTServer extends ServerResource implements ApplicationInfo
 						if (body != null)
 						{
 							ResultProcessor ceres = getEngine().analyze(body);
+							ceres.addErrorInfo("success", "No error");
 							res.setEntity(ceres.toJSON(), MediaType.TEXT_PLAIN);
 						}
 						else
 						{
-							res.setEntity(glueJSONPCallback(req, "{error:1, msg:'No data'}"), MediaType.TEXT_PLAIN);
+							res.setEntity(glueJSONPCallback(req, "{error:\"fail\", error_msg:\"Invalid encoding. must be UTF-8.\", data:[]}") , MediaType.APPLICATION_JSON);
 						}
 						
 					}
 					catch (IOException e)
 					{
-						res.setEntity(glueJSONPCallback(req, "{error:1, msg:'Malformed url-encoded text'}"), MediaType.TEXT_PLAIN);
+						res.setEntity(glueJSONPCallback(req, "{error:\"fail\", error_msg:\"Broken Text\", data:[]}") , MediaType.APPLICATION_JSON);
 					}
 				}
 				else
 				{
-					res.setEntity(glueJSONPCallback(req, "{error:1, msg:'Method POST required'}"), MediaType.TEXT_PLAIN);
+					res.setEntity(glueJSONPCallback(req, "{error:\"fail\", error_msg:\"Use POST method to give the server data.\", data:[]}") , MediaType.APPLICATION_JSON);
 				}
 				subReq();
 			}
