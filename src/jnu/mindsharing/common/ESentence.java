@@ -1,7 +1,6 @@
 package jnu.mindsharing.common;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 
 public class ESentence extends ArrayList<EmoUnit> implements EmoSkeleton
 {
@@ -27,7 +26,16 @@ public class ESentence extends ArrayList<EmoUnit> implements EmoSkeleton
 		String[] arr = {originalText};
 		return arr;
 	}
-
+	
+	public EmoUnit getLastEmoUnit()
+	{
+		if (size() == 0)
+		{
+			return null;
+		}
+		return get(size()-1);
+	}
+	
 	@Override
 	public int length()
 	{
@@ -37,8 +45,10 @@ public class ESentence extends ArrayList<EmoUnit> implements EmoSkeleton
 	@Override
 	public boolean add(EmoUnit e)
 	{
-		P.d("ESentence", "[EmoUnit.add()] %s:%s", e.getOrigin(), e.getTag().toString());
+		P.d("ESentence", "EmoUnit.add(%s:%s)", e.getOrigin(), e.getTag().toString());
 		return super.add(e);
 	}
+	
+	
 
 }
