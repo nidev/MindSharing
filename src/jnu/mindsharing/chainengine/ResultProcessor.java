@@ -15,12 +15,13 @@ public class ResultProcessor
 	 */
 	private String TAG = "CERO";
 	
-	private JSONObject json; 
+	private JSONObject json;
+	private String txt;
 	
+	@SuppressWarnings(value = { "unchecked" })
 	public ResultProcessor(EParagraph epr)
 	{
 		TAG = "-" + hashCode();
-		P.d(TAG, "JSON 데이터 생성 중. EParagraph 객체 내부를 탐색하는 중입니다.");
 		json = new JSONObject();
 		if (epr == null)
 		{
@@ -56,17 +57,61 @@ public class ResultProcessor
 			
 		}
 		P.d(TAG, "JSON 데이터 생성완료.");
+		
+		StringBuffer buffer = new StringBuffer(1024);
+		buffer.append("# -- START OF ANALYSIS RECORD --\r\n");
+		buffer.append("# -- ENCODING: UTF-8 --\r\n");
+		if (epr == null)
+		{
+			buffer.append("# Void EParagraph\r\n");
+		}
+		else
+		{
+			buffer.append("# EParagraph\r\n");
+			buffer.append(epr.getWholeText());
+			buffer.append("\r\n");
+			for (ESentence es: epr)
+			{
+				buffer.append(String.format("# ESentence : %s(%d EmoUnits)", es.getWholeText(), es.size()));
+				buffer.append("\r\n");
+				for (EmoUnit em: es)
+				{
+					buffer.append(String.format("%s\t= %s(%d),%s(%d),%s(%d),%s(%d) tag: %s",
+							em.getOrigin(),
+							em.JOY, EmoUnit.epowerToInt(em.getVectorSize(em.JOY)),
+							em.SORROW, EmoUnit.epowerToInt(em.getVectorSize(em.SORROW)),
+							em.GROWTH, EmoUnit.epowerToInt(em.getVectorSize(em.GROWTH)),
+							em.CEASE, EmoUnit.epowerToInt(em.getVectorSize(em.CEASE)),
+							em.getTag().toString()
+							));
+					buffer.append("\r\n");
+				}
+					
+			}
+		}
+		buffer.append("# -- END OF ANALYSIS RECORD --\r\n");
+		txt = buffer.toString();
+		buffer.delete(0, buffer.length());
+		P.d(TAG, "TXT 데이터 생성 완료");
 	}
 	
+	@SuppressWarnings(value = { "unchecked" })
 	public void addErrorInfo(String error_code, String error_message)
 	{
 		// XXX: 좋은 코드가 아님. Object를 통으로 받기 때문에, 경고가 뜬다.
 		json.put("error", error_code);
 		json.put("error_msg", error_message);
+		// null check?
+		txt = txt + "# Error occured. Please contact admin";
 	}
 	
 	public String toJSON()
 	{
 		return json.toJSONString();
+	}
+	
+	public String toTXT()
+	{
+		return txt;
 	}
 }
