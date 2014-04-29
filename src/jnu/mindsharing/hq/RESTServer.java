@@ -5,11 +5,13 @@ package jnu.mindsharing.hq;
 
 import java.io.IOException;
 import java.net.URLDecoder;
+import java.util.HashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import jnu.mindsharing.chainengine.ResultProcessor;
 import jnu.mindsharing.chainengine.ChainEngine;
+import jnu.mindsharing.chainengine.ResultProcessor;
 import jnu.mindsharing.common.ApplicationInfo;
+import jnu.mindsharing.common.P;
 
 import org.restlet.Component;
 import org.restlet.Request;
@@ -36,6 +38,12 @@ public class RESTServer extends ServerResource implements ApplicationInfo
 	private Server srv;
 	private int current_requests = 0;
 	private int max_requests = 5;
+	private HashMap<Long, ResultProcessor> rpcache;
+	
+	public RESTServer()
+	{
+		rpcache = new HashMap<Long, ResultProcessor>();
+	}
 
 	private synchronized void addReq()
 	{
@@ -104,18 +112,18 @@ public class RESTServer extends ServerResource implements ApplicationInfo
 				
 				if (req.getMethod() == Method.POST)
 				{
-					Representation entity = req.getEntity();
-					String rawBody[] = null;
+					String rawBody = null;
 					String body = null;
 					try
 					{
-						rawBody = entity.getText().split("=");
-						body = URLDecoder.decode(rawBody[1], "UTF-8");
+						// TODO: 공용 서비스시 API 토큰 인식 기능
+						rawBody = req.getEntityAsText();
+						body = URLDecoder.decode(rawBody, "UTF-8");
 						if (body != null)
 						{
-							ResultProcessor ceres = getEngine().analyze(body);
-							ceres.addErrorInfo("success", "No error");
-							res.setEntity(ceres.toJSON(), MediaType.TEXT_PLAIN);
+							ResultProcessor rp = getEngine().analyze(body);
+							rp.addErrorInfo("success", "No error");
+							res.setEntity(rp.toJSON(), MediaType.TEXT_PLAIN);
 						}
 						else
 						{
