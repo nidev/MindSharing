@@ -57,8 +57,9 @@ public class EmoUnit
 	 */
 	public static enum WordTag {
 		Skip,
-		SubjectWord, ObjectWord,
-		UnidentifiedDesc, Desc, DescSubject, DescNextObject, 
+		SubjectTrailMarker, ObjectTrailMarker, NounMarker, AdjectMarker, VerbMarker,
+		Subject, Object,
+		Desc, DescSubject, DescNextObject, 
 		InvertNextDesc, DescEnhancer, DescReducer, SentenceEnhancer, SentenceInverter,
 		Emoticon};
 	/*
