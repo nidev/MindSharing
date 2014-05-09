@@ -77,17 +77,15 @@ public class EmotionAlgorithm extends ArrayList<EParagraph>
 	public void process(int paragraph_index) throws Exception
 	{
 		// phase 1: 문장마다 형태소 분석 후 어휘 탐색
+		EQueryTool eq = new EQueryTool(db);
+		
 		for (ESentence es: get(paragraph_index))
 		{
 			List<MExpression> aresults = ma.analyze(es.getWholeText());
 			aresults = ma.postProcess(aresults);
 			aresults = ma.leaveJustBest(aresults);
 			
-
-			// 루틴 내에서 이전 객체를 재사용하기 위해 외부로 이동
-			MCandidate last_mc = null;
-			Morpheme last_morpheme = null;
-			
+			// phase1: 어휘 품사에 맞춰서 필요한 태그를 설정한다.
 			// TODO: 주어목적어 후보군 생성 작업이 이루어지지않음
 			for(int i=0; i < aresults.size(); i++)
 			{
@@ -103,59 +101,65 @@ public class EmotionAlgorithm extends ArrayList<EParagraph>
 				if (!mexp.isNotHangul())
 				{
 					// P.d(TAG, "-%s- 형태소 후보 갯수 : %d개", mexp.getExp(), mexp.size());
-					
-					Iterator<MCandidate> mc_iter = mexp.iterator();
-					//P.d(TAG, mexp.toString());
-					while (mc_iter.hasNext())
+					for (MCandidate cur_mc : mexp)
 					{
-						MCandidate cur_mc = mc_iter.next();
-						
-						
-						Iterator<Morpheme> morph_iter = cur_mc.iterator();  
-						
-						while (morph_iter.hasNext())
+						for (Morpheme cur_morpheme: cur_mc)
 						{
-							Morpheme cur_morpheme = morph_iter.next();
 							P.d("형태소", "--[단어:%s] %s %s %s %s", cur_mc.getExp(), cur_morpheme.getCharSetName(), cur_morpheme.getString(), cur_morpheme.getTag(), cur_morpheme.getComposed());
 							// 형태소간 관계를 비교한다.
 							// TODO: 효율적인 태그 비교 방법이 필요함
-							if (isTagIn(cur_morpheme.getTag(), "VA", "VXA"))
+							String mtag = cur_morpheme.getTag();
+							if (isTagIn(mtag, "MAG"))
 							{
-								// TODO: 만약에 어미가 형용사구라면,
-								// 앞의 형태소로 의미를 찾아야할듯하다. 근데 원형은 어떻게 얻지?
-								if (isTagIn(last_morpheme.getTag(), "MAG"))
+								String word = cur_morpheme.getString();
+								//P.d("형태소", "형용사 앞의 부사: %s", last_morpheme.getString());
+								if (eq.isNegativeADV(word))
 								{
-									String word = last_morpheme.getString();
-									//P.d("형태소", "형용사 앞의 부사: %s", last_morpheme.getString());
-									// TODO 2: 혹시 switch-case구문으로 정리 가능?
-									if (EQueryTool.isNegativeADV(word))
-									{
-										es.add(new EmoUnit(word).setTag(EmoUnit.WordTag.InvertNextDesc));
-									}
-									else if (EQueryTool.isEnhancer(word))
-									{
-										es.add(new EmoUnit(word).setTag(EmoUnit.WordTag.DescEnhancer));
-									}
-									else if (EQueryTool.isReducer(word))
-									{
-										es.add(new EmoUnit(word).setTag(EmoUnit.WordTag.DescReducer));
-									}
-									else
-									{
-										es.add(new EmoUnit(word).setTag(EmoUnit.WordTag.Skip));
-									}
+									es.add(new EmoUnit(word).setTag(EmoUnit.WordTag.InvertNextDesc));
 								}
-								// TODO: -다, -이다 등 문장을 마치는 어휘인지 체크하여, 문장을 마치면 DescSubject로 다시 태그
-								es.add(new EmoUnit(cur_morpheme.getString()).setTag(EmoUnit.WordTag.DescNextObject));
+								else if (eq.isEnhancer(word))
+								{
+									es.add(new EmoUnit(word).setTag(EmoUnit.WordTag.DescEnhancer));
+								}
+								else if (eq.isReducer(word))
+								{
+									es.add(new EmoUnit(word).setTag(EmoUnit.WordTag.DescReducer));
+								}
+								else
+								{
+									es.add(new EmoUnit(word).setTag(EmoUnit.WordTag.Skip));
+								}
+							}
+							else if (isTagIn(mtag, "VA", "VXA"))
+							{
+								es.add(new EmoUnit(cur_morpheme.getString()).setTag(EmoUnit.WordTag.AdjectMarker));
+							}
+							else if (isTagIn(mtag, "VERB?"))
+							{
+								// TODO: 현재는 인과 관계파악없이 서술어의 어감으로 파악한다.
+								es.add(new EmoUnit(cur_morpheme.getString()).setTag(EmoUnit.WordTag.VerbMarker));
+							}
+							else if (isTagIn(mtag, "SubjectTrail?"))
+							{
+								// TODO: 앞부분의 명사(NNG)태그의 연속을 주어로 파악할 수 있도록 한다.
+								es.add(new EmoUnit(cur_morpheme.getString()).setTag(EmoUnit.WordTag.SubjectTrailMarker));
+							}
+							else if (isTagIn(mtag, "ObjectTrail?"))
+							{
+								// TODO: 앞부분의 명사(NNG)태그의 연속을 목적어나 일반 객체 어휘로 파악할 수 있도록 한다.
+								es.add(new EmoUnit(cur_morpheme.getString()).setTag(EmoUnit.WordTag.ObjectTrailMarker));
+							}
+							else if (isTagIn(mtag, "Nouns?"))
+							{
+								// TODO: 나중에 하나의 EmoUnit으로 합친다!
+								es.add(new EmoUnit(cur_morpheme.getString()).setTag(EmoUnit.WordTag.NounMarker));
 							}
 							else
 							{
+								// TODO: 3차를 넘길 때쯤 Skip 부분은 모두 trim한다.
 								es.add(new EmoUnit(cur_morpheme.getString()).setTag(EmoUnit.WordTag.Skip));
 							}
-							last_morpheme = cur_morpheme;
 						}
-						
-						last_mc = cur_mc; // 이전 후보군을 다시 기억하고 다음 후보로 감
 					}
 				}
 				else
@@ -164,7 +168,7 @@ public class EmotionAlgorithm extends ArrayList<EParagraph>
 					 * 한글이 아닌 경우, 이모티콘 탐색 등을 시도한다.
 					 */
 					P.d(TAG, "한글이 아닌 문자. 이모티콘 탐색을 시도합니다.");
-					if (EQueryTool.isEmoticon(mexp.getExp()))
+					if (eq.isEmoticon(mexp.getExp()))
 					{
 						es.add(new EmoUnit(mexp.getExp()).setTag(EmoUnit.WordTag.Emoticon));
 					}
@@ -177,7 +181,13 @@ public class EmotionAlgorithm extends ArrayList<EParagraph>
 			}
 		}
 		
-		// phase 2: EmoUnit 배열을 순회하면서 태그 재설정
+		// phase 2: EmoUnit 배열을 순회하면서 태그 재설정 (Marker는 감정값 수신후에 다른 태그로 변경한다. phase2이후로 *Marker가 남아있으면 안됨)
+		
+		// 형태소간 관계를 비교한다.
+		// TODO: 효율적인 태그 비교 방법이 필요함
+		// TODO: 만약에 어미가 형용사구라면,
+		// 앞의 형태소로 의미를 찾아야할듯하다. 근데 원형은 어떻게 얻지?
+		// TODO: -다, -이다 등 문장을 마치는 어휘인지 체크하여, 문장을 마치면 DescSubject로 다시 태그
 		// phase 3: EmoUnit 배열의 감정값 정규화
 		// phase 4: EmoUnit
 	}

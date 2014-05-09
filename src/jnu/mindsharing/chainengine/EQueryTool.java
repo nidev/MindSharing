@@ -3,59 +3,82 @@
  */
 package jnu.mindsharing.chainengine;
 
+import java.sql.Connection;
+
+import jnu.mindsharing.common.EmoUnit;
+import jnu.mindsharing.common.P;
+
 /**
  * @author nidev
  *
  */
 public class EQueryTool
 {
+	
+	private String TAG = "EQTool";
+	Connection msdb;
+	
+	public EQueryTool(Connection db)
+	{
+		msdb = db;
+	}
 
 	/**
 	 * @param args
 	 */
-	public static long queryLastEValue(String word)
+	public long queryNounCategory(String word)
 	{
+		// STUB
+		P.d(TAG, "Quering noun category : %s", word);
 		return 0;
 	}
 	
-	public static long queryLastEdata(String word)
+	public EmoUnit queryEmotionalAdjective(String word)
 	{
-		return 0;
+		// STUB
+		P.d(TAG, "Quering emotional-adjective : %s", word);
+		return null;
 	}
 	
-	public static long queryFullEdata(String word)
+	public EmoUnit queryEmotionalVerb(String word)
 	{
-		return 0;
+		// STUB
+		P.d(TAG, "Quering emotional-verb : %s", word);
+		return null;
 	}
 	
-	public static boolean appendNewEdata(String word, String srctext, long evalue)
+	public EmoUnit queryEmoticon(String word)
 	{
-		return false;
+		// STUB
+		P.d(TAG, "Quering emoticon : %s", word);
+		return null;
 	}
 	
-	public static long queryCategory(String word)
+	public boolean isEmoticon(String word)
 	{
-		return 0;
-	}
-	
-	public static boolean isEmoticon(String word)
-	{
+		// STUB
+		P.d(TAG, "Quering emoticon : %s", word);
 		return true; // STUB: 일단 들어가는지 체크함
 	}
 	
-	public static boolean isEnhancer(String word)
+	public boolean isEnhancer(String word)
 	{
+		// STUB
+		P.d(TAG, "Quering enhancer : %s", word);
 		return true; // STUB: 감정을 강화하는가
 	}
 	
-	public static boolean isReducer(String word)
+	public boolean isReducer(String word)
 	{
+		// STUB
+		P.d(TAG, "Quering reducer : %s", word);
 		return true; // STUB: 감정을 감소하는가
 	}
 	
-	public static boolean isNegativeADV(String word)
+	public boolean isNegativeADV(String word)
 	{
-		// 부정적인 접두 부사
+		// STUB
+		P.d(TAG, "Quering negative-adverb : %s", word);
 		return word.equals("안") || word.equals("아니");
 	}
 }

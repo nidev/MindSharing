@@ -102,7 +102,7 @@ public class ResultProcessor
 		json.put("error", error_code);
 		json.put("error_msg", error_message);
 		// null check?
-		txt = txt + "# Error occured. Please contact admin";
+		txt = txt + String.format("# error (%s) : error_msg(%s)\r\n", error_code, error_message);
 	}
 	
 	public String toJSON()
