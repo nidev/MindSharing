@@ -76,13 +76,12 @@ public class ResultProcessor
 				buffer.append("\r\n");
 				for (EmoUnit em: es)
 				{
-					buffer.append(String.format("%s\t= %s(%d),%s(%d),%s(%d),%s(%d) tag: %s",
-							em.getOrigin(),
+					buffer.append(String.format("%s(%d),%s(%d),%s(%d),%s(%d) %s\t:%s",
 							em.JOY, EmoUnit.epowerToInt(em.getVectorSize(em.JOY)),
 							em.SORROW, EmoUnit.epowerToInt(em.getVectorSize(em.SORROW)),
 							em.GROWTH, EmoUnit.epowerToInt(em.getVectorSize(em.GROWTH)),
 							em.CEASE, EmoUnit.epowerToInt(em.getVectorSize(em.CEASE)),
-							em.getTag().toString()
+							em.getTag().toString(), em.getOrigin()
 							));
 					buffer.append("\r\n");
 				}

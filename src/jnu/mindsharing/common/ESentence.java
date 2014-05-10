@@ -45,8 +45,20 @@ public class ESentence extends ArrayList<EmoUnit> implements EmoSkeleton
 	@Override
 	public boolean add(EmoUnit e)
 	{
-		P.d("ESentence", "EmoUnit.add(%s:%s)", e.getOrigin(), e.getTag().toString());
+		P.d("ES.ADD", "%s:%s", e.getOrigin(), e.getTag().toString());
 		return super.add(e);
+	}
+	
+	public boolean hasSubject()
+	{
+		for (EmoUnit em: this)
+		{
+			if (em.getTag() == EmoUnit.WordTag.Subject)
+			{
+				return true;
+			}
+		}
+		return false;
 	}
 	
 	
