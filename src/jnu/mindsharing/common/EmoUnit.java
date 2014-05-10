@@ -57,10 +57,10 @@ public class EmoUnit
 	 */
 	public static enum WordTag {
 		Skip,
-		SubjectTrailMarker, ObjectTrailMarker, NounMarker, AdjectMarker, VerbMarker,
+		SubjectTrailMarker, ObjectTrailMarker, DescTrailMarker, NounMarker, AdjectMarker, VerbMarker,
 		Subject, Object,
 		Desc, DescSubject, DescNextObject, 
-		InvertNextDesc, DescEnhancer, DescReducer, SentenceEnhancer, SentenceInverter,
+		InvertNextDesc, NextDescEnhancer, NextDescReducer, NextDescDepender, 
 		Emoticon};
 	/*
 	 * 한가지 더 고려해야할 토큰이 있다. 예를 들어,
@@ -232,5 +232,23 @@ public class EmoUnit
 	public Enum<WordTag> getTag()
 	{
 		return wordTag;
+	}
+	
+	public boolean importVectors(EmoUnit supplied)
+	{
+		// 주어진 EmoUnit에서 값을 가져온다.
+		// 현재 객체에 저장된 값은 무시된다
+		if (supplied == null)
+		{
+			return false;
+		}
+		else
+		{
+			for (String title: vectorTitles)
+			{
+				vectorTable.put(title, supplied.getVectorSize(title));
+			}
+			return true;
+		}
 	}
 }
