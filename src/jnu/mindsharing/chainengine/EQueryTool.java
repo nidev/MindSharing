@@ -33,17 +33,10 @@ public class EQueryTool
 		return 0;
 	}
 	
-	public EmoUnit queryEmotionalAdjective(String word)
+	public EmoUnit queryEmotionalDescriptor(String word)
 	{
 		// STUB
-		P.d(TAG, "Quering emotional-adjective : %s", word);
-		return null;
-	}
-	
-	public EmoUnit queryEmotionalVerb(String word)
-	{
-		// STUB
-		P.d(TAG, "Quering emotional-verb : %s", word);
+		P.d(TAG, "Quering emotional-descriptor : %s", word);
 		return null;
 	}
 	
