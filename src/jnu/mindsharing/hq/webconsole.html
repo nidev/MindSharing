@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>MindSharing Web Console</title>
+        <script src='http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js'></script>
+        <script type="text/javascript">
+
+        function addline(msg) {
+        	$("#output").append(msg);
+        	$("#output").append("<br />");
+        }
+
+        function get_result(request_id) {
+        	$.ajax({
+		        url: "http://j.nidev.org:8182/get/" + request_id + "/json",
+		        type: "GET",
+		        crossDomain: true,
+		        dataType: "json",
+		        success:function(result) {
+		        	addline("서버에서 결과를 가져오는 중");
+		        	addline("요청 결과 : " + result.error);
+		        	addline("요청 응답 : " + result.error_msg);
+		        	// for 문과 동일함
+		        	$.each(result.data, function (index) {
+		        		addline("문장: " + result.data[index].text);
+		        		addline("감정 어휘 갯수" + result.data[index].emounit_size);
+		        		var emounits = result.data[index].emounits;
+		        		$.each(emounits, function (index2) {
+		        			var emounit = emounits[index2];
+		        			addline(" * " + emounit.text +
+		        				" => 즐거움: " + emounit.joy +
+		        				", 슬픔: " + emounit.sorrow +
+		        				", 희망/성장/발전: " + emounit.growth +
+		        				", 절망/파괴/쇠락: " + emounit.cease);
+		        		});
+		        		addline(" ----------------- " + request_id + " 결과 수신 끝");
+		        	});
+		        },
+		        error:function(xhr,status,error) {
+		            alert(status);
+		        }
+		    });
+
+        }
+
+        function post_process()
+        {
+            // jQuery 코드
+            var sourcetext= $("#input").text();
+            $("#output").empty();
+            // http://stackoverflow.com/questions/4508198/how-to-use-type-post-in-jsonp-ajax-call
+            // 영어문서 참고
+            $.ajax({
+		        url: "http://j.nidev.org:8182/new",
+		        type: "POST",
+		        crossDomain: true,
+		        data: sourcetext,
+		        dataType: "json",
+		        success:function(result) {
+		        	addline("작업 요청 완료.");
+		        	addline("요청 결과 : " + result.error);
+		        	addline("요청 응답 : " + result.error_msg);
+		        	addline("요청 번호 : " + result.data[0]);
+		        	if (result.data[0])
+		        	{
+		        		get_result(result.data[0]);
+		        	}
+		        },
+		        error:function(xhr,status,error) {
+		            alert(status);
+		        }
+		    });
+        }
+
+        </script>
+    </head>
+<body>
+
+<div id='input_area'>
+    <h3>입력</h3><br />
+    <form>
+        <textarea rows='4' cols='50' id='input'></textarea>
+        <input type='button' value='분석' onclick="post_process();">
+    </form>
+</div>
+<hr>
+<div id='output_area'>
+    <h3>출력</h3>
+    <div id='output' style="border-style: solid;"></div>
+</div>
+<div id='description'>
+분석기 사용 결과가 이상한 경우(단어 누락, 연결 이상, 어휘 오인식)에 제작자에게 알려주십시오.
+</div>
+
+</body>
+</html>
