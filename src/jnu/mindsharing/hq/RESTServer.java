@@ -92,13 +92,6 @@ public class RESTServer extends ServerResource implements ApplicationInfo
 		return engineObject;
 	}
 	
-	public static String glueJSONPCallback(Request req, String json_data)
-	{
-		String callback_function_body = "%s(%s)";
-		String callback_function = req.getResourceRef().getQueryAsForm().getFirstValue("callback");
-		return String.format(callback_function_body, callback_function == null? "" : callback_function, json_data);
-	}
-	
 	public void run(ChainEngine ce) throws Exception
 	{
 		engineObject = ce;
@@ -120,7 +113,6 @@ public class RESTServer extends ServerResource implements ApplicationInfo
 			{
 				addReq();
 				
-				
 				if (req.getMethod() == Method.POST)
 				{
 					String rawBody = null;
@@ -138,7 +130,7 @@ public class RESTServer extends ServerResource implements ApplicationInfo
 							// null 이 들어간 동안은 임시 데이터이다.
 							// 작업 처리 중을 의미한다. 작업이 완료되면 진짜 ResultProcessor 객체가 들어간다.
 							rpcache.put(req_id, null);
-							res.setEntity(glueJSONPCallback(req, "{error:\"success\", error_msg:\"Request analysis without errors\", data:[\""+req_id+"\"]}") , MediaType.APPLICATION_JSON);
+							res.setEntity("{\"error\":\"success\", \"error_msg\":\"Request analysis without errors\", \"data\":[\""+req_id+"\"]}", MediaType.APPLICATION_JSON);
 							res.commit(); // 현재 응답을 커밋하고, 후에 처리를 함.
 							try
 							{
@@ -157,18 +149,18 @@ public class RESTServer extends ServerResource implements ApplicationInfo
 						}
 						else
 						{
-							res.setEntity(glueJSONPCallback(req, "{error:\"fail\", error_msg:\"Invalid encoding. must be UTF-8.\", data:[]}") , MediaType.APPLICATION_JSON);
+							res.setEntity("{\"error\":\"fail\", \"error_msg\":\"Invalid encoding. must be UTF-8.\", \"data\":[]}", MediaType.APPLICATION_JSON);
 						}
 						
 					}
 					catch (IOException e)
 					{
-						res.setEntity(glueJSONPCallback(req, "{error:\"fail\", error_msg:\"Broken Text\", data:[]}") , MediaType.APPLICATION_JSON);
+						res.setEntity("{\"error\":\"fail\", \"error_msg\":\"Broken Text\", \"data\":[]}" , MediaType.APPLICATION_JSON);
 					}
 				}
 				else
 				{
-					res.setEntity(glueJSONPCallback(req, "{error:\"fail\", error_msg:\"Use POST method to give the server data.\", data:[]}") , MediaType.APPLICATION_JSON);
+					res.setEntity("{\"error\":\"fail\", \"error_msg\":\"Use POST method to give the server data.\", \"data\":[]}", MediaType.APPLICATION_JSON);
 				}
 				subReq();
 			}
@@ -192,42 +184,29 @@ public class RESTServer extends ServerResource implements ApplicationInfo
 					{
 						if (rpcache.get(req_id) == null)
 						{
-							res.setEntity(glueJSONPCallback(req, "{error:\"wait\", error_msg:\"Processing Now.\", data:[]}") , MediaType.APPLICATION_JSON);
+							res.setEntity("{\"error\":\"wait\", \"error_msg\":\"Processing Now.\", \"data\":[]}", MediaType.APPLICATION_JSON);
 						}
 						else
 						{
 							if (req_type.equals("json"))
 							{
-								res.setEntity(glueJSONPCallback(req, rpcache.get(req_id).toJSON()), MediaType.APPLICATION_JSON);
+								res.setEntity(rpcache.get(req_id).toJSON(), MediaType.APPLICATION_JSON);
 							}
 							else
 							{
 								// XXX: 이 동작은 예측할 수 없다.
-								res.setEntity(glueJSONPCallback(req, String.format("/* %s */", rpcache.get(req_id).toTXT())), MediaType.APPLICATION_JSON);
+								res.setEntity(String.format("/* %s */", rpcache.get(req_id).toTXT()), MediaType.APPLICATION_JSON);
 							}
 						}
 					}
 					else
 					{
-						res.setEntity(glueJSONPCallback(req, "{error:\"fail\", error_msg:\"No data found\", data:[]}") , MediaType.APPLICATION_JSON);
+						res.setEntity("{\"error\":\"fail\", \"error_msg\":\"No data found\", \"data\":[]}", MediaType.APPLICATION_JSON);
 					}
 				}
 				else
 				{
-					res.setEntity(glueJSONPCallback(req, "{error:\"fail\", error_msg:\"POST is not allowed for requesting a result.\", data:[]}") , MediaType.APPLICATION_JSON);
-				}
-			}
-		};
-		
-		Restlet rtJSONExample = new Restlet(getContext()) {
-			@Override
-			public void handle(Request req, Response res)
-			{
-				if (req.getMethod() == Method.GET)
-				{
-					String json_data = "{\"name\": \"Charlie\", \"age\": 24, \"grades\": {\"1\": \"A\", \"2\":\"B\", \"3\":\"C\", \"4\":\"D\"}}";
-					
-					res.setEntity(glueJSONPCallback(req, json_data), MediaType.APPLICATION_JSON);
+					res.setEntity("{\"error\":\"fail\", \"error_msg\":\"POST is not allowed for requesting a result.\", \"data\":[]}", MediaType.APPLICATION_JSON);
 				}
 			}
 		};
@@ -248,9 +227,10 @@ public class RESTServer extends ServerResource implements ApplicationInfo
 						while ((temp = reader.readLine()) != null)
 						{
 							s.append(temp);
+							s.append("\r\n");
 						
 						}
-						res.setEntity(s.toString(), MediaType.TEXT_PLAIN);
+						res.setEntity(s.toString(), MediaType.TEXT_HTML);
 					}
 					catch (IOException e)
 					{
