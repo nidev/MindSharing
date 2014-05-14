@@ -28,38 +28,40 @@ public class EmoUnit
 	 * 이 태그는 처음에는 Pass로 지정하고, 1차 어휘 분석 이후에 수식 관계 및 주술관계 분석을 한 후에
 	 * 태그를 변경한다. 태그 유형은 다음과 같다.
 	 * 
-	 * (구현된 태그 앞에는 *를 붙인다.)
-	 * *Skip - 어휘를 처리하지 않는다.
-	 * UnknownDesc - 문장을 마치는 서술어이나, 데이터베이스에 등록되지않은 서술어이다. 감정값은 전체 흐름에 맞춰 조절한다.
-	 * SubjectWord - 주어(이/가) 또는, 서술의 대상(은/는)이다.
-	 * ObjectWord - 주어를 제외한 모든 명사이다.
-	 * Desc - 서술어이다. 감정 정보가 포함된 서술어이지만, 역할이 분명하지 않다.
-	 * InvertNextDesc - 다음 서술어를 반전시킨다. (감정 값 반전 등등) 반전 후 이 토큰은 Skip된다.
-	 * UnidentifiedDesc - 새로 입력된 서술어이다. 감정표현이 있는지 없는지 모른다. 
-	 * DescSubject - 주어를 수식하는, 문장을 마치는 서술어이다.
-	 * DescEnhancer - 다음에 오는 EmoUnit중 태그가 DescSubject|DescNextObject|Desc라면 increase() 를 호출하게 한다. 증가 후 이 토큰은 Skip된다.
-	 * DescReducer - 다음에 오는 EmoUnit중 태그가 DescSubject|DescNextObject|Desc라면 decrease() 를 호출하게 한다. 감소 후 이 토큰은 Skip된다.
-	 * DescNextObject - 감정값이 등록된, 다음 ObjectWord를 수식하는 어휘이다
 	 * 
-	 * SentenceEnhancer - 다음 문장의 감정값의 증대, 강화가 있음을 알린다.(게다가, 더욱이)
-	 * InverseNextSentence - 다음 문장의 감정값 반전이 있음을 알린다.(역접)
-	 * *Emoticon - 문장 전체를 향한 이모티콘, 혹은 이모티콘 자체를 가르킨다.
+	 * * 범용 태그
+	 * Skip - 어휘를 처리하지 않는다. 처리되지않는 어휘는 나중에 삭제된다.
 	 * 
-	 *  
+	 * * 마커 태그(초기에 어휘 품사만 가지고 결정한다)
+	 * SubjectTrail : 앞의 어휘가 주어이다.
+	 * ObjectTrail : 앞의 어휘는 목적어이다.
+	 * DescTrail : 앞의 어휘가 서술어일 가능성이 높다.
+	 * Noun : 이 어휘는 명사이다.
+	 * Adject : 이 어휘는 형용사이다.
+	 * Verb : 이 어휘는 동사이다.
+	 * Refererence : 이 어휘는 지시하는 대상이 있는 대명사이다.
 	 * 
-	 * 표현을 약하게 만드는 어휘들(조금, 약간)
-	 * (태그 정리바람)
+	 * * 역할 태그(마커 태그를 바탕으로 EmotionAlgorithm이 합성, 소거를 통해 역할 태그로 정리한다.)
+	 * Subject : 해당 어휘는 주어이다
+	 * Object : 해당 어휘는 목적어 또는 일반 명사들의 덩어리이다.
+	 * Desc : 수식 관계를 파악할 수 없는 서술어이다.
+	 * DescSubject : 주어를 수식하는 서술어이다.
+	 * DescNextObject : 뒤에 오는 Object를 수식하는 서술어이다.
 	 * 
-	 * 1차 어휘 분석 이후에 2차 어휘 분석에서는 주술-목술 관계, 기타 어휘의 감정분석을 하여 태그를 설정한다.
+	 * * 연산자 태그(이 태그는 다음에 오는 감정값에 영향을 미친다)
+	 * InvertNextDesc : 다음 서술어가 갖는 감정값을 반전한다.
+	 * NextDescEnhacer : 다음 서술어의 감정값을 강화한다.
+	 * NextDescReducer : 다음 서술어의 감정값을 약화한다.
+	 * NextDescDepender : 현재 서술어가 다음 서술어에 영향을 미칠 수 있어, 다음 서술어를 참고한다.
 	 * 
-	 * 3차에서는 태그를 따라가며 O(n)의 복잡도로 문장 전체의 값을 계산한다.
+	 * * 특수 태그
+	 * Emoticon : 한글 문자가 아닌 이모티콘을 나타낸다.
 	 * 
 	 */
 	public static enum WordTag {
 		Skip,
-		SubjectTrailMarker, ObjectTrailMarker, DescTrailMarker, NounMarker, AdjectMarker, VerbMarker,
-		Subject, Object,
-		Desc, DescSubject, DescNextObject, 
+		SubjectTrailMarker, ObjectTrailMarker, DescTrailMarker, NounMarker, AdjectMarker, VerbMarker, ReferenceMarker, QuantityComingMarker, DeterminerMarker, 
+		Subject, Object, Desc, DescSubject, DescNextObject, 
 		InvertNextDesc, NextDescEnhancer, NextDescReducer, NextDescDepender, 
 		Emoticon};
 	/*
@@ -78,7 +80,7 @@ public class EmoUnit
 	final public String GROWTH = "growth";
 	final public String CEASE = "cease";
 	
-	final String[] vectorTitles = {JOY, SORROW, GROWTH, CEASE};
+	final public String[] vectorTitles = {JOY, SORROW, GROWTH, CEASE};
 	
 	private HashMap<String, Enum<EPower>> vectorTable;
 	private Enum<WordTag> wordTag = WordTag.Skip;
@@ -218,6 +220,11 @@ public class EmoUnit
 		return emotionOrigin;
 	}
 	
+	public String[] getTitles()
+	{
+		return vectorTitles;
+	}
+	
 	public Enum<EPower> getVectorSize(String title)
 	{
 		return vectorTable.get(title);
@@ -247,6 +254,34 @@ public class EmoUnit
 			for (String title: vectorTitles)
 			{
 				vectorTable.put(title, supplied.getVectorSize(title));
+			}
+			return true;
+		}
+	}
+	
+	public boolean importVectors(int joy, int sorrow, int growth, int cease)
+	{
+		if (joy < 0 || sorrow < 0 || growth < 0 || cease < 0)
+		{
+			return false;
+		}
+		else
+		{
+			for (; joy > 0 ; joy--)
+			{
+				increase(JOY);
+			}
+			for (; sorrow > 0 ; sorrow--)
+			{
+				increase(SORROW);
+			}
+			for (; growth > 0 ; growth--)
+			{
+				increase(GROWTH);
+			}
+			for (; cease > 0 ; cease--)
+			{
+				increase(CEASE);
 			}
 			return true;
 		}

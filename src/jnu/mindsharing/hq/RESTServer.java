@@ -3,7 +3,10 @@
  */
 package jnu.mindsharing.hq;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.URLDecoder;
 import java.util.HashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -230,7 +233,37 @@ public class RESTServer extends ServerResource implements ApplicationInfo
 		};
 		
 		
-		component.getDefaultHost().attach("/json_example", rtJSONExample);
+		Restlet rtWebConsole = new Restlet(getContext()) {
+			@Override
+			public void handle(Request req, Response res)
+			{
+				if (req.getMethod() == Method.GET)
+				{
+					InputStream html = RESTServer.class.getResourceAsStream("/jnu/mindsharing/hq/webconsole.html");
+					BufferedReader reader = new BufferedReader(new InputStreamReader(html));
+					StringBuffer s = new StringBuffer();
+					String temp;
+					try
+					{
+						while ((temp = reader.readLine()) != null)
+						{
+							s.append(temp);
+						
+						}
+						res.setEntity(s.toString(), MediaType.TEXT_PLAIN);
+					}
+					catch (IOException e)
+					{
+						res.setEntity("Cannot read webconsole.html from the package", MediaType.TEXT_PLAIN);
+						e.printStackTrace();
+					}
+
+					
+				}
+			}
+		};
+		
+		component.getDefaultHost().attach("/console", rtWebConsole);
 		component.getDefaultHost().attach("/new", rtAnalyzer);
 		component.getDefaultHost().attach("/get/{id}/{type}", rtSendResult);
 		component.getDefaultHost().attach("/get/{id}", rtSendResult);
@@ -245,8 +278,9 @@ public class RESTServer extends ServerResource implements ApplicationInfo
 	}
 	
 	@Get
-    public String toString()
+    public String toHTML()
 	{
-        return "GET /test : For testing purpose\r\nGET /json_example : Get an example of JSON\r\nPOST /new : Invoke new task of analizing. Returning id.\r\nGET /get/id : Get results of a certain job.";
+        return "Welcome to Chain Engine API Server.\r\n(Emotional data analyzer for Korean Language)\r\nHost here provides below services:\r\n=========================================\r\n"
+        		+ "GET /console : Web console to test the engine(View json object, get raw analysis data)\r\nGET /test : For testing purpose\r\nPOST /new : Invoke new task of analizing. Returning id.\r\nGET /get/id/{type} : Get results of a certain job. Type can be txt or json.";
     }
 }

@@ -4,6 +4,8 @@
 package jnu.mindsharing.hq;
 
 import jnu.mindsharing.chainengine.ChainEngine;
+import jnu.mindsharing.chainengine.EQueryTool;
+import jnu.mindsharing.common.EQueryConstants;
 import jnu.mindsharing.common.P;
 
 import org.restlet.resource.ServerResource;
@@ -33,7 +35,7 @@ public class Bootstrap extends ServerResource
 		P.b();
 		P.d(TAG, "메모리 부족으로 프로그램이 종료될 경우, -xm512M 옵션을 추가하여 재가동하십시오.");
 		P.d(TAG, "사전 로딩 및 데이터베이스 연결 작업을 수행합니다.");
-		if (!chainEngine.connectMysql())
+		if (!EQueryTool.testDatabaseConnection(EQueryConstants.SQL_HOST, EQueryConstants.SQL_DBNAME))
 		{
 			P.e(TAG, "데이터베이스를 사용할 수 없습니다.");
 			System.exit(-1);

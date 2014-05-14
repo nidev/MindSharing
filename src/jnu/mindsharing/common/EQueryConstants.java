@@ -2,6 +2,10 @@ package jnu.mindsharing.common;
 
 public class EQueryConstants
 {
+	public final static String SQL_HOST = "localhost";
+	public final static String SQL_DBNAME = "mindsharing";
+	public final static String SQL_JDBCHEAD = "jdbc:mysql://";
+	
 	// 그것, 그거해, 이거 로 지칭하는 대상을 추론하기 위한 것
 	/*
 	 * 한 단어로 수렴이 가능한 케이스에 대해서만 처리 작업을 할 것.

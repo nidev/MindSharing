@@ -2,7 +2,6 @@ package jnu.mindsharing.chainengine;
 
 import java.sql.Connection;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import jnu.mindsharing.common.EParagraph;
@@ -20,22 +19,12 @@ public class EmotionAlgorithm extends ArrayList<EParagraph>
 	private static final long serialVersionUID = -6004998827195979333L;
 	
 	private String TAG = "Algorithm";
-	EmoUnit internal;
 	private MorphemeAnalyzer ma;
-	private Connection db;
 	
-	public EmotionAlgorithm(MorphemeAnalyzer hostMA, Connection mindsharing_db)
+	public EmotionAlgorithm(MorphemeAnalyzer hostMA)
 	{
 		// TODO: null 체크
 		ma = hostMA;
-		db = mindsharing_db;
-		
-		internal = new EmoUnit();
-	}
-	
-	public void reset()
-	{
-		internal.defaultTable();
 	}
 	
 	public int createNewParagraph(String text)
@@ -108,7 +97,7 @@ public class EmotionAlgorithm extends ArrayList<EParagraph>
 	public void process(int paragraph_index) throws Exception
 	{
 		// phase 1: 문장마다 형태소 분석 후 어휘 탐색
-		EQueryTool eq = new EQueryTool(db);
+		EQueryTool eq = new EQueryTool();
 		
 		for (ESentence es: get(paragraph_index))
 		{
@@ -191,6 +180,18 @@ public class EmotionAlgorithm extends ArrayList<EParagraph>
 							{
 								es.add(new EmoUnit(cur_morpheme.getString()).setTag(EmoUnit.WordTag.NextDescDepender));
 							}
+							else if (isTagIn(mtag, "MDT", "MDN"))
+							{
+								// 관형사... 체언을 자세히 꾸며준다.
+								// 따라서 뒤에오는 Object를 자세히 설명해준다.
+								es.add(new EmoUnit(cur_morpheme.getString()).setTag(EmoUnit.WordTag.DeterminerMarker));
+								
+							}
+							else if (isTagIn(mtag, "EFN"))
+							{
+								// 마침표 등지의 끝나는 위치에 Skip 토큰을 추가한다.
+								es.add(new EmoUnit(cur_morpheme.getString()).setTag(EmoUnit.WordTag.Skip));
+							}
 							else if (isTagIn(mtag, "JKS", "JX"))
 							{
 								// TODO: 앞부분의 명사(NNG)태그의 연속을 주어로 파악할 수 있도록 한다.
@@ -205,10 +206,26 @@ public class EmotionAlgorithm extends ArrayList<EParagraph>
 								// TODO: 앞부분의 명사(NNG)태그의 연속을 목적어나 일반 객체 어휘로 파악할 수 있도록 한다.
 								es.add(new EmoUnit(cur_morpheme.getString()).setTag(EmoUnit.WordTag.ObjectTrailMarker));
 							}
-							else if (isTagIn(mtag, "NNG", "NP", "NNP", "NNB"))
+							else if (isTagIn(mtag, "NNG", "XR", "XSN", "NP", "NNP", "NNB"))
 							{
-								// TODO: 나중에 하나의 EmoUnit으로 합친다!
-								es.add(new EmoUnit(cur_morpheme.getString()).setTag(EmoUnit.WordTag.NounMarker));
+								// 명사 어휘 덩어리를 만들기 위한 태그 부분
+								// XXX: XR 은 어근 태그
+								// 복잡+ 하다. 인데.... 후
+								/*
+								 * TODO: 서로 다른 명사의 타입을 하나로 합치다보면 문제가 발생한다.
+								 * 구분할 수 있게 태그를 다시 설정함이 좋을듯하다.
+								 * 
+								 * 또는 꼬꼬마의 태그를 그대로 EmoUnit에 저장할 수 있게 하거나.
+								 */
+								if (mtag.equals("NP"))
+								{
+									// 대명사는 가르키는 대상이 존재하므로 일단 ReferenceMarker로.
+									es.add(new EmoUnit(cur_morpheme.getString()).setTag(EmoUnit.WordTag.ReferenceMarker));
+								}
+								else
+								{
+									es.add(new EmoUnit(cur_morpheme.getString()).setTag(EmoUnit.WordTag.NounMarker));
+								}
 							}
 							else
 							{
@@ -225,7 +242,9 @@ public class EmotionAlgorithm extends ArrayList<EParagraph>
 					P.d(TAG, "한글이 아닌 문자. 이모티콘 탐색을 시도합니다.");
 					if (eq.isEmoticon(mexp.getExp()))
 					{
-						es.add(new EmoUnit(mexp.getExp()).setTag(EmoUnit.WordTag.Emoticon));
+						EmoUnit new_emo = new EmoUnit(mexp.getExp()).setTag(EmoUnit.WordTag.Emoticon);
+						new_emo.importVectors(eq.queryEmoticon(mexp.getExp()));
+						es.add(new_emo);
 					}
 					else
 					{
@@ -235,6 +254,13 @@ public class EmotionAlgorithm extends ArrayList<EParagraph>
 					}
 				}
 				
+				
+			}
+			
+			// Skip 으로 끝나지 않았다면, 패딩을 추가해준다.
+			if (es.getLastEmoUnit().getTag() != EmoUnit.WordTag.Skip)
+			{
+				es.add(new EmoUnit(".").setTag(EmoUnit.WordTag.Skip));
 			}
 			
 			// phase 2: EmoUnit 배열을 순회하면서 태그 재설정 (Marker는 감정값 수신후에 다른 태그로 변경한다. phase2이후로 *Marker가 남아있으면 안됨)
@@ -290,9 +316,12 @@ public class EmotionAlgorithm extends ArrayList<EParagraph>
 				}
 				else if (tag == EmoUnit.WordTag.AdjectMarker)
 				{
-					if ((es_idx+1) >= es.size())
+					if ((es_idx+1) == es.size())
 					{
-						em.setTag(EmoUnit.WordTag.DescSubject);
+						if (es.getLastEmoUnit().getTag() == EmoUnit.WordTag.AdjectMarker)
+						{
+							es.getLastEmoUnit().setTag(EmoUnit.WordTag.DescSubject);
+						}
 					}
 					else
 					{
@@ -380,7 +409,7 @@ public class EmotionAlgorithm extends ArrayList<EParagraph>
 				Enum<EmoUnit.WordTag> tag = em.getTag();
 				if (tag == EmoUnit.WordTag.Desc || tag == EmoUnit.WordTag.DescNextObject || tag == EmoUnit.WordTag.DescSubject)
 				{
-					EmoUnit result = eq.queryEmotionalDescriptor(em.getOrigin());
+					EmoUnit result = eq.queryWord(em.getOrigin());
 					if (result == null)
 					{
 						P.e(TAG, "모르는 어휘 : %s", em.getOrigin());
@@ -397,7 +426,23 @@ public class EmotionAlgorithm extends ArrayList<EParagraph>
 			// TODO: 역할이 불분명한 서술어(Desc로 태그 된)의 연관관계를 파악한다.
 			if (!es.hasSubject())
 			{
-				es.add(0, new EmoUnit("나").setTag(EmoUnit.WordTag.Subject));
+				// object중에 주어를 선정하는 과정이 없음. 일반적으로 first object를 주어로 간주하면 된다.
+				for (EmoUnit em : es)
+				{
+					if (em.getTag() == EmoUnit.WordTag.Object)
+					{
+						// XXX: 현재 휴리스틱 규칙은 없음
+						// 분명 오류를 내는 알고리즘임
+						em.setTag(EmoUnit.WordTag.Subject);
+						break;
+					}
+						
+				}
+				if (!es.hasSubject())
+				{
+					// 그래도 없다면 임의로 주어를 삽입한다.
+					es.add(0, new EmoUnit("나").setTag(EmoUnit.WordTag.Subject));
+				}
 			}
 
 			// phase 5: EmoUnit 배열의 감정값 정규화
