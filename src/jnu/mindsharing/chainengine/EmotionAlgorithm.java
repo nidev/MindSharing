@@ -289,7 +289,7 @@ public class EmotionAlgorithm extends ArrayList<EParagraph>
 						EmoUnit new_em = mergeIntoObject(noun_queue);
 						for (int backoffset=1; backoffset <= noun_queue.size(); backoffset++)
 						{
-							es.set(es_idx-backoffset, null);
+							es.set(es_idx-backoffset, new EmoUnit().setTag(EmoUnit.WordTag.Skip));
 						}
 						es.set(es_idx-1, new_em);
 						noun_queue.clear();
@@ -305,7 +305,7 @@ public class EmotionAlgorithm extends ArrayList<EParagraph>
 						{
 							es.get(es_idx - 1).setTag(tag == EmoUnit.WordTag.SubjectTrailMarker ? EmoUnit.WordTag.Subject : EmoUnit.WordTag.Object);
 						}
-						es.set(es_idx, null);
+						es.set(es_idx, new EmoUnit().setTag(EmoUnit.WordTag.Skip));
 					}
 					else
 					{
@@ -344,7 +344,7 @@ public class EmotionAlgorithm extends ArrayList<EParagraph>
 									{
 										EmoUnit inverter = new EmoUnit(String.format("-%s %s", depender, verb)).setTag(EmoUnit.WordTag.InvertNextDesc);
 										EmoUnit desc = es.get(es_idx);
-										es.set(es_idx, null);
+										es.set(es_idx, new EmoUnit().setTag(EmoUnit.WordTag.Skip));
 										es.set(es_idx+1, inverter);
 										es.set(es_idx+2, desc);
 									}
@@ -378,7 +378,7 @@ public class EmotionAlgorithm extends ArrayList<EParagraph>
 							{
 								new_em.setTag(EmoUnit.WordTag.Desc);
 							}
-							es.set(es_idx-1, null);
+							es.set(es_idx-1, new EmoUnit().setTag(EmoUnit.WordTag.Skip));
 							es.set(es_idx, new_em);
 						}
 						else
@@ -400,7 +400,17 @@ public class EmotionAlgorithm extends ArrayList<EParagraph>
 				}
 			}
 			
+			// Compaction!
+			// Skip 태그들을 모두 null 로 마크하고 제거한다.
+			for (int es_idx=0; es_idx < es.size() ; es_idx++)
+			{
+				if (es.get(es_idx).getTag() == EmoUnit.WordTag.Skip)
+				{
+					es.set(es_idx, null);
+				}
+			}
 			while(es.remove(null)); // 합친 후 null 모두 제거
+			es.trimToSize();
 			
 			// phase 3: DescObject, DescSubject, Desc 태그된 어휘에 대해 감정값을 탐색한다.
 			// TODO: 동음이의어 처리는 어떻게 할 것인가?
