@@ -47,7 +47,9 @@
         function post_process()
         {
             // jQuery 코드
-            var sourcetext= $("#input").text();
+            // 입력창의 값은 val()로 가져와야함. IE에서는 text()로도 가져올 수 있으나,
+            // 다른 브라우저에서는 동작하지 않는다.
+            var sourcetext= $("#inputbox").val();
             $("#output").empty();
             // http://stackoverflow.com/questions/4508198/how-to-use-type-post-in-jsonp-ajax-call
             // 영어문서 참고
@@ -55,7 +57,7 @@
 		        url: "http://j.nidev.org:8182/new",
 		        type: "POST",
 		        crossDomain: true,
-		        data: sourcetext,
+		        data: {text:sourcetext},
 		        dataType: "json",
 		        success:function(result) {
 		        	addline("작업 요청 완료.");
@@ -80,7 +82,7 @@
 <div id='input_area'>
     <h3>입력</h3><br />
     <form>
-        <textarea rows='4' cols='50' id='input'></textarea>
+        <textarea rows='4' cols='50' id='inputbox'></textarea>
         <input type='button' value='분석' onclick="post_process();">
     </form>
 </div>
