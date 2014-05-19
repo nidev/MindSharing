@@ -201,6 +201,13 @@ public class EmotionAlgorithm extends ArrayList<EParagraph>
 							{
 								es.add(new EmoUnit(cur_morpheme.getString()+"다").setTag(EmoUnit.WordTag.DescTrailMarker));
 							}
+							else if (isTagIn(mtag, "JKM", "JKG", "JKC", "JKQ"))
+							{
+								// XXX: 부사격/관형격/보격/인용격 조사 사용안함
+								// 필요하면 2단계를 고치시오
+								es.add(new EmoUnit(cur_morpheme.getString()).setTag(EmoUnit.WordTag.UnhandledTrailMarker));
+								
+							}
 							else if (isTagIn(mtag, "JKO"))
 							{
 								// TODO: 앞부분의 명사(NNG)태그의 연속을 목적어나 일반 객체 어휘로 파악할 수 있도록 한다.
@@ -224,7 +231,8 @@ public class EmotionAlgorithm extends ArrayList<EParagraph>
 								}
 								else
 								{
-									es.add(new EmoUnit(cur_morpheme.getString()).setTag(EmoUnit.WordTag.NounMarker));
+									es.add(new EmoUnit(cur_morpheme.getString()).setTag(EmoUnit.WordTag.NounMarker).setExt(mtag));
+									
 								}
 							}
 							else
@@ -265,18 +273,59 @@ public class EmotionAlgorithm extends ArrayList<EParagraph>
 			
 			// phase 2: EmoUnit 배열을 순회하면서 태그 재설정 (Marker는 감정값 수신후에 다른 태그로 변경한다. phase2이후로 *Marker가 남아있으면 안됨)
 			// NounMarker 끼리 뭉쳐서 Object 태그로 만든다.
+			
+			// 2-1: 명사 결합 문제로 인해 서술어를 먼저 변환한다.
 			ArrayList<EmoUnit> noun_queue = new ArrayList<EmoUnit>();
 			for (int es_idx=0; es_idx < es.size(); es_idx++)
 			{
-				
 				EmoUnit em = es.get(es_idx);
-				if (em == null) continue;
-				
 				Enum<EmoUnit.WordTag> tag = em.getTag();
-				
-				
-				if (tag == EmoUnit.WordTag.NounMarker)
+				if (tag == EmoUnit.WordTag.DescTrailMarker)
 				{
+					// (명사)+하다 의 어휘를 다시 하나의 서술어로 합친다.
+					if (es_idx > 0)
+					{
+						if (es.get(es_idx-1).getTag() == EmoUnit.WordTag.NounMarker)
+						{
+							EmoUnit new_em = new EmoUnit(es.get(es_idx-1).getOrigin() + es.get(es_idx).getOrigin());
+							es.set(es_idx-1, new EmoUnit().setTag(EmoUnit.WordTag.Skip));
+							es.set(es_idx, new_em.setTag(EmoUnit.WordTag.Desc).setExt("DESC"));
+							
+						}
+						else
+						{
+							P.e(TAG, "-하다 표현 앞에는 명사 어휘가 와야합니다. 그런데 오지 않았습니다. 심각한 오류입니다.");
+							es.get(es_idx).setTag(EmoUnit.WordTag.Skip);
+						}
+						
+					}
+				}
+				else if (tag == EmoUnit.WordTag.VerbMarker)
+				{
+					em.setTag(EmoUnit.WordTag.Desc);
+					em.setExt("VERB");
+				}
+				else if (tag == EmoUnit.WordTag.AdjectMarker)
+				{
+					em.setTag(EmoUnit.WordTag.Desc);
+					em.setExt("SUPPORTIVE");
+				}
+				else
+				{
+					// 마커를 건들지 않음
+				}
+			}
+			
+			// 2-2: 전체적인 어휘 뭉치기 작업을 진행한다.
+			for (int es_idx=0; es_idx < es.size(); es_idx++)
+			{
+				EmoUnit em = es.get(es_idx);
+				Enum<EmoUnit.WordTag> tag = em.getTag();
+				String ext = em.getExt();
+				if (tag == EmoUnit.WordTag.NounMarker &&
+						(noun_queue.isEmpty() ||  noun_queue.get(noun_queue.size()-1).getExt().equals(ext)))
+				{
+					P.e("NOUN_MERGER", "명사 어휘 합성 중 %s - %s", em.getOrigin(), ext);
 					noun_queue.add(em);
 					continue;
 				}
@@ -296,8 +345,22 @@ public class EmotionAlgorithm extends ArrayList<EParagraph>
 					}
 				}
 				
-				
-				if (tag == EmoUnit.WordTag.SubjectTrailMarker || tag == EmoUnit.WordTag.ObjectTrailMarker)
+				if (tag == EmoUnit.WordTag.UnhandledTrailMarker)
+				{
+					// XXX: 이 마커와, 그 앞의 명사 어휘는 삭제됨.
+					if (es_idx > 0)
+					{
+						es.set(es_idx, new EmoUnit().setTag(EmoUnit.WordTag.Skip));
+						es.set(es_idx-1, new EmoUnit().setTag(EmoUnit.WordTag.Skip));
+					}
+					else
+					{
+						P.e(TAG, "격조사인데, 앞에 체언이 없이 격조사가 나타났습니다. 이것은 심각한 오류입니다.");
+						P.e(TAG, "입력된 텍스트 : %s", es.getWholeText());
+						em.setTag(EmoUnit.WordTag.Skip);
+					}
+				}
+				else if (tag == EmoUnit.WordTag.SubjectTrailMarker || tag == EmoUnit.WordTag.ObjectTrailMarker)
 				{
 					if (es_idx > 0)
 					{
@@ -314,18 +377,19 @@ public class EmotionAlgorithm extends ArrayList<EParagraph>
 						em.setTag(EmoUnit.WordTag.Skip);
 					}
 				}
-				else if (tag == EmoUnit.WordTag.AdjectMarker)
+				else if (tag == EmoUnit.WordTag.Desc)
 				{
 					if ((es_idx+1) == es.size())
 					{
-						if (es.getLastEmoUnit().getTag() == EmoUnit.WordTag.AdjectMarker)
+						if (es.getLastEmoUnit().getTag() == EmoUnit.WordTag.Desc)
 						{
+							// XXX: 조건문 재조정 필요. 왜냐하면 후에 다른 서술어가 오는지 체크해야하기 때문
 							es.getLastEmoUnit().setTag(EmoUnit.WordTag.DescSubject);
 						}
 					}
 					else
 					{
-						if (es.get(es_idx+1).getTag() == EmoUnit.WordTag.NounMarker)
+						if (es.get(es_idx+1).getTag() == EmoUnit.WordTag.Object || es.get(es_idx+1).getTag() == EmoUnit.WordTag.Subject)
 						{
 							em.setTag(EmoUnit.WordTag.DescNextObject);
 						}
@@ -334,7 +398,7 @@ public class EmotionAlgorithm extends ArrayList<EParagraph>
 							if ((es_idx+2) < es.size())
 							{
 								if (es.get(es_idx+1).getTag() == EmoUnit.WordTag.NextDescDepender
-										&& es.get(es_idx+2).getTag() == EmoUnit.WordTag.VerbMarker)
+										&& es.get(es_idx+2).getTag() == EmoUnit.WordTag.Desc)
 								{
 									// -지 아니하다/않다/못하다
 									String depender = es.get(es_idx+1).getOrigin();
@@ -355,48 +419,9 @@ public class EmotionAlgorithm extends ArrayList<EParagraph>
 						}
 					}
 				}
-				else if (tag == EmoUnit.WordTag.DescTrailMarker)
+				else 
 				{
-					// (명사)+하다 의 어휘를 다시 하나의 서술어로 합친다.
-					if (es_idx > 0)
-					{
-						if (es.get(es_idx-1).getTag() == EmoUnit.WordTag.Object)
-						{
-							EmoUnit new_em = new EmoUnit(es.get(es_idx-1).getOrigin() + es.get(es_idx).getOrigin());
-							if ((es_idx+1) < es.size())
-							{
-								if (es.get(es_idx+1).getTag() == EmoUnit.WordTag.Object)
-								{
-									new_em.setTag(EmoUnit.WordTag.DescNextObject);
-								}
-								else
-								{
-									new_em.setTag(EmoUnit.WordTag.Desc);
-								}
-							}
-							else
-							{
-								new_em.setTag(EmoUnit.WordTag.Desc);
-							}
-							es.set(es_idx-1, new EmoUnit().setTag(EmoUnit.WordTag.Skip));
-							es.set(es_idx, new_em);
-						}
-						else
-						{
-							P.e(TAG, "-하다 표현 앞에는 명사 어휘가 와야합니다. 그런데 오지 않았습니다. 심각한 오류입니다.");
-							es.get(es_idx).setTag(EmoUnit.WordTag.Skip);
-						}
-						
-					}
-					else
-					{
-						P.e(TAG, "-하다 표현 앞에는 명사 어휘가 와야합니다. 그런데 오지 않았습니다. 심각한 오류입니다.");
-						es.get(es_idx).setTag(EmoUnit.WordTag.Skip);
-					}
-				}
-				else
-				{
-					//noun_queue.clear();
+					;
 				}
 			}
 			

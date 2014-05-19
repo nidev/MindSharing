@@ -60,7 +60,7 @@ public class EmoUnit
 	 */
 	public static enum WordTag {
 		Skip,
-		SubjectTrailMarker, ObjectTrailMarker, DescTrailMarker, NounMarker, AdjectMarker, VerbMarker, ReferenceMarker, QuantityComingMarker, DeterminerMarker, 
+		UnhandledTrailMarker, SubjectTrailMarker, ObjectTrailMarker, DescTrailMarker, NounMarker, AdjectMarker, VerbMarker, ReferenceMarker, QuantityComingMarker, DeterminerMarker, 
 		Subject, Object, Desc, DescSubject, DescNextObject, 
 		InvertNextDesc, NextDescEnhancer, NextDescReducer, NextDescDepender, 
 		Emoticon};
@@ -84,6 +84,7 @@ public class EmoUnit
 	
 	private HashMap<String, Enum<EPower>> vectorTable;
 	private Enum<WordTag> wordTag = WordTag.Skip;
+	private String extTag;
 	private String emotionOrigin = null;
 	
 	private String TAG = "EmoUnit";
@@ -91,13 +92,16 @@ public class EmoUnit
 
 	public EmoUnit()
 	{
+		emotionOrigin = "";
 		defaultTable();
+		extTag = "";
 	}
 	
 	public EmoUnit(String source)
 	{
 		emotionOrigin = source;
 		defaultTable();
+		extTag = "";
 	}
 	
 	public void defaultTable()
@@ -239,6 +243,17 @@ public class EmoUnit
 	public Enum<WordTag> getTag()
 	{
 		return wordTag;
+	}
+	
+	public EmoUnit setExt(String exttag)
+	{
+		extTag = exttag;
+		return this;
+	}
+	
+	public String getExt()
+	{
+		return extTag;
 	}
 	
 	public boolean importVectors(EmoUnit supplied)
