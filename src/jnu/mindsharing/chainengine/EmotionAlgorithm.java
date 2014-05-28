@@ -322,8 +322,12 @@ public class EmotionAlgorithm extends ArrayList<EParagraph>
 				EmoUnit em = es.get(es_idx);
 				Enum<EmoUnit.WordTag> tag = em.getTag();
 				String ext = em.getExt();
+				// 명사 파생 접미사(XSN)는 반드시 본 명사에 붙어야한다.
 				if (tag == EmoUnit.WordTag.NounMarker &&
-						(noun_queue.isEmpty() ||  noun_queue.get(noun_queue.size()-1).getExt().equals(ext)))
+						(noun_queue.isEmpty()
+								|| noun_queue.get(noun_queue.size()-1).getExt().equals(ext)
+								|| noun_queue.get(noun_queue.size()-1).getExt().equals("XSN")
+								|| ext.equals("XSN")))
 				{
 					P.e("NOUN_MERGER", "명사 어휘 합성 중 %s - %s", em.getOrigin(), ext);
 					noun_queue.add(em);
@@ -425,17 +429,8 @@ public class EmotionAlgorithm extends ArrayList<EParagraph>
 				}
 			}
 			
-			// Compaction!
-			// Skip 태그들을 모두 null 로 마크하고 제거한다.
-			for (int es_idx=0; es_idx < es.size() ; es_idx++)
-			{
-				if (es.get(es_idx).getTag() == EmoUnit.WordTag.Skip)
-				{
-					es.set(es_idx, null);
-				}
-			}
-			while(es.remove(null)); // 합친 후 null 모두 제거
-			es.trimToSize();
+			// Compaction 코드는 ESentence 내부로 옮겼음.
+			es.compactSkips();
 			
 			// phase 3: DescObject, DescSubject, Desc 태그된 어휘에 대해 감정값을 탐색한다.
 			// TODO: 동음이의어 처리는 어떻게 할 것인가?
@@ -457,7 +452,8 @@ public class EmotionAlgorithm extends ArrayList<EParagraph>
 			}
 			
 			// phase 4: 인칭 문제를 해결한다. 여기에서 주어를 발견할 수 없다면, Object 중에 주어를 선정하고, 그게 안되면 주어 '나'를 삽입한다.
-			// 아직 'Marker'와 'Skip'으로 남아있는 어휘를 모두 제거한다.
+			// 아직 'Marker'와 'Skip'으로 남아있는 어휘를 모두 제거한다, NextDescDepender를 읽고 전후 관계를 파악한다.
+			// 
 			// TODO: 역할이 불분명한 서술어(Desc로 태그 된)의 연관관계를 파악한다.
 			if (!es.hasSubject())
 			{
@@ -479,6 +475,52 @@ public class EmotionAlgorithm extends ArrayList<EParagraph>
 					es.add(0, new EmoUnit("나").setTag(EmoUnit.WordTag.Subject));
 				}
 			}
+			
+			for (int es_idx=0; es_idx < es.size() ; es_idx++)
+			{
+				// 크게(크다 + 게) + 퍼뜨리다
+				// => 크다, 퍼뜨리다 식으로 이미지를 추출한다.
+				if (es.get(es_idx).getTag() == EmoUnit.WordTag.NextDescDepender)
+				{
+					if (es_idx+1 < es.size())
+					{
+						if (es.get(es_idx-1).getTag() == EmoUnit.WordTag.Desc &&
+							es.get(es_idx+1).getTag() == EmoUnit.WordTag.Desc)
+						{
+							EmoUnit baseemo = es.get(es_idx-1);
+							EmoUnit auxemo = es.get(es_idx+1);
+							EmoUnit newemo = new EmoUnit(baseemo.getOrigin() + " " + auxemo.getOrigin());
+							newemo.importVectors(baseemo);
+							newemo.setTag(EmoUnit.WordTag.Desc);
+							es.get(es_idx-1).setTag(EmoUnit.WordTag.Skip);
+							es.get(es_idx).setTag(EmoUnit.WordTag.Skip);
+							// 근데 이건 필요한가?
+							if (auxemo.getOrigin().equals("없다") || auxemo.getOrigin().equals("않다") || auxemo.getOrigin().equals("아니하다"))
+							{
+								
+								es.set(es_idx+1, newemo.invertAll());
+								
+							}
+							else
+							{
+
+								es.set(es_idx+1, newemo);
+								
+							}
+							
+						}
+						else if(es.get(es_idx+1).getTag() == EmoUnit.WordTag.Subject
+								|| es.get(es_idx+1).getTag() == EmoUnit.WordTag.Object)
+						{
+							// ~하는데 ~가 하다
+						}
+					}
+				}
+			}
+			// TODO: 있다, 없다, 하다 에 대한 처리도 필요함. 이 경우는 Object Desc(sentence end)식으로 구성된 경우가 많음.
+			// Compaction 한번 더 실시
+			es.compactSkips();
+			
 
 			// phase 5: EmoUnit 배열의 감정값 정규화
 			// phase 6: EmoUnit 배열 순회하면서 글쓴이의 감정 파악

@@ -61,6 +61,19 @@ public class ESentence extends ArrayList<EmoUnit> implements EmoSkeleton
 		return false;
 	}
 	
-	
+	public void compactSkips()
+	{
+		// Compaction!
+		// Skip 태그들을 모두 null 로 마크하고 제거한다.
+		for (int es_idx=0; es_idx < size() ; es_idx++)
+		{
+			if (get(es_idx).getTag() == EmoUnit.WordTag.Skip)
+			{
+				set(es_idx, null);
+			}
+		}
+		while(remove(null)); // 합친 후 null 모두 제거
+		trimToSize();
+	}
 
 }
