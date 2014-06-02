@@ -2,7 +2,6 @@ package jnu.mindsharing.chainengine;
 
 import java.util.ArrayList;
 
-import jnu.mindsharing.common.ESentence;
 import jnu.mindsharing.common.EmoUnit;
 import jnu.mindsharing.common.Nuri;
 import jnu.mindsharing.common.P;
@@ -86,7 +85,7 @@ public class ResultProcessor
 				buffer.append(String.format("# Subject on %s (%d relations)", nri.getSubjectName(), nri.getRelations().size()));
 				buffer.append("\r\n");
 				EmoUnit subem = nri.getSubjectEmo();
-				buffer.append(String.format("# Subject emotion : " + String.format("%s(%d),%s(%d),%s(%d),%s(%d) %s\t:%s",
+				buffer.append(String.format("# Subject emotion : " + String.format("%s(%d),%s(%d),%s(%d),%s(%d)",
 						subem.JOY, EmoUnit.epowerToInt(subem.getVectorSize(subem.JOY)),
 						subem.SORROW, EmoUnit.epowerToInt(subem.getVectorSize(subem.SORROW)),
 						subem.GROWTH, EmoUnit.epowerToInt(subem.getVectorSize(subem.GROWTH)),

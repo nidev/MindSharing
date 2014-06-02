@@ -301,4 +301,12 @@ public class EmoUnit
 			return true;
 		}
 	}
+	
+	public boolean hasZeroEmotion()
+	{
+		return getVectorSize(JOY) == EPower.None &&
+				getVectorSize(SORROW) == EPower.None &&
+				getVectorSize(GROWTH) == EPower.None &&
+				getVectorSize(CEASE) == EPower.None;
+	}
 }

@@ -30,8 +30,7 @@ public class EmotionAlgorithm extends ArrayList<Nuri>
 	{
 		// Return: index
 		epr.add(new EParagraph(text));
-		
-		return size()-1;
+		return epr.size()-1;
 	}
 	
 	public EParagraph findEParagraphByText(String text)
@@ -76,18 +75,26 @@ public class EmotionAlgorithm extends ArrayList<Nuri>
 		nri.setSubject(NuriTypes.PERSON, es.getSubject().getOrigin(), es.getSubjectDesc());
 		
 		// XXX: 잘 구성해야함
-		
-		
-		return null;
+		// 러프하게 작성
+		for (EmoUnit em : es)
+		{
+			if (!em.hasZeroEmotion())
+			{
+				nri.addRelations(em);
+			}
+		}
+		return nri;
 	}
 	
 	public void process(int paragraph_index) throws Exception
 	{
 		// phase 1: 문장마다 형태소 분석 후 어휘 탐색
+		P.d(TAG, "Process");
 		EQueryTool eq = new EQueryTool();
 		
 		for (ESentence es: epr.get(paragraph_index))
 		{
+			P.d(TAG, "처리 중 : %s", es.getWholeText());
 			TextPreprocessor es_tp= new TextPreprocessor(es);
 			// 전처리기를 사용해서 전처리 작업을 모두 수행한다.
 			// TextPreprocessor.java 참고
@@ -191,6 +198,9 @@ public class EmotionAlgorithm extends ArrayList<Nuri>
 			// Compaction 한번 더 실시
 			es.compactSkips();
 		}
+		
+		// TODO: DescNextObject 의 경우, 수식된 객체와 수식어를 연결해주어야한다. 문자열로 한번에 결합하고, 새 EmoUnit으로 구성
+		
 		// TODO: ^^^^^^^^^^^ 관계 분석 단계에서 가능한 모든 결합조건을 파악해서 문장 태그를 마친다.
 		// CAUTION: 여기에서부터는 Destructive routine이 실행된다. 위에서 태그된 자료 중 일부는 사라지고, ESentence는 Nuri로 완전히 재구성된다.
 		
@@ -205,6 +215,7 @@ public class EmotionAlgorithm extends ArrayList<Nuri>
 		// phase 6: EmoUnit 배열 순회하면서 글쓴이의 감정 파악
 		// (연관 단어: 날씨, 기분, 감정, 빈정 등의 키워드에 이루어지는 수식들), 기타 상황 서술어(짜증난다)
 		
+		displayEStatus();
 		epr.clear(); // 사용후 EParagraph결과물 모두 버림
 	}
 	
@@ -213,7 +224,7 @@ public class EmotionAlgorithm extends ArrayList<Nuri>
 	public void processAll() throws Exception
 	{
 		int index = 0;
-		for (index = 0; index < size(); index++)
+		for (index = 0; index < epr.size(); index++)
 		{
 			process(index);
 		}
@@ -223,7 +234,6 @@ public class EmotionAlgorithm extends ArrayList<Nuri>
 	
 	public ResultProcessor extractResultProcessor()
 	{
-		displayEStatus();
 		ResultProcessor resp = new ResultProcessor(this);
 		return resp;
 	}
@@ -233,7 +243,7 @@ public class EmotionAlgorithm extends ArrayList<Nuri>
 		P.d(TAG, "ArrayList<EParagraph> epr 내의 총 문단 %d개", size());
 		for (EParagraph ep : epr)
 		{
-			P.d(TAG, "==> 문단 (%x): 문장 d개", ep.hashCode(), ep.length());
+			P.d(TAG, "==> 문장 %d개", ep.length());
 			for (ESentence es : ep)
 			{
 				P.d(TAG, "====> 문장 (%x): 문장길이 %d글자 감정 단어 %d개", es.hashCode(), es.getWholeText().length(), es.size());

@@ -1,7 +1,6 @@
 package jnu.mindsharing.common;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 
 public class Nuri extends NuriTypes
 {

@@ -23,12 +23,18 @@
 		        	addline("요청 응답 : " + result.error_msg);
 		        	// for 문과 동일함
 		        	$.each(result.data, function (index) {
-		        		addline("문장: " + result.data[index].text);
-		        		addline("감정 어휘 갯수" + result.data[index].emounit_size);
-		        		var emounits = result.data[index].emounits;
-		        		$.each(emounits, function (index2) {
-		        			var emounit = emounits[index2];
-		        			addline(" * " + emounit.text + "(" + "태그" + ":" + emounit.tag + ")");
+		        		addline("---- 문장 시작 ----")
+		        		addline("주어 : " + result.data[index].subject);
+		        		var emounit = result.data[index].subject_emotion;
+	        			addline("[주어의 감정] 즐거움: " + emounit[0] +
+	        				", 슬픔: " + emounit[1] +
+	        				", 희망/성장/발전: " + emounit[2] +
+	        				", 절망/파괴/쇠락: " + emounit[3]);
+		        		var relations = result.data[index].relations;
+		        		addline("[연관 감정 표현]");
+		        		$.each(relations, function (index2) {
+		        			var emounit = relations[index2];
+		        			addline(" >> " + emounit.text + "(" + "태그" + ":" + emounit.tag + ")");
 		        			addline(" --- 즐거움: " + emounit.joy +
 		        				", 슬픔: " + emounit.sorrow +
 		        				", 희망/성장/발전: " + emounit.growth +

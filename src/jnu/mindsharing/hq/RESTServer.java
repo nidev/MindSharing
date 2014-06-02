@@ -121,7 +121,6 @@ public class RESTServer extends ServerResource implements ApplicationInfo
 					{
 						// TODO: 공용 서비스시 API 토큰 인식 기능
 						rawBody = req.getEntityAsText();
-						P.d(TAG, "받은 메시지 : %s", rawBody);
 						body = URLDecoder.decode(rawBody, "UTF-8");
 						
 						ResultProcessor rp = null;

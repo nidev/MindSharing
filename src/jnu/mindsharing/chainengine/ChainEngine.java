@@ -1,12 +1,8 @@
 package jnu.mindsharing.chainengine;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
 import java.util.ArrayList;
 
 import jnu.mindsharing.common.ApplicationInfo;
-import jnu.mindsharing.common.EQueryConstants;
 import jnu.mindsharing.common.ESentence;
 import jnu.mindsharing.common.P;
 import jnu.mindsharing.legacy.libs.PhraseSplit;
@@ -73,7 +69,7 @@ public class ChainEngine implements ApplicationInfo
 		{
 			P.d(TAG, "알고리즘에 필요한 문장 정보를 제공하는 중입니다.");
 			// 나중에 문단 수가 늘어나면 for 문으로 확장할 것.
-			int current_para = 0; 
+			int current_para; 
 			current_para = eprocess.createNewParagraph(source_paragraph);
 			for (String sentence: splitIntoSentences(source_paragraph))
 			{
