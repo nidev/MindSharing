@@ -67,6 +67,7 @@ public class ChainEngine implements ApplicationInfo
 		// purifier.rb 의 자바 버전!
 		// 문장 단위 전처리 작업 시작
 		EmotionAlgorithm eprocess = new EmotionAlgorithm(kkmaMA);
+		eprocess.clear();
 		
 		try
 		{
@@ -81,17 +82,8 @@ public class ChainEngine implements ApplicationInfo
 			
 			eprocess.processAll();
 			
-			return eprocess.extractResultProcessor(eprocess.get(current_para));
+			return eprocess.extractResultProcessor();
 			
-			/*
-			Timer timer = new Timer();
-			timer.start();
-			List<MExpression> ret = kkmaMA.analyze(source);
-			timer.stop();
-			timer.printMsg("분해작업 소요시간");
-			P.d(TAG, "형태소를 정제합니다.");
-			*/
-			//kkmaMA.closeLogger();
 		}
 		catch (Exception e)
 		{

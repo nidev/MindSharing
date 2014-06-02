@@ -1,8 +1,10 @@
 package jnu.mindsharing.chainengine;
 
-import jnu.mindsharing.common.EParagraph;
+import java.util.ArrayList;
+
 import jnu.mindsharing.common.ESentence;
 import jnu.mindsharing.common.EmoUnit;
+import jnu.mindsharing.common.Nuri;
 import jnu.mindsharing.common.P;
 
 import org.json.simple.JSONArray;
@@ -19,41 +21,51 @@ public class ResultProcessor
 	private String txt;
 	
 	@SuppressWarnings(value = { "unchecked" })
-	public ResultProcessor(EParagraph epr)
+	public ResultProcessor(ArrayList<Nuri> ea_result)
 	{
 		TAG = "-" + hashCode();
 		json = new JSONObject();
-		if (epr == null)
+		if (ea_result == null)
 		{
 			json.put("data", new JSONArray());
 		}
 		else
 		{
-			JSONArray paragraphs_array = new JSONArray();
-			for (ESentence es: epr)
+			JSONArray nri_array = new JSONArray();
+			for (Nuri nri: ea_result)
 			{
-				JSONObject sentence_object = new JSONObject();
-				sentence_object.put("text", es.getWholeText());
-				sentence_object.put("emounit_size", es.size());
+				JSONObject subject = new JSONObject();
+				subject.put("subject", nri.getSubjectName());
+				subject.put("subject_type", nri.getSubjectType());
 				
-				JSONArray emounits_array = new JSONArray();
-				for (EmoUnit em: es)
+				JSONArray subjectEmo = new JSONArray();
+				EmoUnit subem = nri.getSubjectEmo();
+				subjectEmo.add(EmoUnit.epowerToInt(subem.getVectorSize(subem.JOY)));
+				subjectEmo.add(EmoUnit.epowerToInt(subem.getVectorSize(subem.JOY)));
+				subjectEmo.add(EmoUnit.epowerToInt(subem.getVectorSize(subem.JOY)));
+				subjectEmo.add(EmoUnit.epowerToInt(subem.getVectorSize(subem.JOY)));
+				
+				subject.put("subject_emotion", subjectEmo);
+				
+				
+				JSONArray relations_array = new JSONArray();
+				for (EmoUnit em: nri.getRelations())
 				{
-					JSONObject emounit_object = new JSONObject();
-					emounit_object.put("text", em.getOrigin());
-					emounit_object.put("tag", em.getTag().toString());
-					emounit_object.put(em.JOY, EmoUnit.epowerToInt(em.getVectorSize(em.JOY)));
-					emounit_object.put(em.SORROW, EmoUnit.epowerToInt(em.getVectorSize(em.SORROW)));
-					emounit_object.put(em.GROWTH, EmoUnit.epowerToInt(em.getVectorSize(em.GROWTH)));
-					emounit_object.put(em.CEASE, EmoUnit.epowerToInt(em.getVectorSize(em.CEASE)));
+					JSONObject relation_object = new JSONObject();
+					relation_object.put("text", em.getOrigin());
+					relation_object.put("tag", em.getTag().toString());
+					relation_object.put(em.JOY, EmoUnit.epowerToInt(em.getVectorSize(em.JOY)));
+					relation_object.put(em.SORROW, EmoUnit.epowerToInt(em.getVectorSize(em.SORROW)));
+					relation_object.put(em.GROWTH, EmoUnit.epowerToInt(em.getVectorSize(em.GROWTH)));
+					relation_object.put(em.CEASE, EmoUnit.epowerToInt(em.getVectorSize(em.CEASE)));
 					
-					emounits_array.add(emounit_object);
+					relations_array.add(relation_object);
 					
 				}
-				sentence_object.put("emounits", emounits_array);
-				paragraphs_array.add(sentence_object);
+				subject.put("relations", relations_array);
+				nri_array.add(subject);
 			}
-			json.put("data", paragraphs_array);
+			json.put("data", nri_array);
 			
 		}
 		P.d(TAG, "JSON 데이터 생성완료.");
@@ -61,20 +73,27 @@ public class ResultProcessor
 		StringBuffer buffer = new StringBuffer(1024);
 		buffer.append("# -- START OF ANALYSIS RECORD --\r\n");
 		buffer.append("# -- ENCODING: UTF-8 --\r\n");
-		if (epr == null)
+		if (ea_result == null)
 		{
-			buffer.append("# Void EParagraph\r\n");
+			buffer.append("# No result\r\n");
 		}
 		else
 		{
-			buffer.append("# EParagraph\r\n");
-			buffer.append(epr.getWholeText());
-			buffer.append("\r\n");
-			for (ESentence es: epr)
+			buffer.append("# Structured sentences\r\n");
+			
+			for (Nuri nri: ea_result)
 			{
-				buffer.append(String.format("# ESentence : %s(%d EmoUnits)", es.getWholeText(), es.size()));
+				buffer.append(String.format("# Subject on %s (%d relations)", nri.getSubjectName(), nri.getRelations().size()));
 				buffer.append("\r\n");
-				for (EmoUnit em: es)
+				EmoUnit subem = nri.getSubjectEmo();
+				buffer.append(String.format("# Subject emotion : " + String.format("%s(%d),%s(%d),%s(%d),%s(%d) %s\t:%s",
+						subem.JOY, EmoUnit.epowerToInt(subem.getVectorSize(subem.JOY)),
+						subem.SORROW, EmoUnit.epowerToInt(subem.getVectorSize(subem.SORROW)),
+						subem.GROWTH, EmoUnit.epowerToInt(subem.getVectorSize(subem.GROWTH)),
+						subem.CEASE, EmoUnit.epowerToInt(subem.getVectorSize(subem.CEASE)))));
+				buffer.append("\r\n");
+				buffer.append("# Emotional expression related to subject\r\n");
+				for (EmoUnit em: nri.getRelations())
 				{
 					buffer.append(String.format("%s(%d),%s(%d),%s(%d),%s(%d) %s\t:%s",
 							em.JOY, EmoUnit.epowerToInt(em.getVectorSize(em.JOY)),
