@@ -1,4 +1,43 @@
 <!DOCTYPE html>
+<!-- JSON 객체 내부 구조
+1. 분석 요청시
+{
+    "error": "success", <분석 요청 결과, success는 성공시에>
+    "error_msg": "Analysis on progress", <메시지>
+    "data": [
+        "r5e24af70" <요청ID>
+    ]
+}
+
+2. 분석 결과 수신시
+{
+    "error": "success",
+    "data": [
+        { <한 문장의 시작>
+            "relations": [ <문장 내 연관 감정 표현을 배열에 담음>
+                {
+                    "text": "상쾌하다 하다", <본래 표현>
+                    "tag": "Desc", <어휘 유형>
+                    "joy": 3, <감정값>
+					"sorrow": 0, <감정값>
+                    "cease": 0, <감정값>
+                    "growth": 0 <감정값>
+                }
+            ],
+            "subject": "파란 하늘", <문장의 주어>
+            "subject_type": 1, <주어의 유형, 일단 1로 놓음. 무시 가능>
+            "subject_emotion": [ <주어의 감정>
+                0, <JOY>
+                0, <SORROW>
+                0, <GROWTH>
+                0 <CEASE>
+            ]
+        } <여기까지가 한 문장의 정보>
+    ],
+    "error_msg": "No error"
+}              
+-->
+
 <html>
     <head>
         <meta charset="UTF-8">
