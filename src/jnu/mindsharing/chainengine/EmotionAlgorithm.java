@@ -78,7 +78,7 @@ public class EmotionAlgorithm extends ArrayList<Nuri>
 		// 러프하게 작성
 		for (EmoUnit em : es)
 		{
-			if (!em.hasZeroEmotion())
+			if (!em.hasZeroEmotion() || em.getTag() == EmoUnit.WordTag.Desc || em.getTag() == EmoUnit.WordTag.DescNextObject)
 			{
 				nri.addRelations(em);
 			}
@@ -159,7 +159,7 @@ public class EmotionAlgorithm extends ArrayList<Nuri>
 				// => 크다, 퍼뜨리다 식으로 이미지를 추출한다.
 				if (es.get(es_idx).getTag() == EmoUnit.WordTag.NextDescDepender)
 				{
-					if (es_idx+1 < es.size())
+					if (es_idx > 0 && es_idx+1 < es.size())
 					{
 						if (es.get(es_idx-1).getTag() == EmoUnit.WordTag.Desc &&
 							es.get(es_idx+1).getTag() == EmoUnit.WordTag.Desc)
@@ -210,8 +210,7 @@ public class EmotionAlgorithm extends ArrayList<Nuri>
 			add(buildNuriFromESentence(es));
 		}
 		
-		// phase 5: SegmentArray 순회하면서 전체 감정 값 추출
-		// phase 
+		// phase 5: 자기 자신을 순회하면서 전체 감정 값 추출, 정규화 수치화
 		// phase 6: EmoUnit 배열 순회하면서 글쓴이의 감정 파악
 		// (연관 단어: 날씨, 기분, 감정, 빈정 등의 키워드에 이루어지는 수식들), 기타 상황 서술어(짜증난다)
 		
