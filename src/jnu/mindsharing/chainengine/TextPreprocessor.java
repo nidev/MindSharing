@@ -66,7 +66,8 @@ public class TextPreprocessor
 		List<MExpression> aresults = ma.analyze(es.getWholeText());
 		if (aresults == null)
 		{
-			throw new RuntimeException("분석기 오류 발생. 심각한 오류입니다.");
+			return;
+			// throw new RuntimeException("분석기 오류 발생. 심각한 오류입니다.");
 		}
 		// WARNING: postProcess 과정에서 토큰 품질이 감소한다. 쓸데없이 자세히 잘라서, SNS텍스트 분석에는 부적합함
 		//aresults = ma.postProcess(aresults);
