@@ -131,6 +131,16 @@ public class EmoUnit
 		return INVALID_ENUM;
 	}
 	
+	public int[] getVectorAsIntArray()
+	{
+		int emovector[] = new int[vectorTitles.length];
+		for (int index = 0 ; index < vectorTitles.length ; index++)
+		{
+			emovector[index] = epowerToInt(getVectorSize(vectorTitles[index]));
+		}
+		return emovector;
+	}
+	
 	private EmoUnit increase(String title)
 	{
 		// TODO: title validation check
