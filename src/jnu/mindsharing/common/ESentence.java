@@ -72,18 +72,7 @@ public class ESentence extends ArrayList<EmoUnit> implements EmoSkeleton
 		}
 		return null;
 	}
-	
-	public EmoUnit getSubjectDesc()
-	{
-		for (EmoUnit em: this)
-		{
-			if (em.getTag() == EmoUnit.WordTag.DescSubject)
-			{
-				return em;
-			}
-		}
-		return null;
-	}
+
 	
 	public void compactSkips()
 	{
