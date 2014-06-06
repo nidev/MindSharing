@@ -19,6 +19,8 @@ public class EmotionAlgorithm extends ArrayList<Nuri>
 	private MorphemeAnalyzer ma;
 	private ArrayList<EParagraph> epr;
 	
+	enum ESENTENCE_TRAVERSE_MODE {NORMAL, INCREASE_NEXT, DECREASE_NEXT, INVERT_NEXT, DESC_JOIN};
+	
 	public EmotionAlgorithm(MorphemeAnalyzer hostMA)
 	{
 		// TODO: null 체크
@@ -72,9 +74,18 @@ public class EmotionAlgorithm extends ArrayList<Nuri>
 	public Nuri buildNuriFromESentence(ESentence es)
 	{
 		Nuri nri = new Nuri();
-		nri.setSubject(NuriTypes.PERSON, es.getSubject().getOrigin(), es.getSubjectDesc());
+		EmoUnit es_subject = es.getSubject();
+		
+		nri.setSubject(NuriTypes.PERSON, es_subject.getOrigin()+"/"+es_subject.getExt());
 		
 		// XXX: 잘 구성해야함
+		// 주어 부분에 감정값이 있었다면, 카피한다.
+		if (!es_subject.hasZeroEmotion())
+		{
+			EmoUnit subject_copied = new EmoUnit(es_subject.getExt());
+			subject_copied.importVectors(es_subject);
+			nri.addRelations(subject_copied);
+		}
 		// 러프하게 작성
 		for (EmoUnit em : es)
 		{
@@ -199,7 +210,99 @@ public class EmotionAlgorithm extends ArrayList<Nuri>
 			es.compactSkips();
 		}
 		
-		// TODO: DescNextObject 의 경우, 수식된 객체와 수식어를 연결해주어야한다. 문자열로 한번에 결합하고, 새 EmoUnit으로 구성
+		// EmoUnit 간의 연산 작업 수행 (수식어 + 명사 결합, 다음 감정 어휘의 감정값 증가/감소/반전)
+		
+		for (ESentence es: epr.get(paragraph_index))
+		{
+			EmoUnit op_src = null;
+			Enum<ESENTENCE_TRAVERSE_MODE> tm;
+			tm = ESENTENCE_TRAVERSE_MODE.NORMAL;
+			for (EmoUnit em: es)
+			{
+				// 결합 작업은 모두 끝났으므로, 이 단계에서 extTag를 지운다. 그리고 여기에, 결합시 문맥 정보를 담는다.
+				em.setExt();
+				
+				if (em.getTag() == EmoUnit.WordTag.DescNextObject)
+				{
+					op_src = em;
+					tm = ESENTENCE_TRAVERSE_MODE.DESC_JOIN;
+				}
+				else if (em.getTag() == EmoUnit.WordTag.NextDescReducer)
+				{
+					op_src = em;
+					tm = ESENTENCE_TRAVERSE_MODE.DECREASE_NEXT;
+				}
+				else if (em.getTag() == EmoUnit.WordTag.NextDescEnhancer)
+				{
+					op_src = em;
+					tm = ESENTENCE_TRAVERSE_MODE.INCREASE_NEXT;
+				}
+				else if (em.getTag() == EmoUnit.WordTag.InvertNextDesc)
+				{
+					op_src = em;
+					tm = ESENTENCE_TRAVERSE_MODE.INVERT_NEXT;
+				}
+				else
+				{
+					if (em.getTag() == EmoUnit.WordTag.Subject || em.getTag() == EmoUnit.WordTag.Object)
+					{
+						if (tm == ESENTENCE_TRAVERSE_MODE.DESC_JOIN)
+						{
+							em.setExt(op_src.getOrigin());
+							em.importVectors(op_src);
+							// 감정값 복사 후, 연산자로 사용된 EmoUnit을 폐기한다.
+							op_src.setTag(EmoUnit.WordTag.Skip);
+							tm = ESENTENCE_TRAVERSE_MODE.NORMAL;
+						}
+					}
+					else if (em.getTag() == EmoUnit.WordTag.Desc
+							|| em.getTag() == EmoUnit.WordTag.DescNextObject
+							|| em.getTag() == EmoUnit.WordTag.DescSubject)
+					{
+						if (tm == ESENTENCE_TRAVERSE_MODE.DECREASE_NEXT)
+						{
+							em.decrease(em.JOY);
+							em.decrease(em.SORROW);
+							em.setExt(op_src.getOrigin());
+							// 나머지는 인과관계이므로 안줄여도 될듯.
+							// 감정값 복사 후, 연산자로 사용된 EmoUnit을 폐기한다.
+							op_src.setTag(EmoUnit.WordTag.Skip);
+							tm = ESENTENCE_TRAVERSE_MODE.NORMAL;
+						}
+						else if (tm == ESENTENCE_TRAVERSE_MODE.INCREASE_NEXT)
+						{
+							em.increase(em.JOY);
+							em.increase(em.SORROW);
+							em.setExt(op_src.getOrigin());
+							// 나머지는 인과관계이므로 안줄여도 될듯.
+							// 감정값 복사 후, 연산자로 사용된 EmoUnit을 폐기한다.
+							op_src.setTag(EmoUnit.WordTag.Skip);
+							tm = ESENTENCE_TRAVERSE_MODE.NORMAL;
+						}
+						else if (tm == ESENTENCE_TRAVERSE_MODE.INVERT_NEXT)
+						{
+							em.invertAll();
+							em.setExt(op_src.getOrigin());
+							// 나머지는 인과관계이므로 안줄여도 될듯.
+							// 감정값 복사 후, 연산자로 사용된 EmoUnit을 폐기한다.
+							op_src.setTag(EmoUnit.WordTag.Skip);
+							tm = ESENTENCE_TRAVERSE_MODE.NORMAL;
+						}
+						else
+						{
+							continue;
+						}
+					}
+					else
+					{
+						continue;
+					}
+				}
+			}
+		}
+		
+		
+		
 		
 		// TODO: ^^^^^^^^^^^ 관계 분석 단계에서 가능한 모든 결합조건을 파악해서 문장 태그를 마친다.
 		// CAUTION: 여기에서부터는 Destructive routine이 실행된다. 위에서 태그된 자료 중 일부는 사라지고, ESentence는 Nuri로 완전히 재구성된다.
