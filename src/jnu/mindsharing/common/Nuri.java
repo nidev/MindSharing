@@ -7,12 +7,12 @@ public class Nuri extends NuriTypes
 
 	int subjectType;
 	String subjectSrc;
-	EmoUnit contextEmo;
+	double contextEmo[];
 	ArrayList<EmoUnit> relations;
 	
 	public Nuri()
 	{
-		contextEmo = new EmoUnit();
+		contextEmo = new double[4];
 		relations = new ArrayList<EmoUnit>();
 	}
 	
@@ -23,15 +23,15 @@ public class Nuri extends NuriTypes
 		
 	}
 	
-	public void setContextEmo(EmoUnit context)
+	public void setContextEmo(double[] emovalues)
 	{
-		if (context != null)
-		{
-			contextEmo.importVectors(context);
-		}
+		contextEmo[0] = emovalues[0];
+		contextEmo[1] = emovalues[1];
+		contextEmo[2] = emovalues[2];
+		contextEmo[3] = emovalues[3];
 	}
 	
-	public EmoUnit getContextEmo()
+	public double[] getContextEmo()
 	{
 		return contextEmo;
 	}
@@ -44,11 +44,6 @@ public class Nuri extends NuriTypes
 	public String getSubjectName()
 	{
 		return subjectSrc;
-	}
-	
-	public EmoUnit getcontextEmo()
-	{
-		return contextEmo;
 	}
 	
 	public ArrayList<EmoUnit> getRelations()
