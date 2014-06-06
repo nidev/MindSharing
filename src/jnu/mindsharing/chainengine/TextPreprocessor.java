@@ -187,16 +187,16 @@ public class TextPreprocessor
 							 * 
 							 * 또는 꼬꼬마의 태그를 그대로 EmoUnit에 저장할 수 있게 하거나.
 							 */
-							if (mtag.equals("NP"))
-							{
+							//if (mtag.equals("NP"))
+							//{
 								// 대명사는 가르키는 대상이 존재하므로 일단 ReferenceMarker로.
-								es.add(new EmoUnit(cur_morpheme.getString()).setTag(EmoUnit.WordTag.ReferenceMarker));
-							}
-							else
-							{
-								es.add(new EmoUnit(cur_morpheme.getString()).setTag(EmoUnit.WordTag.NounMarker).setExt(mtag));
-								
-							}
+							//	es.add(new EmoUnit(cur_morpheme.getString()).setTag(EmoUnit.WordTag.ReferenceMarker));
+							//}
+							//else
+							//{
+							es.add(new EmoUnit(cur_morpheme.getString()).setTag(EmoUnit.WordTag.NounMarker).setExt(mtag));
+							//	
+							//}
 						}
 						else
 						{
@@ -327,18 +327,9 @@ public class TextPreprocessor
 			Enum<EmoUnit.WordTag> tag = em.getTag();
 			if (tag == EmoUnit.WordTag.UnhandledTrailMarker)
 			{
-				// XXX: 이 마커와, 그 앞의 명사 어휘는 삭제됨.
-				if (es_idx > 0)
-				{
-					es.set(es_idx, new EmoUnit().setTag(EmoUnit.WordTag.Skip));
-					es.set(es_idx-1, new EmoUnit().setTag(EmoUnit.WordTag.Skip));
-				}
-				else
-				{
-					P.e(TAG, "격조사인데, 앞에 체언이 없이 격조사가 나타났습니다. 이것은 심각한 오류입니다.");
-					P.e(TAG, "입력된 텍스트 : %s", es.getWholeText());
-					em.setTag(EmoUnit.WordTag.Skip);
-				}
+				// 이 마커를 삭제하고, Object는 생존하도록 남긴다.
+				em.setTag(EmoUnit.WordTag.Skip);
+		
 			}
 			else if (tag == EmoUnit.WordTag.SubjectTrailMarker || tag == EmoUnit.WordTag.ObjectTrailMarker)
 			{
@@ -361,8 +352,8 @@ public class TextPreprocessor
 			{
 				if ((es_idx+2) <= es.size())
 				{
-					// XXX: 명사 수식 어휘 인식이 잘 안됨
-					P.e(TAG, "현재 : %s,  다음 : %s@", es.get(es_idx).getOrigin(), es.get(es_idx+1).getOrigin(), es.get(es_idx+1).getTag().toString());
+					// (서술어)한 (명사) ex) 예쁜 그녀
+					// 의 결합 조건을 체크한다.
 					if (es.get(es_idx+1).getTag() == EmoUnit.WordTag.Object || es.get(es_idx+1).getTag() == EmoUnit.WordTag.Subject)
 					{
 						em.setTag(EmoUnit.WordTag.DescNextObject);
