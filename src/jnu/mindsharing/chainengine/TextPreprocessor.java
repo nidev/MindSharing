@@ -286,7 +286,7 @@ public class TextPreprocessor
 			}
 		}
 		
-		// 2-2: 전체적인 어휘 뭉치기 작업을 진행한다.
+		// 2-2: 명사 어휘를 결합한다.
 		for (int es_idx=0; es_idx < es.size(); es_idx++)
 		{
 			EmoUnit em = es.get(es_idx);
@@ -318,7 +318,13 @@ public class TextPreprocessor
 					noun_queue.clear();
 				}
 			}
-			
+		}
+		
+		// 2-2: 조사와 Object들 사이의 관계를 파악해, 기본적인 서술 관계를 파악하고, 확실한 경우 주어를 설정한다.
+		for (int es_idx=0; es_idx < es.size(); es_idx++)
+		{
+			EmoUnit em = es.get(es_idx);
+			Enum<EmoUnit.WordTag> tag = em.getTag();
 			if (tag == EmoUnit.WordTag.UnhandledTrailMarker)
 			{
 				// XXX: 이 마커와, 그 앞의 명사 어휘는 삭제됨.
@@ -353,35 +359,32 @@ public class TextPreprocessor
 			}
 			else if (tag == EmoUnit.WordTag.Desc)
 			{
-				if ((es_idx+1) <= es.size())
+				if ((es_idx+2) <= es.size())
 				{
+					// XXX: 명사 수식 어휘 인식이 잘 안됨
+					P.e(TAG, "현재 : %s,  다음 : %s@", es.get(es_idx).getOrigin(), es.get(es_idx+1).getOrigin(), es.get(es_idx+1).getTag().toString());
 					if (es.get(es_idx+1).getTag() == EmoUnit.WordTag.Object || es.get(es_idx+1).getTag() == EmoUnit.WordTag.Subject)
 					{
 						em.setTag(EmoUnit.WordTag.DescNextObject);
 					}
 					else
 					{
-						if ((es_idx+2) < es.size())
+						if (es.get(es_idx+1).getTag() == EmoUnit.WordTag.NextDescDepender
+								&& es.get(es_idx+2).getTag() == EmoUnit.WordTag.Desc)
 						{
-							if (es.get(es_idx+1).getTag() == EmoUnit.WordTag.NextDescDepender
-									&& es.get(es_idx+2).getTag() == EmoUnit.WordTag.Desc)
+							// -지 아니하다/않다/못하다
+							String depender = es.get(es_idx+1).getOrigin();
+							String verb = es.get(es_idx+2).getOrigin();
+							// XXX: 문자열 상수가 아닌, 태그로 비교하는 방법을 만들자.
+							if (depender.equals("지") && isTagIn(verb, "아니하다", "않다", "못하다"))
 							{
-								// -지 아니하다/않다/못하다
-								String depender = es.get(es_idx+1).getOrigin();
-								String verb = es.get(es_idx+2).getOrigin();
-								// XXX: 문자열 상수가 아닌, 태그로 비교하는 방법을 만들자.
-								if (depender.equals("지") && isTagIn(verb, "아니하다", "않다", "못하다"))
-								{
-									EmoUnit inverter = new EmoUnit(String.format("-%s %s", depender, verb)).setTag(EmoUnit.WordTag.InvertNextDesc);
-									EmoUnit desc = es.get(es_idx);
-									es.set(es_idx, new EmoUnit().setTag(EmoUnit.WordTag.Skip));
-									es.set(es_idx+1, inverter);
-									es.set(es_idx+2, desc);
-								}
+								EmoUnit inverter = new EmoUnit(String.format("-%s %s", depender, verb)).setTag(EmoUnit.WordTag.InvertNextDesc);
+								EmoUnit desc = es.get(es_idx);
+								es.set(es_idx, new EmoUnit().setTag(EmoUnit.WordTag.Skip));
+								es.set(es_idx+1, inverter);
+								es.set(es_idx+2, desc);
 							}
-								
 						}
-						
 					}
 				}
 			}
