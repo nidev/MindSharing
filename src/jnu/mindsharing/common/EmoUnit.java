@@ -131,12 +131,15 @@ public class EmoUnit
 		return INVALID_ENUM;
 	}
 	
-	public EmoUnit increase(String title)
+	private EmoUnit increase(String title)
 	{
 		// TODO: title validation check
-		// Can't go more than EPower.Strong
 		Enum<EPower> currentValue = vectorTable.get(title);
-		if (currentValue == EPower.Formal) // None 인 값을 Formal로 증가시키면 안됨!
+		if (currentValue == EPower.None)
+		{
+			vectorTable.put(title, EPower.Formal);
+		}
+		else if (currentValue == EPower.Formal)
 		{
 			vectorTable.put(title, EPower.Mild);
 		}
@@ -155,12 +158,11 @@ public class EmoUnit
 		return this; // Chaining을 위한 기법. ex) emounit_object.increase().invert()
 	}
 	
-	public EmoUnit decrease(String title)
+	private EmoUnit decrease(String title)
 	{
 		// TODO: title validation check
-		// Can't go more than EPower.Strong
 		Enum<EPower> currentValue = vectorTable.get(title);
-		if (currentValue == EPower.Extreme) 
+		if (currentValue == EPower.Extreme)
 		{
 			vectorTable.put(title, EPower.Strong);
 		}
@@ -172,11 +174,33 @@ public class EmoUnit
 		{
 			vectorTable.put(title, EPower.Formal);
 		}
-		else // Formal보다 작은 감정값은 없음!
+		else if (currentValue == EPower.Formal)
 		{
-			P.e(TAG, "감정의 세기는 EPower.None 으로 갈 수 없습니다. (감소 요청된 감정벡터: %s)", title);
+			vectorTable.put(title, EPower.None);
+		}
+		else
+		{
+			P.e(TAG, "감정의 세기는 EPower.None 밑으로 갈 수 없습니다. (감소 요청된 감정벡터: %s)", title);
 		}
 		return this; // Chaining을 위한 기법. ex) emounit_object.increase().decrease()
+	}
+	
+	public EmoUnit enhance(String title)
+	{
+		if (getVectorSize(title) != EmoUnit.EPower.None)
+		{
+			increase(title);
+		}
+		return this;
+	}
+	
+	public EmoUnit reduce(String title)
+	{
+		if (getVectorSize(title) != EmoUnit.EPower.Formal)
+		{
+			decrease(title);
+		}
+		return this;
 	}
 	
 	public EmoUnit invertEmotionals()
