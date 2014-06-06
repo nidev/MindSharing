@@ -38,11 +38,11 @@ public class ResultProcessor
 				subject.put("subject_type", nri.getSubjectType());
 				
 				JSONArray contextEmo = new JSONArray();
-				EmoUnit conem = nri.getcontextEmo();
-				contextEmo.add(EmoUnit.epowerToInt(conem.getVectorSize(conem.JOY)));
-				contextEmo.add(EmoUnit.epowerToInt(conem.getVectorSize(conem.SORROW)));
-				contextEmo.add(EmoUnit.epowerToInt(conem.getVectorSize(conem.GROWTH)));
-				contextEmo.add(EmoUnit.epowerToInt(conem.getVectorSize(conem.CEASE)));
+				double[] conem = nri.getContextEmo();
+				contextEmo.add(conem[0]);
+				contextEmo.add(conem[1]);
+				contextEmo.add(conem[2]);
+				contextEmo.add(conem[3]);
 				
 				subject.put("context", contextEmo);
 				
@@ -84,12 +84,8 @@ public class ResultProcessor
 			{
 				buffer.append(String.format("# Subject on %s (%d relations)", nri.getSubjectName(), nri.getRelations().size()));
 				buffer.append("\r\n");
-				EmoUnit conem = nri.getContextEmo();
-				buffer.append(String.format("# Context emotion : " + String.format("%s(%d),%s(%d),%s(%d),%s(%d)",
-						conem.JOY, EmoUnit.epowerToInt(conem.getVectorSize(conem.JOY)),
-						conem.SORROW, EmoUnit.epowerToInt(conem.getVectorSize(conem.SORROW)),
-						conem.GROWTH, EmoUnit.epowerToInt(conem.getVectorSize(conem.GROWTH)),
-						conem.CEASE, EmoUnit.epowerToInt(conem.getVectorSize(conem.CEASE)))));
+				double[] conem = nri.getContextEmo();
+				buffer.append(String.format("# Context emotion : JOY(%.5f),SORROW(%.5f),GROWTH(%.5f),CEASE(%.5f)", conem[0], conem[1], conem[2], conem[3]));
 				buffer.append("\r\n");
 				buffer.append("# Emotional expression related to subject\r\n");
 				for (EmoUnit em: nri.getRelations())

@@ -78,18 +78,10 @@ public class EmotionAlgorithm extends ArrayList<Nuri>
 		
 		nri.setSubject(NuriTypes.PERSON, es_subject.getOrigin()+"/"+es_subject.getExt());
 		
-		// XXX: 잘 구성해야함
-		// 주어 부분에 감정값이 있었다면, 카피한다.
-		if (!es_subject.hasZeroEmotion())
-		{
-			EmoUnit subject_copied = new EmoUnit(es_subject.getExt());
-			subject_copied.importVectors(es_subject);
-			nri.addRelations(subject_copied);
-		}
-		// 러프하게 작성
+		// 관련 감정 어휘를 모두 Relation으로 추가한다.
 		for (EmoUnit em : es)
 		{
-			if (!em.hasZeroEmotion() || em.getTag() == EmoUnit.WordTag.Desc || em.getTag() == EmoUnit.WordTag.DescNextObject)
+			if (!em.hasZeroEmotion() || em.getTag() == EmoUnit.WordTag.Desc || em.getTag() == EmoUnit.WordTag.Object)
 			{
 				nri.addRelations(em);
 			}
@@ -105,7 +97,9 @@ public class EmotionAlgorithm extends ArrayList<Nuri>
 		
 		for (ESentence es: epr.get(paragraph_index))
 		{
-			P.d(TAG, "처리 중 : %s", es.getWholeText());
+			// XXX: 왜 null?
+			if (es == null) continue;
+			
 			TextPreprocessor es_tp= new TextPreprocessor(es);
 			// 전처리기를 사용해서 전처리 작업을 모두 수행한다.
 			// TextPreprocessor.java 참고
@@ -142,32 +136,48 @@ public class EmotionAlgorithm extends ArrayList<Nuri>
 			// 관계 분석 단계 - 2: 인칭 문제를 해결한다. 여기에서 주어를 발견할 수 없다면, Object 중에 주어를 선정하고, 그게 안되면 주어 '나'를 삽입한다.
 			// 아직 'Marker'와 'Skip'으로 남아있는 어휘를 모두 제거한다, NextDescDepender를 읽고 전후 관계를 파악한다.
 			// 
-			// TODO: 역할이 불분명한 서술어(Desc로 태그 된)의 연관관계를 파악한다.
+
+			// 주어가 없는 경우에 탐색 작업을 진행
 			if (!es.hasSubject())
 			{
-				// object중에 주어를 선정하는 과정이 없음. 일반적으로 first object를 주어로 간주하면 된다.
-				for (EmoUnit em : es)
+				// 혹시 대명사가 주어일 수도 있다. (우선순위 1)
+				for (EmoUnit em:es)
 				{
-					if (em.getTag() == EmoUnit.WordTag.Object)
+					if (em.getTag() == EmoUnit.WordTag.ReferenceMarker)
 					{
-						// XXX: 현재 휴리스틱 규칙은 없음
-						// 분명 오류를 내는 알고리즘임
 						em.setTag(EmoUnit.WordTag.Subject);
 						break;
 					}
-						
 				}
+				
 				if (!es.hasSubject())
 				{
-					// 그래도 없다면 임의로 주어를 삽입한다.
+					// 일단, 첫번째로 Object 로 마크된 EmoUnit를 주어로 선정한다. (우선순위 2)
+					for (EmoUnit em : es)
+					{
+						if (em.getTag() == EmoUnit.WordTag.Object)
+						{
+							// XXX: 현재 휴리스틱 규칙은 없음
+							// 분명 오류를 내는 알고리즘임
+							em.setTag(EmoUnit.WordTag.Subject);
+							break;
+						}
+							
+					}
+				}
+				
+				if (!es.hasSubject())
+				{
+					// ... 최후의 방법. (우선순위 3)
 					es.add(0, new EmoUnit("나").setTag(EmoUnit.WordTag.Subject));
 				}
 			}
 			
+			
+			// 복합 서술어 처리
+			// '크게 퍼뜨리다' 를 '크다 + 퍼뜨리다'로 결합시켜 새로운 EmoUnit을 구성한다.
 			for (int es_idx=0; es_idx < es.size() ; es_idx++)
 			{
-				// 크게(크다 + 게) + 퍼뜨리다
-				// => 크다, 퍼뜨리다 식으로 이미지를 추출한다.
 				if (es.get(es_idx).getTag() == EmoUnit.WordTag.NextDescDepender)
 				{
 					if (es_idx > 0 && es_idx+1 < es.size())
@@ -182,19 +192,7 @@ public class EmotionAlgorithm extends ArrayList<Nuri>
 							newemo.setTag(EmoUnit.WordTag.Desc);
 							es.get(es_idx-1).setTag(EmoUnit.WordTag.Skip);
 							es.get(es_idx).setTag(EmoUnit.WordTag.Skip);
-							// 근데 이건 필요한가?
-							if (auxemo.getOrigin().equals("없다") || auxemo.getOrigin().equals("않다") || auxemo.getOrigin().equals("아니하다"))
-							{
-								
-								es.set(es_idx+1, newemo.invertAll());
-								
-							}
-							else
-							{
-
-								es.set(es_idx+1, newemo);
-								
-							}
+							es.set(es_idx+1, newemo);
 							
 						}
 						else if(es.get(es_idx+1).getTag() == EmoUnit.WordTag.Subject
@@ -220,27 +218,30 @@ public class EmotionAlgorithm extends ArrayList<Nuri>
 			for (EmoUnit em: es)
 			{
 				// 결합 작업은 모두 끝났으므로, 이 단계에서 extTag를 지운다. 그리고 여기에, 결합시 문맥 정보를 담는다.
+				P.e(TAG, "탐색 중, 현재 : %s, 모드 %s", em.getOrigin(), tm.toString());
 				em.setExt();
-				
-				if (em.getTag() == EmoUnit.WordTag.DescNextObject)
+				if (tm == ESENTENCE_TRAVERSE_MODE.NORMAL)
 				{
-					op_src = em;
-					tm = ESENTENCE_TRAVERSE_MODE.DESC_JOIN;
-				}
-				else if (em.getTag() == EmoUnit.WordTag.NextDescReducer)
-				{
-					op_src = em;
-					tm = ESENTENCE_TRAVERSE_MODE.DECREASE_NEXT;
-				}
-				else if (em.getTag() == EmoUnit.WordTag.NextDescEnhancer)
-				{
-					op_src = em;
-					tm = ESENTENCE_TRAVERSE_MODE.INCREASE_NEXT;
-				}
-				else if (em.getTag() == EmoUnit.WordTag.InvertNextDesc)
-				{
-					op_src = em;
-					tm = ESENTENCE_TRAVERSE_MODE.INVERT_NEXT;
+					if (em.getTag() == EmoUnit.WordTag.DescNextObject)
+					{
+						op_src = em;
+						tm = ESENTENCE_TRAVERSE_MODE.DESC_JOIN;
+					}
+					else if (em.getTag() == EmoUnit.WordTag.NextDescReducer)
+					{
+						op_src = em;
+						tm = ESENTENCE_TRAVERSE_MODE.DECREASE_NEXT;
+					}
+					else if (em.getTag() == EmoUnit.WordTag.NextDescEnhancer)
+					{
+						op_src = em;
+						tm = ESENTENCE_TRAVERSE_MODE.INCREASE_NEXT;
+					}
+					else if (em.getTag() == EmoUnit.WordTag.InvertNextDesc)
+					{
+						op_src = em;
+						tm = ESENTENCE_TRAVERSE_MODE.INVERT_NEXT;
+					}
 				}
 				else
 				{
@@ -248,10 +249,12 @@ public class EmotionAlgorithm extends ArrayList<Nuri>
 					{
 						if (tm == ESENTENCE_TRAVERSE_MODE.DESC_JOIN)
 						{
-							em.setExt(op_src.getOrigin());
+							
+							em.setExt(op_src.getOrigin()+"+"+op_src.getExt());
 							em.importVectors(op_src);
 							// 감정값 복사 후, 연산자로 사용된 EmoUnit을 폐기한다.
 							op_src.setTag(EmoUnit.WordTag.Skip);
+							op_src.defaultTable();
 							tm = ESENTENCE_TRAVERSE_MODE.NORMAL;
 						}
 					}
@@ -261,32 +264,35 @@ public class EmotionAlgorithm extends ArrayList<Nuri>
 					{
 						if (tm == ESENTENCE_TRAVERSE_MODE.DECREASE_NEXT)
 						{
-							em.decrease(em.JOY);
-							em.decrease(em.SORROW);
+							em.reduce(em.JOY);
+							em.reduce(em.SORROW);
 							em.setExt(op_src.getOrigin());
 							// 나머지는 인과관계이므로 안줄여도 될듯.
-							// 감정값 복사 후, 연산자로 사용된 EmoUnit을 폐기한다.
 							op_src.setTag(EmoUnit.WordTag.Skip);
-							tm = ESENTENCE_TRAVERSE_MODE.NORMAL;
+							// 다음에 서술어가 추가로 존재하므로 DESC_JOIN 모드로 변경한다.
+							op_src = em;
+							tm = ESENTENCE_TRAVERSE_MODE.DESC_JOIN;
 						}
 						else if (tm == ESENTENCE_TRAVERSE_MODE.INCREASE_NEXT)
 						{
-							em.increase(em.JOY);
-							em.increase(em.SORROW);
+							em.enhance(em.JOY);
+							em.enhance(em.SORROW);
 							em.setExt(op_src.getOrigin());
 							// 나머지는 인과관계이므로 안줄여도 될듯.
-							// 감정값 복사 후, 연산자로 사용된 EmoUnit을 폐기한다.
 							op_src.setTag(EmoUnit.WordTag.Skip);
-							tm = ESENTENCE_TRAVERSE_MODE.NORMAL;
+							// 다음에 서술어가 추가로 존재하므로 DESC_JOIN 모드로 변경한다.
+							op_src = em;
+							tm = ESENTENCE_TRAVERSE_MODE.DESC_JOIN;
 						}
 						else if (tm == ESENTENCE_TRAVERSE_MODE.INVERT_NEXT)
 						{
 							em.invertAll();
 							em.setExt(op_src.getOrigin());
 							// 나머지는 인과관계이므로 안줄여도 될듯.
-							// 감정값 복사 후, 연산자로 사용된 EmoUnit을 폐기한다.
 							op_src.setTag(EmoUnit.WordTag.Skip);
-							tm = ESENTENCE_TRAVERSE_MODE.NORMAL;
+							// 다음에 서술어가 추가로 존재하므로 DESC_JOIN 모드로 변경한다.
+							op_src = em;
+							tm = ESENTENCE_TRAVERSE_MODE.DESC_JOIN;
 						}
 						else
 						{
@@ -312,13 +318,35 @@ public class EmotionAlgorithm extends ArrayList<Nuri>
 		{
 			add(buildNuriFromESentence(es));
 		}
-		
-		// phase 5: 자기 자신을 순회하면서 전체 감정 값 추출, 정규화 수치화
-		// phase 6: EmoUnit 배열 순회하면서 글쓴이의 감정 파악
-		// (연관 단어: 날씨, 기분, 감정, 빈정 등의 키워드에 이루어지는 수식들), 기타 상황 서술어(짜증난다)
-		
-		displayEStatus();
 		epr.clear(); // 사용후 EParagraph결과물 모두 버림
+		
+		// phase 5: EmotionAlgorithm 내부에 저장된 Nuri 객체들에서 전체 감정 값 추출, 정규화 및 수치화
+		for (Nuri nri:this)
+		{
+			double[] normalized_emo = new double[4];
+			normalized_emo[0] = 0.0; // joy
+			normalized_emo[1] = 0.0; // sorrow
+			normalized_emo[2] = 0.0; // growth
+			normalized_emo[3] = 0.0; // cease
+			int relations_length = nri.getRelations().size();
+			if (relations_length > 0)
+			{
+				for (EmoUnit em : nri.getRelations())
+				{
+					int emovalues[] = em.getVectorAsIntArray();
+					normalized_emo[0] += emovalues[0];
+					normalized_emo[1] += emovalues[1];
+					normalized_emo[2] += emovalues[2];
+					normalized_emo[3] += emovalues[3];
+				}
+				
+				normalized_emo[0] /= relations_length;
+				normalized_emo[1] /= relations_length;
+				normalized_emo[2] /= relations_length;
+				normalized_emo[3] /= relations_length;
+			}
+			nri.setContextEmo(normalized_emo);
+		}
 	}
 	
 
