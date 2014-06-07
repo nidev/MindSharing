@@ -22,7 +22,7 @@ public class EQueryTool
 	final int TYPE_WORD = 0;
 	final int TYPE_EMOTICON = 1;
 	
-	private String TAG = "EQTool";
+	private String TAG = "EmotionQuery";
 	
 	private Connection db;
 	
@@ -108,14 +108,13 @@ public class EQueryTool
 	 */
 	public long queryNounCategory(String word)
 	{
-		// STUB
-		P.d(TAG, "Quering noun category : %s", word);
+		P.d(TAG, "Query? [CATEGORY OF] %s", word);
 		return 0;
 	}
 	
 	public EmoUnit queryExpression(String word, int type)
 	{
-		P.d(TAG, "Quering ... %s", word);
+		P.d(TAG, "Query? [EMOTION VALUE OF] %s [TYPE] %d", word, type);
 		try
 		{
 			PreparedStatement stmt = db.prepareStatement("SELECT * FROM Expression WHERE word = ? AND type = ?");
@@ -147,13 +146,11 @@ public class EQueryTool
 	
 	public EmoUnit queryWord(String word)
 	{
-		P.d(TAG, "Quering word on %s requested", word);
 		return queryExpression(word, TYPE_WORD);
 	}
 	
 	public EmoUnit queryEmoticon(String word)
 	{
-		P.d(TAG, "Quering emoticon on %s requested", word);
 		return queryExpression(word, TYPE_EMOTICON);
 	}
 	
@@ -164,8 +161,7 @@ public class EQueryTool
 	
 	public boolean isEnhancer(String word)
 	{
-		// XXX: Please avoid hardcode
-		P.d(TAG, "Quering enhancer : %s", word);
+		P.d(TAG, "Query? [EMOTION ENHANCER] %s", word);
 		String enhancers[] = {"매우", "잘", "정말", "진짜", "진심", "참", "너무"};
 		for (String keyword: enhancers)
 		{
@@ -179,8 +175,7 @@ public class EQueryTool
 	
 	public boolean isReducer(String word)
 	{
-		// XXX: Please avoid hardcode
-		P.d(TAG, "Quering reducer : %s", word);
+		P.d(TAG, "Query? [EMOTION REDUCER] %s", word);
 		String reducers[] = {"약간", "조금", "살짝"};
 		for (String keyword: reducers)
 		{
@@ -195,7 +190,7 @@ public class EQueryTool
 	public boolean isNegativeADV(String word)
 	{
 		// STUB
-		P.d(TAG, "Quering negative-adverb : %s", word);
+		P.d(TAG, "Query? [NEGATIVE ADVERB] %s", word);
 		return word.equals("안") || word.equals("아니");
 	}
 }
