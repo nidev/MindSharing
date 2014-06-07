@@ -94,7 +94,7 @@ public class HistoriaModule
 		}
 		s.append("===================================================================");s.append(br);
 		SimpleDateFormat timeformat = new SimpleDateFormat("yyyy-MM-dd a hh:mm:ss");
-		s.append("Historia has made since " + timeformat.format(new Date(timeBegin)) + ".");s.append(br);
+		s.append("Historia has been created for learning, since " + timeformat.format(new Date(timeBegin)) + ".");s.append(br);
 		
 		return s.toString(); 
 	}
