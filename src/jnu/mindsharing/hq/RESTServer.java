@@ -244,6 +244,15 @@ public class RESTServer extends ServerResource implements ApplicationInfo
 			}
 		};
 		
+		Restlet rtMachineLearning = new Restlet(getContext()) {
+			@Override
+			public void handle(Request req, Response res)
+			{
+				res.setEntity(engineObject.getHistoriaModuleDigest(), MediaType.TEXT_PLAIN);
+			}
+		};
+		
+		component.getDefaultHost().attach("/historia", rtMachineLearning);
 		component.getDefaultHost().attach("/console", rtWebConsole);
 		component.getDefaultHost().attach("/new", rtAnalyzer);
 		component.getDefaultHost().attach("/get/{id}/{type}", rtSendResult);
@@ -262,6 +271,6 @@ public class RESTServer extends ServerResource implements ApplicationInfo
     public String toHTML()
 	{
         return "Welcome to Chain Engine API Server.\r\n(Emotional data analyzer for Korean Language)\r\nHost here provides below services:\r\n=========================================\r\n"
-        		+ "GET /console : Web console to test the engine(View json object, get raw analysis data)\r\nGET /test : For testing purpose\r\nPOST /new : Invoke new task of analizing. Returning id.\r\nGET /get/id/{type} : Get results of a certain job. Type can be txt or json.";
+        		+ "GET /historia : Digest of HistoriaModule (machin learning)\r\nGET /console : Web console to test the engine(View json object, get raw analysis data)\r\nGET /test : For testing purpose\r\nPOST /new : Invoke new task of analizing. Returning id.\r\nGET /get/id/{type} : Get results of a certain job. Type can be txt or json.";
     }
 }

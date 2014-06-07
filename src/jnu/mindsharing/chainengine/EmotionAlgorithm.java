@@ -17,15 +17,17 @@ public class EmotionAlgorithm extends ArrayList<Nuri>
 	
 	private String TAG = "Algorithm";
 	private MorphemeAnalyzer ma;
+	private HistoriaModule mlearn;
 	private ArrayList<EParagraph> epr;
 	
 	enum ESENTENCE_TRAVERSE_MODE {NORMAL, INCREASE_NEXT, DECREASE_NEXT, INVERT_NEXT, DESC_JOIN};
 	
-	public EmotionAlgorithm(MorphemeAnalyzer hostMA)
+	public EmotionAlgorithm(MorphemeAnalyzer hostMA, HistoriaModule ml)
 	{
 		// TODO: null 체크
 		ma = hostMA;
 		epr = new ArrayList<EParagraph>();
+		mlearn = ml;
 	}
 	
 	public int createNewParagraph(String text)
@@ -121,13 +123,27 @@ public class EmotionAlgorithm extends ArrayList<Nuri>
 				Enum<EmoUnit.WordTag> tag = em.getTag();
 				if (tag == EmoUnit.WordTag.Desc || tag == EmoUnit.WordTag.DescNextObject || tag == EmoUnit.WordTag.DescSubject)
 				{
-					EmoUnit result = eq.queryWord(em.getOrigin());
+					String source = em.getOrigin();
+					EmoUnit result = eq.queryWord(source);
 					if (result == null)
 					{
-						P.e(TAG, "모르는 어휘 : %s", em.getOrigin());
+						
+						if (mlearn.findWord(source) != null)
+						{
+							P.e(TAG, "HistoriaModule에서 (%s) 단어의 감정값을 받았습니다.", source);
+							double[] historia_emovalue = mlearn.getHistory(source);
+							em.importVectors((int)Math.round(historia_emovalue[0]), (int)Math.round(historia_emovalue[1]),
+									(int)Math.round(historia_emovalue[2]), (int)Math.round(historia_emovalue[3]));
+						}
+						else
+						{
+							P.e(TAG, "(%s) 단어는 감정값을 알 수가 없습니다.", em.getOrigin());
+						}
+						
 					}
 					else
 					{
+						P.e(TAG, "데이터베이스에서 (%s) 단어의 감정값을 받았습니다. (추정값)", source);
 						em.importVectors(result);
 					}
 				}
@@ -218,8 +234,8 @@ public class EmotionAlgorithm extends ArrayList<Nuri>
 			for (EmoUnit em: es)
 			{
 				// 결합 작업은 모두 끝났으므로, 이 단계에서 extTag를 지운다. 그리고 여기에, 결합시 문맥 정보를 담는다.
-				P.e(TAG, "탐색 중, 현재 : %s, 모드 %s", em.getOrigin(), tm.toString());
 				em.setExt();
+				// P.e(TAG, "탐색 중, 현재 : %s, 모드 %s", em.getOrigin(), tm.toString());
 				if (tm == ESENTENCE_TRAVERSE_MODE.NORMAL)
 				{
 					if (em.getTag() == EmoUnit.WordTag.DescNextObject)
@@ -321,6 +337,12 @@ public class EmotionAlgorithm extends ArrayList<Nuri>
 		epr.clear(); // 사용후 EParagraph결과물 모두 버림
 		
 		// phase 5: EmotionAlgorithm 내부에 저장된 Nuri 객체들에서 전체 감정 값 추출, 정규화 및 수치화
+		double[] fulltext_emo = new double[4];
+		fulltext_emo[0] = 0.0; // joy
+		fulltext_emo[1] = 0.0; // sorrow
+		fulltext_emo[2] = 0.0; // growth
+		fulltext_emo[3] = 0.0; // cease
+		
 		for (Nuri nri:this)
 		{
 			double[] normalized_emo = new double[4];
@@ -344,8 +366,35 @@ public class EmotionAlgorithm extends ArrayList<Nuri>
 				normalized_emo[1] /= relations_length;
 				normalized_emo[2] /= relations_length;
 				normalized_emo[3] /= relations_length;
+				
+				fulltext_emo[0] += normalized_emo[0];
+				fulltext_emo[1] += normalized_emo[1];
+				fulltext_emo[2] += normalized_emo[2];
+				fulltext_emo[3] += normalized_emo[3];
 			}
 			nri.setContextEmo(normalized_emo);
+		}
+		
+		// phrase 6: Desc/DescSubject 중에 감정값이 없는 어휘에 대해, 전체 문맥에서 얻은
+		// 평균 감정값을 HistoriaModule에 학습시킨다.
+		if (size() > 0)
+		{
+			fulltext_emo[0] = fulltext_emo[0]/size();
+			fulltext_emo[1] = fulltext_emo[1]/size();
+			fulltext_emo[2] = fulltext_emo[2]/size();
+			fulltext_emo[3] = fulltext_emo[3]/size();
+
+			for (Nuri nri:this)
+			{
+				for (EmoUnit em : nri.getRelations())
+				{
+					if (em.hasZeroEmotion() && (em.getTag() == EmoUnit.WordTag.Desc || em.getTag() == EmoUnit.WordTag.DescSubject))
+					{
+						P.d(TAG, "HistoriaModule에 학습 중 : %s", em.getOrigin());
+						mlearn.addHistory(em.getOrigin(), fulltext_emo);
+					}
+				}
+			}
 		}
 	}
 	

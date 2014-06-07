@@ -13,13 +13,16 @@ public class ChainEngine implements ApplicationInfo
 {
 	final String versionCode = "chronicle";
 	final int versionNumber = 1;
-	private MorphemeAnalyzer kkmaMA;
+	private MorphemeAnalyzer kkmaMA; // 형태소 분석기
+	private HistoriaModule mlearn;  // 기계학습 모듈
 	
 	private String TAG = "Engine";
 
 	public ChainEngine()
 	{
 		kkmaMA = null;
+		mlearn = new HistoriaModule();
+		mlearn.printDigest();
 	}
 	
 	@Override
@@ -62,7 +65,7 @@ public class ChainEngine implements ApplicationInfo
 		// TODO: 사전 정제작업?
 		// purifier.rb 의 자바 버전!
 		// 문장 단위 전처리 작업 시작
-		EmotionAlgorithm eprocess = new EmotionAlgorithm(kkmaMA);
+		EmotionAlgorithm eprocess = new EmotionAlgorithm(kkmaMA, mlearn);
 		eprocess.clear();
 		
 		try
@@ -86,5 +89,10 @@ public class ChainEngine implements ApplicationInfo
 			e.printStackTrace();
 			return null;
 		}
+	}
+	
+	public String getHistoriaModuleDigest()
+	{
+		return mlearn.digest();
 	}
 }
