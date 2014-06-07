@@ -57,7 +57,7 @@ public class HistoriaModule
 	{
 		for (String key: history.keySet())
 		{
-			if (key.contains(keyword))
+			if (key.equals(keyword))
 			{
 				return key;
 			}
