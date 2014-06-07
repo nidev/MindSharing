@@ -71,7 +71,9 @@ public class TextPreprocessor
 		}
 		// WARNING: postProcess 과정에서 토큰 품질이 감소한다. 쓸데없이 자세히 잘라서, SNS텍스트 분석에는 부적합함
 		//aresults = ma.postProcess(aresults);
-		aresults = ma.leaveJustBest(aresults);
+		//aresults = ma.leaveJustBest(aresults);
+		
+		
 		
 		// phase1: 어휘 품사에 맞춰서 필요한 태그를 설정한다.
 		// TODO: 주어목적어 후보군 생성 작업이 이루어지지않음
@@ -88,122 +90,109 @@ public class TextPreprocessor
 			
 			if (!mexp.isNotHangul())
 			{
-				// P.d(TAG, "-%s- 형태소 후보 갯수 : %d개", mexp.getExp(), mexp.size());
-				for (MCandidate cur_mc : mexp)
+				//P.d(TAG, "-%s- 형태소 후보 갯수 : %d개", mexp.getExp(), mexp.size());
+				MCandidate cur_mc = SejongMCandidateRefiner.refineAndSelectBest(mexp);
+				for (Morpheme cur_morpheme: cur_mc)
 				{
-					for (Morpheme cur_morpheme: cur_mc)
+					P.d("형태소", "--[단어:%s] %s %s %s %s", cur_mc.getExp(), cur_morpheme.getCharSetName(), cur_morpheme.getString(), cur_morpheme.getTag(), cur_morpheme.getComposed());
+
+					// 꼬꼬마 형태소의 태그를, 내부의 태그로 새롭게 변환한다.
+					String mtag = cur_morpheme.getTag();
+					if (isTagIn(mtag, "MAG"))
 					{
-						P.d("형태소", "--[단어:%s] %s %s %s %s", cur_mc.getExp(), cur_morpheme.getCharSetName(), cur_morpheme.getString(), cur_morpheme.getTag(), cur_morpheme.getComposed());
-						// 형태소간 관계를 비교한다.
-						// TODO: 효율적인 태그 비교 방법이 필요함
-						String mtag = cur_morpheme.getTag();
-						if (isTagIn(mtag, "MAG"))
+						String word = cur_morpheme.getString();
+						//P.d("형태소", "형용사 앞의 부사: %s", last_morpheme.getString());
+						if (eq.isNegativeADV(word))
 						{
-							String word = cur_morpheme.getString();
-							//P.d("형태소", "형용사 앞의 부사: %s", last_morpheme.getString());
-							if (eq.isNegativeADV(word))
-							{
-								// 안, 아니, 아니하, 전혀, 절대 등등
-								es.add(new EmoUnit(word).setTag(EmoUnit.WordTag.InvertNextDesc));
-							}
-							else if (eq.isEnhancer(word))
-							{
-								// 매우, 정말, 진짜, 확실히
-								es.add(new EmoUnit(word).setTag(EmoUnit.WordTag.NextDescEnhancer));
-							}
-							else if (eq.isReducer(word))
-							{
-								// 약간, 조금, 살짝
-								es.add(new EmoUnit(word).setTag(EmoUnit.WordTag.NextDescReducer));
-							}
-							else
-							{
-								es.add(new EmoUnit(word).setTag(EmoUnit.WordTag.Skip));
-							}
+							// 안, 아니, 아니하, 전혀, 절대 등등
+							es.add(new EmoUnit(word).setTag(EmoUnit.WordTag.InvertNextDesc));
 						}
-						else if (isTagIn(mtag, "VA", "VXA"))
+						else if (eq.isEnhancer(word))
 						{
-							// 형용사 어휘
-							es.add(new EmoUnit(cur_morpheme.getString()+"다").setTag(EmoUnit.WordTag.AdjectMarker));
+							// 매우, 정말, 진짜, 확실히
+							es.add(new EmoUnit(word).setTag(EmoUnit.WordTag.NextDescEnhancer));
 						}
-						else if (isTagIn(mtag, "VV"))
+						else if (eq.isReducer(word))
 						{
-							// 동사 어휘
-							// VV 태그는 명사+하다 의 조합이 아닌 동사들
-							// TODO: 현재는 인과 관계파악없이 서술어의 어감으로 파악한다.
-							es.add(new EmoUnit(cur_morpheme.getString()+"다").setTag(EmoUnit.WordTag.VerbMarker));
-						}
-						else if (isTagIn(mtag, "VXV", "VX"))
-						{
-							// 있다/없다/(명사)하다 와 같은 보조동사 어휘
-							// 처리할지 말지는 고민 중
-							es.add(new EmoUnit(cur_morpheme.getString()+"다").setTag(EmoUnit.WordTag.VerbMarker));
-						}
-						else if (isTagIn(mtag, "ECD")) // 의존적 종결어미 (--하'지')
-						{
-							es.add(new EmoUnit(cur_morpheme.getString()).setTag(EmoUnit.WordTag.NextDescDepender));
-						}
-						else if (isTagIn(mtag, "MDT", "MDN"))
-						{
-							// 관형사... 체언을 자세히 꾸며준다.
-							// 따라서 뒤에오는 Object를 자세히 설명해준다.
-							es.add(new EmoUnit(cur_morpheme.getString()).setTag(EmoUnit.WordTag.DeterminerMarker));
-							
-						}
-						else if (isTagIn(mtag, "EFN"))
-						{
-							// 마침표 등지의 끝나는 위치에 Skip 토큰을 추가한다.
-							es.add(new EmoUnit(cur_morpheme.getString()).setTag(EmoUnit.WordTag.Skip));
-						}
-						else if (isTagIn(mtag, "JKS", "JX"))
-						{
-							// TODO: 앞부분의 명사(NNG)태그의 연속을 주어로 파악할 수 있도록 한다.
-							es.add(new EmoUnit(cur_morpheme.getString()).setTag(EmoUnit.WordTag.SubjectTrailMarker));
-						}
-						else if (isTagIn(mtag, "XSV", "XSA"))
-						{
-							es.add(new EmoUnit(cur_morpheme.getString()+"다").setTag(EmoUnit.WordTag.DescTrailMarker));
-						}
-						else if (isTagIn(mtag, "JKM", "JKG", "JKC", "JKQ"))
-						{
-							// XXX: 부사격/관형격/보격/인용격 조사 사용안함
-							// 필요하면 2단계를 고치시오
-							es.add(new EmoUnit(cur_morpheme.getString()).setTag(EmoUnit.WordTag.UnhandledTrailMarker));
-							
-						}
-						else if (isTagIn(mtag, "JKO"))
-						{
-							// TODO: 앞부분의 명사(NNG)태그의 연속을 목적어나 일반 객체 어휘로 파악할 수 있도록 한다.
-							es.add(new EmoUnit(cur_morpheme.getString()).setTag(EmoUnit.WordTag.ObjectTrailMarker));
-						}
-						else if (isTagIn(mtag, "NNG", "XR", "XSN", "NP", "NNP", "NNB"))
-						{
-							// 명사 어휘 덩어리를 만들기 위한 태그 부분
-							// XXX: XR 은 어근 태그
-							// 복잡+ 하다. 인데.... 후
-							/*
-							 * TODO: 서로 다른 명사의 타입을 하나로 합치다보면 문제가 발생한다.
-							 * 구분할 수 있게 태그를 다시 설정함이 좋을듯하다.
-							 * 
-							 * 또는 꼬꼬마의 태그를 그대로 EmoUnit에 저장할 수 있게 하거나.
-							 */
-							//if (mtag.equals("NP"))
-							//{
-								// 대명사는 가르키는 대상이 존재하므로 일단 ReferenceMarker로.
-							//	es.add(new EmoUnit(cur_morpheme.getString()).setTag(EmoUnit.WordTag.ReferenceMarker));
-							//}
-							//else
-							//{
-							es.add(new EmoUnit(cur_morpheme.getString()).setTag(EmoUnit.WordTag.NounMarker).setExt(mtag));
-							//	
-							//}
+							// 약간, 조금, 살짝
+							es.add(new EmoUnit(word).setTag(EmoUnit.WordTag.NextDescReducer));
 						}
 						else
 						{
-							//
-							// TODO: 3차를 넘길 때쯤 Skip 부분은 모두 trim한다.
-							// es.add(new EmoUnit(cur_morpheme.getString()).setTag(EmoUnit.WordTag.Skip));
+							es.add(new EmoUnit(word).setTag(EmoUnit.WordTag.Skip));
 						}
+					}
+					else if (isTagIn(mtag, "VA", "VXA"))
+					{
+						// 형용사 어휘
+						es.add(new EmoUnit(cur_morpheme.getString()+"다").setTag(EmoUnit.WordTag.AdjectMarker));
+					}
+					else if (isTagIn(mtag, "VV"))
+					{
+						// 동사 어휘
+						// VV 태그는 명사+하다 의 조합이 아닌 동사들
+						// TODO: 현재는 인과 관계파악없이 서술어의 어감으로 파악한다.
+						es.add(new EmoUnit(cur_morpheme.getString()+"다").setTag(EmoUnit.WordTag.VerbMarker));
+					}
+					else if (isTagIn(mtag, "VXV", "VX"))
+					{
+						// 있다/없다/(명사)하다 와 같은 보조동사 어휘
+						// 처리할지 말지는 고민 중
+						es.add(new EmoUnit(cur_morpheme.getString()+"다").setTag(EmoUnit.WordTag.VerbMarker));
+					}
+					else if (isTagIn(mtag, "ECD")) // 의존적 종결어미 (--하'지')
+					{
+						es.add(new EmoUnit(cur_morpheme.getString()).setTag(EmoUnit.WordTag.NextDescDepender));
+					}
+					else if (isTagIn(mtag, "MDT", "MDN"))
+					{
+						// 관형사... 체언을 자세히 꾸며준다.
+						// 따라서 뒤에오는 Object를 자세히 설명해준다.
+						es.add(new EmoUnit(cur_morpheme.getString()).setTag(EmoUnit.WordTag.DeterminerMarker));
+						
+					}
+					else if (isTagIn(mtag, "EFN"))
+					{
+						// 마침표 등지의 끝나는 위치에 Skip 토큰을 추가한다.
+						es.add(new EmoUnit(cur_morpheme.getString()).setTag(EmoUnit.WordTag.Skip));
+					}
+					else if (isTagIn(mtag, "JKS", "JX"))
+					{
+						// TODO: 앞부분의 명사(NNG)태그의 연속을 주어로 파악할 수 있도록 한다.
+						es.add(new EmoUnit(cur_morpheme.getString()).setTag(EmoUnit.WordTag.SubjectTrailMarker));
+					}
+					else if (isTagIn(mtag, "XSV", "XSA"))
+					{
+						es.add(new EmoUnit(cur_morpheme.getString()+"다").setTag(EmoUnit.WordTag.DescTrailMarker));
+					}
+					else if (isTagIn(mtag, "JKM", "JKG", "JKC", "JKQ"))
+					{
+						// XXX: 부사격/관형격/보격/인용격 조사 사용안함
+						// 필요하면 2단계를 고치시오
+						es.add(new EmoUnit(cur_morpheme.getString()).setTag(EmoUnit.WordTag.UnhandledTrailMarker));
+						
+					}
+					else if (isTagIn(mtag, "JKO"))
+					{
+						// TODO: 앞부분의 명사(NNG)태그의 연속을 목적어나 일반 객체 어휘로 파악할 수 있도록 한다.
+						es.add(new EmoUnit(cur_morpheme.getString()).setTag(EmoUnit.WordTag.ObjectTrailMarker));
+					}
+					else if (isTagIn(mtag, "NNG", "XR", "XSN", "NP", "NNP", "NNB", "UN")) // UN 태그에 주목
+					{
+						// 명사 어휘 덩어리를 만들기 위한 태그 부분 
+						/*
+						 * XR 은 어근 태그 (복잡+하다 에서 복잡 부분)
+						 * 
+						 * 서로 다른 명사의 타입을 하나로 합치다보면 문제가 발생한다.
+						 * 구분할 수 있게 Ext 태그를 다시 설정함이 좋을듯하다.
+						 * 
+						 * 주목: UN 은 형태소 분석기에서 '명사'로 추정한 어휘이다. '인명'도 엄밀히 명사의 범주에 속하기 때문에, 인명 인식을 위해서 추가한다.
+						 */
+						es.add(new EmoUnit(cur_morpheme.getString()).setTag(EmoUnit.WordTag.NounMarker).setExt(mtag));
+					}
+					else
+					{
+						// 관심 없는 어휘는 ESentence 객체에 변환된 태그로 넣지않고 무시한다.
 					}
 				}
 			}
@@ -213,7 +202,7 @@ public class TextPreprocessor
 				P.d(TAG, "한글이 아닌 문자. 이모티콘 탐색을 시도합니다.");
 				if (eq.isEmoticon(mexp.getExp()))
 				{
-					// 이모티콘으로만 마크하고 어휘 탐색은 나중에...
+					// 이모티콘은 Preprocessing 단계에서 감정값이 평가된다.
 					EmoUnit new_emo = new EmoUnit(mexp.getExp()).setTag(EmoUnit.WordTag.Emoticon);
 					new_emo.importVectors(eq.queryEmoticon(mexp.getExp()));
 					es.add(new_emo);
