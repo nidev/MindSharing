@@ -18,13 +18,20 @@ public class HistoriaModule
 {
 	private HashMap<String, double[]> history;
 	private long timeBegin;
-
+	
+	/**
+	 * 모듈 생성. 생성 시각을 기억하고, 감정값 해시맵을 준비한다.
+	 */
 	public HistoriaModule()
 	{
 		timeBegin = System.currentTimeMillis();
 		history = new HashMap<String, double[]>();
 	}
 	
+	/**
+	 * 감정값 없이, 새로운 어휘를 학습한다.
+	 * @param word 새로운 어휘
+	 */
 	public void addHistory(String word)
 	{
 		double[] void_value = new double[4];
@@ -36,6 +43,11 @@ public class HistoriaModule
 		history.put(word, void_value);
 	}
 	
+	/**
+	 * 주어진 감정값으로, 입력된 어휘를 학습한다.
+	 * @param word 어휘
+	 * @param contextEmo joy/sorrow/growth/cease 값을 갖고 있는 double타입 배열
+	 */
 	public void addHistory(String word, double[] contextEmo)
 	{
 		if (!history.containsKey(word))
@@ -53,6 +65,11 @@ public class HistoriaModule
 		history.put(word, new_value);
 	}
 	
+	/**
+	 * 검색할 어휘가 해시맵에 존재하는지 확인한다. 없다면 null을 반환한다.
+	 * @param keyword 검색할 어휘
+	 * @return 일치하는 문자열, 또는 null
+	 */
 	public String findWord(String keyword)
 	{
 		for (String key: history.keySet())
@@ -65,6 +82,11 @@ public class HistoriaModule
 		return null;
 	}
 	
+	/**
+	 * 학습된 감정값을 가져온다. 어휘가 해시맵에 없다면 null을 반환한다.
+	 * @param word 감정 어휘
+	 * @return 감정값 4개가 담긴 double 배열, 또는 null
+	 */
 	public double[] getHistory(String word)
 	{
 		if (history.containsKey(word))
@@ -77,6 +99,10 @@ public class HistoriaModule
 		}
 	}
 	
+	/**
+	 * 학습상태를 텍스트로 요약하여 반환한다.
+	 * @return 학습상태 보고
+	 */
 	public String digest()
 	{
 		String br = "\r\n";
@@ -85,12 +111,12 @@ public class HistoriaModule
 		s.append(String.format("%d words are learned.%s", history.size(), br));
 		s.append(br);
 		s.append("===================================================================");s.append(br);
-		s.append("| Word(Descriptor)  | External weight for JOY/SORROW/GROWTH/CEASE |");s.append(br);
+		s.append("| External weight for JOY/SORROW/GROWTH/CEASE| Word(Descriptor)   |");s.append(br);
 		s.append("===================================================================");s.append(br);
 		for (String word : history.keySet())
 		{
 			double[] v = history.get(word);
-			s.append(String.format("%20s |  %.5f / %.5f / %.5f / %.5f%s", word, v[0], v[1], v[2], v[3], br));
+			s.append(String.format("%.5f | %.5f | %.5f | %.5f | %s %s", v[0], v[1], v[2], v[3], word, br));
 		}
 		s.append("===================================================================");s.append(br);
 		SimpleDateFormat timeformat = new SimpleDateFormat("yyyy-MM-dd a hh:mm:ss");
@@ -99,6 +125,9 @@ public class HistoriaModule
 		return s.toString(); 
 	}
 	
+	/**
+	 * 학습상태 보고서를 표준 출력으로 출력한다.
+	 */
 	public void printDigest()
 	{
 		System.out.println(digest());

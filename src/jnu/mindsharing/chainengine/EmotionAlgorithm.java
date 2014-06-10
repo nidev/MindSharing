@@ -11,6 +11,13 @@ import jnu.mindsharing.common.P;
 
 import org.snu.ids.ha.ma.MorphemeAnalyzer;
 
+/**
+ * 텍스트에서 감정을 추출해내는 알고리즘이 있는 클래스이다. 이곳에 텍스트를 추가하는 건 엔진의 역할이다.
+ * 
+ * @see TextPreprocessor
+ * @author nidev
+ *
+ */
 public class EmotionAlgorithm extends ArrayList<Nuri>
 {
 	private static final long serialVersionUID = -6004998827195979333L;
@@ -22,6 +29,11 @@ public class EmotionAlgorithm extends ArrayList<Nuri>
 	
 	enum ESENTENCE_TRAVERSE_MODE {NORMAL, INCREASE_NEXT, DECREASE_NEXT, INVERT_NEXT, DESC_JOIN};
 	
+	/**
+	 * 알고리즘 클래스 초기화
+	 * @param hostMA 엔진에서 제공한 꼬꼬마 형태소 분석기 객체
+	 * @param ml 엔진에서 제공한 학습기 모듈 객체
+	 */
 	public EmotionAlgorithm(MorphemeAnalyzer hostMA, HistoriaModule ml)
 	{
 		// TODO: null 체크
@@ -30,13 +42,23 @@ public class EmotionAlgorithm extends ArrayList<Nuri>
 		mlearn = ml;
 	}
 	
+	/**
+	 * 새 텍스트 문단을 ArrayList<EParagraph>에 추가하여 처리할 수 있도록 준비한다.
+	 * @param text 분석할 텍스트 문단
+	 * @return 현재 문단의 인덱스
+	 */
 	public int createNewParagraph(String text)
 	{
-		// Return: index
 		epr.add(new EParagraph(text));
 		return epr.size()-1;
 	}
 	
+	/**
+	 * 주어진 문자열과 일치하는 EParagraph 문단을 반환한다. 없다면 null 을 반환한다.
+	 * @param text 찾아볼 문자열
+	 * @return 해당 문단을 포함하고 있는 EPragraph 객체, 또는 null
+	 * 
+	 */
 	public EParagraph findEParagraphByText(String text)
 	{
 		for (EParagraph ep: epr)
@@ -49,12 +71,21 @@ public class EmotionAlgorithm extends ArrayList<Nuri>
 		return null;
 	}
 	
+	/**
+	 * 해당 인덱스에 위치한 EParagraph 객체 안에, 분석할 문장이 들어있는 ESentence 객체를 추가한다.
+	 * @param paragraph_index createNewParagraph()에서 반환한 문단 인덱스
+	 * @param es ESentence 객체
+	 */
 	public void addESentenceTo(int paragraph_index, ESentence es)
 	{
 		epr.get(paragraph_index).add(es);
 	}
 
 	
+	/**
+	 * ESentence 객체 내부 데이터를 검토한다.
+	 * @param es ESentence 객체
+	 */
 	public void inspectESentence(ESentence es)
 	{
 		// for debugging
@@ -73,6 +104,11 @@ public class EmotionAlgorithm extends ArrayList<Nuri>
 		P.e(TAG, "Inspector end");
 	}
 	
+	/**
+	 * 태깅과 결합, 관계분석 작업이 끝난 ESentence 객체로부터, 정제된 정보 객체인 Nuri를 생성한다.
+	 * @param es 분석 작업이 완료된 ESentence 객체
+	 * @return Nuri 객체
+	 */
 	public Nuri buildNuriFromESentence(ESentence es)
 	{
 		Nuri nri = new Nuri();
@@ -91,6 +127,10 @@ public class EmotionAlgorithm extends ArrayList<Nuri>
 		return nri;
 	}
 	
+	/**
+	 * 주어진 인덱스에 해당하는 문단을 처리한다. 예외가 발생할 수 있다.
+	 * @param paragraph_index EParagraph의 문단 인덱스
+	 */
 	public void process(int paragraph_index) throws Exception
 	{
 		// phase 1: 문장마다 형태소 분석 후 어휘 탐색
@@ -400,6 +440,9 @@ public class EmotionAlgorithm extends ArrayList<Nuri>
 	
 
 	
+	/**
+	 * ArrayList<EParagraph>에 저장된 문장을 모두 처리한다. process() 에서 발생한 예외가 넘어올 수 있다.
+	 */
 	public void processAll() throws Exception
 	{
 		int index = 0;
@@ -410,13 +453,19 @@ public class EmotionAlgorithm extends ArrayList<Nuri>
 		
 	}
 	
-	
+	/**
+	 * ResultProcessor 객체를, 알고리즘 객체로부터 추출한다.
+	 * @return JSON이나 TXT로 출력이 준비된 ResultProcessor 객체
+	 */
 	public ResultProcessor extractResultProcessor()
 	{
 		ResultProcessor resp = new ResultProcessor(this);
 		return resp;
 	}
 	
+	/**
+	 * EmotionAlgorithm 객체의 상태를 보여준다.
+	 */
 	public void displayEStatus()
 	{
 		P.d(TAG, "ArrayList<EParagraph> epr 내의 총 문단 %d개", size());

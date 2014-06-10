@@ -28,6 +28,8 @@ import org.restlet.resource.Get;
 import org.restlet.resource.ServerResource;
 
 /**
+ * 웹 API 서비스를 위한 RESTful API 서버 (Restlet 기반)
+ * 
  * @author nidev
  *
  */
@@ -42,56 +44,92 @@ public class RESTServer extends ServerResource implements ApplicationInfo
 	private int max_requests = 5;
 	private HashMap<String, ResultProcessor> rpcache;
 	
+	/**
+	 * 생성자, 캐시를 위한 해시 테이블을 생성함
+	 */
 	public RESTServer()
 	{
 		rpcache = new HashMap<String, ResultProcessor>();
 	}
 
+	/**
+	 * Request 카운터를 증가
+	 */
 	private synchronized void addReq()
 	{
 		P.d(TAG, "-- Current API Queue: %d/10 --", getReqs());
 		current_requests += 1;
 	}
 	
+	/**
+	 * Request 카운터를 감소
+	 */
 	private synchronized void subReq()
 	{
 		P.d(TAG, "-- Current API Queue: %d/10 --", getReqs());
 		current_requests -= 1;
 	}
 	
+	/**
+	 * 처리 중인 Request 수를 반환
+	 */
 	private synchronized int getReqs()
 	{
 		return current_requests;
 	}
 	
+	/**
+	 * Request 수가 제한 값에 도달했는지 확인
+	 * @return 요청 제한 초과시 true, 이외에 false
+	 */
 	private synchronized boolean isMaxReq()
 	{
 		return current_requests >= max_requests;
 	}
 	
+	/**
+	 * 서버 버전 코드를 반환
+	 * @return 서버 버전 코드
+	 */
 	@Override
 	public String getVersionCode()
 	{
 		return versionCode;
 	}
 
+	/**
+	 * 서버 버전 넘버를 반환
+	 * @return 서버 버전 넘버
+	 */
 	@Override
 	public int getVersionNumber()
 	{
 		return versionNumber;
 	}
 
+	/**
+	 * 라이브러리 저작권 정보를 제공한다.
+	 * @return 저작권 정보가 담긴 텍스트
+	 */
 	@Override
 	public String getLicenseInfo()
 	{
 		return "Restlet Framework (http://restlet.org/download/legal)를 LGPL License하에 사용합니다.";
 	}
 	
+	/**
+	 * 서버 내부의 엔진 객체를 획득한다.
+	 * @return ChainEngine 객체
+	 */
 	public ChainEngine getEngine()
 	{
 		return engineObject;
 	}
 	
+	/**
+	 * API 서버를 실행한다. 동작 도중 오류 발생시 Exception을 발생시킨다. 이 부분에서, 각 요청 주소에 대한 작업이 모두 정의되어있다.
+	 * @param ce ChainEngine 객체
+	 */
 	public void run(ChainEngine ce) throws Exception
 	{
 		engineObject = ce;
@@ -262,11 +300,20 @@ public class RESTServer extends ServerResource implements ApplicationInfo
 		component.start();
 	}
 	
+	
+	/**
+	 * 서버 가동 상태를 반환한다.
+	 * @return 가동 중이면 true, 이외에 false
+	 */
 	public boolean isStarted()
 	{
 		return srv.isStarted();
 	}
 	
+	/**
+	 * 서버에 처음 접속했을때 보여주는 텍스트 페이지 내용을 반환한다.
+	 * @return 첫 화면에 나올 텍스트
+	 */
 	@Get
     public String toHTML()
 	{

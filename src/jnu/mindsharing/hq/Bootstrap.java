@@ -11,6 +11,8 @@ import jnu.mindsharing.common.P;
 import org.restlet.resource.ServerResource;
 
 /**
+ * Boostrap은 엔진과 API 서버를 동시에 가동하기위한 편리한 클래스이다. 엔진 가동과 데이터베이스 연결, API 서버 가동을 담당한다.
+ * 
  * @author nidev
  *
  */
@@ -19,7 +21,9 @@ public class Bootstrap extends ServerResource
 	static String TAG = "CEBoot";
 
 	/**
-	 * @args Set of arguments for running from CLI, given by a user.
+	 * 서버와 메시지 로거를 가동한다. 메시지는 기본적으로 표준 출력을 통해 출력된다.
+	 * @param args 명령행 옵션들(사용되지 않음)
+	 * @return none
 	 */
 	public static void main(String[] args)
 	{
@@ -55,17 +59,6 @@ public class Bootstrap extends ServerResource
 			e.printStackTrace();
 			P.e(TAG, "Exception class: %s,  Exception message: %s", e.toString(), e.getMessage());
 			P.e(TAG, "이 오류는 로그 시스템에 기록되었습니다.");
-		}
-		finally
-		{
-			/*
-			P.d(TAG, "남은 API 요청을 조회합니다. 아래의 정보는 처리되지않은 API 요청입니다.");
-			// restServer.showQueue();
-			P.b();
-			P.d(TAG, "엔진을 안전하게 종료합니다.");
-			// chainEngine.closeSafely();
-			P.d(TAG, "종료.");
-			*/
 		}
 	}
 }

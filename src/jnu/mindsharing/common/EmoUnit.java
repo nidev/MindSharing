@@ -15,7 +15,8 @@ import java.util.HashMap;
  * 0은 값이 없는 상태, 1은 통상적으로 사용되는 어휘, 2는 직설적으로 사용하거나 강한 어휘에 설정한다.
  * ex) 죽다(sorrow 1, cease 1) -> 뒈지다(sorrow 1, cease 2)와 같은 표현이 가능함
  * 
- * 잘 추상화한 것 같으니, 글 전체를 계산하는 객체에서도 재사용이 가능할듯. (약간의 확장이 더 필요한듯하다. 한 문장 계산 후, 로그로 줄이고 다른 객체에 벡터를 저장해야함.)
+ * 이 객체는 emotionOrigin(감정 어휘 문자열)을 설정하지않고도, 감정값을 주고 받는 자료구조로 사용할 수 있다.
+ * 
  * @author nidev
  *
  */
@@ -90,6 +91,10 @@ public class EmoUnit
 	private String TAG = "EmoUnit";
 	
 
+	/**
+	 * 감정 어휘 문자열을 제공하지 않고, EmoUnit 객체를 생성한다.
+	 * 기본 감정값으로 초기화된다. 
+	 */
 	public EmoUnit()
 	{
 		emotionOrigin = "";
@@ -97,6 +102,11 @@ public class EmoUnit
 		extTag = "";
 	}
 	
+	/**
+	 * 감정 어휘를 제공한 상태에서 EmoUnit 객체를 생성한다.
+	 * 기본 감정값으로 초기화된다.
+	 * @param source 감정 소스
+	 */
 	public EmoUnit(String source)
 	{
 		emotionOrigin = source;
@@ -104,6 +114,9 @@ public class EmoUnit
 		extTag = "";
 	}
 	
+	/**
+	 * 감정값 테이블을 초기화한다.
+	 */
 	public void defaultTable()
 	{
 		if (vectorTable == null)
@@ -116,6 +129,11 @@ public class EmoUnit
 		}
 	}
 	
+	/**
+	 * 원시 감정값인 Enum<EPower> 의 값을 정수로 변환한다.
+	 * @param ev EPower 값
+	 * @return EPower에 해당하는 정수값
+	 */
 	public static int epowerToInt(Enum<EPower> ev)
 	{
 		int num = 0;
@@ -131,6 +149,10 @@ public class EmoUnit
 		return INVALID_ENUM;
 	}
 	
+	/**
+	 * 감정 정보가 담긴 벡터를, 감정의 세기가 정수로 변환된 배열로 변환한다.
+	 * @return epowerToInt로 변환된 원시 감정값이 담긴 배열
+	 */
 	public int[] getVectorAsIntArray()
 	{
 		int emovector[] = new int[vectorTitles.length];
@@ -141,6 +163,11 @@ public class EmoUnit
 		return emovector;
 	}
 	
+	/**
+	 * 해당하는 타이틀의 원시 감정값을 증가시킨다.
+	 * @param title 타이틀(joy, sorrow, growth, cease 중 하나)
+	 * @return EmoUnit 객체 자신
+	 */
 	private EmoUnit increase(String title)
 	{
 		// TODO: title validation check
@@ -168,6 +195,11 @@ public class EmoUnit
 		return this; // Chaining을 위한 기법. ex) emounit_object.increase().invert()
 	}
 	
+	/**
+	 * 해당하는 타이틀의 원시 감정값을 감소시킨다.
+	 * @param title 타이틀(joy, sorrow, growth, cease 중 하나)
+	 * @return EmoUnit 객체 자신
+	 */
 	private EmoUnit decrease(String title)
 	{
 		// TODO: title validation check
@@ -195,6 +227,11 @@ public class EmoUnit
 		return this; // Chaining을 위한 기법. ex) emounit_object.increase().decrease()
 	}
 	
+	/**
+	 * 해당하는 타이틀의 원시 감정값이 None이 아닌 경우, 감정값을 증가시킨다. EPower.Extreme 이상으로 가지않는다.
+	 * @param title 타이틀(joy, sorrow, growth, cease 중 하나)
+	 * @return EmoUnit 객체 자신
+	 */
 	public EmoUnit enhance(String title)
 	{
 		if (getVectorSize(title) != EmoUnit.EPower.None)
@@ -204,6 +241,11 @@ public class EmoUnit
 		return this;
 	}
 	
+	/**
+	 * 해당하는 타이틀의 원시 감정값이 None이 아닌 경우, 감정값을 감소시킨다. EPower.Formal 이하로 가지 않는다.
+	 * @param title 타이틀(joy, sorrow, growth, cease 중 하나)
+	 * @return EmoUnit 객체 자신
+	 */
 	public EmoUnit reduce(String title)
 	{
 		if (getVectorSize(title) != EmoUnit.EPower.Formal)
@@ -213,6 +255,10 @@ public class EmoUnit
 		return this;
 	}
 	
+	/**
+	 * 감정 벡터의 값을 교환한다. (기쁨->슬픔, 슬픔->기쁨)
+	 * @return EmoUnit 객체 자신
+	 */
 	public EmoUnit invertEmotionals()
 	{
 		// This function will exchange each strength of two vectors.
@@ -226,6 +272,10 @@ public class EmoUnit
 		return this; // Chaining을 위한 기법. ex) emounit_object.increase().invertEmotionals()
 	}
 	
+	/**
+	 * 상황 벡터의 값을 교환한다. (성장->쇠퇴, 쇠퇴->성장)
+	 * @return EmoUnit 객체 자신
+	 */
 	public EmoUnit invertConditionals()
 	{
 		// This function will exchange each strength of two vectors.
@@ -239,55 +289,100 @@ public class EmoUnit
 		return this; // Chaining을 위한 기법. ex) emounit_object.increase().invertConditionals()
 	}
 	
+	/**
+	 * 감정과 상황 벡터의 값을 모두 교환시켜 반전한다. (기쁨->슬픔, 슬픔->기쁨, 성장->쇠퇴, 쇠퇴->성장)
+	 * @return EmoUnit 객체 자신
+	 */
 	public EmoUnit invertAll()
 	{
 		invertEmotionals();
 		return invertConditionals();
 	}
 	
+	/**
+	 * 감정 소스 문자열을 반환한다.
+	 * @return 감정 어휘
+	 */
 	public String getOrigin()
 	{
 		return emotionOrigin;
 	}
 	
+	/**
+	 * 사용할 수 있는 벡터 타이틀을 가져온다.
+	 * @return 벡터 타이틀, 문자열 배열
+	 */
 	public String[] getTitles()
 	{
 		return vectorTitles;
 	}
 	
+	/**
+	 * 해당하는 타이틀의 벡터 크기를 가져온다. 그 크기는 Enum<EPower>로 표현되어있다.
+	 * @param title 타이틀
+	 * @return 해당 타이틀의 원시 감정값
+	 */
 	public Enum<EPower> getVectorSize(String title)
 	{
 		return vectorTable.get(title);
 	}
 	
+	
+	/**
+	 * EmoUnit 객체에 태그를 설정한다. 이 태그는 Enum<WordTag> 중에 하나이다.
+	 * @param wt WordTag 중에 하나
+	 * @return EmoUnit 객체 자신
+	 */
 	public EmoUnit setTag(Enum<WordTag> wt)
 	{
 		wordTag = wt;
 		return this;
 	}
 	
+	/**
+	 * EmoUnit 객체에 설정된 태그를 가져온다. 이 태그는 Enum<WordTag> 중에 하나이다.
+	 * @return Enum<WordTag>의 중 하나
+	 */
 	public Enum<WordTag> getTag()
 	{
 		return wordTag;
 	}
 	
+	/**
+	 * EmoUnit 객체에 확장태그를 설정한다. 이 태그는 내부에서 약속된 문자열이다. 어떤 문자열인지는 처리 시점에 따라 다르다.
+	 * @param exttag 확장태그 문자열
+	 * @return EmoUnit 객체 자신
+	 */
 	public EmoUnit setExt(String exttag)
 	{
 		extTag = exttag;
 		return this;
 	}
 	
+	/**
+	 * EmoUnit 객체에 빈문자열로 확장태그를 설정한다. 확장태그를 초기화할 때 사용한다.
+	 * @return EmoUnit 객체 자신
+	 */
 	public EmoUnit setExt()
 	{
 		extTag = "";
 		return this;
 	}
 	
+	/**
+	 * EmoUnit 객체에 설정된 확장태그를 가져온다. 이 태그는 내부에서 약속된 문자열이다. 어떤 문자열인지는 처리 시점에 따라 다르다.
+	 * @return 확장태그
+	 */
 	public String getExt()
 	{
 		return extTag;
 	}
 	
+	/**
+	 * 주어진 EmoUnit 객체로부터 감정값을 복사해온다. 이전에 저장된 감정값은 사라진다.
+	 * @param supplied 제공된 EmoUnit 
+	 * @return true(제공된 EmoUnit이 null이 아닌 경우), false(null 포인터가 제공된 경우)
+	 */
 	public boolean importVectors(EmoUnit supplied)
 	{
 		// 주어진 EmoUnit에서 값을 가져온다.
@@ -306,6 +401,14 @@ public class EmoUnit
 		}
 	}
 	
+	/**
+	 * 주어진 원시 감정값들을 EmoUnit 객체에 설정한다. 이전에 저장된 감정값은 사라진다.
+	 * @param joy 기쁨(joy) 감정의 원시값
+	 * @param sorrow 슬픔(sorrow) 감정의 원시값
+	 * @param growth 성장(growth) 감정의 원시값
+	 * @param cease 쇠퇴(cease) 감정의 원시값
+	 * @return true(입력된 감정값 중 음수가 없을 경우), false (음수가 존재해서 가져올 수 없는 경우)
+	 */
 	public boolean importVectors(int joy, int sorrow, int growth, int cease)
 	{
 		if (joy < 0 || sorrow < 0 || growth < 0 || cease < 0)
@@ -314,6 +417,8 @@ public class EmoUnit
 		}
 		else
 		{
+			defaultTable(); // 테이블 초기화
+			
 			for (; joy > 0 ; joy--)
 			{
 				increase(JOY);
@@ -334,6 +439,10 @@ public class EmoUnit
 		}
 	}
 	
+	/**
+	 * 감정값이 전혀 설정되어있지 않은지 확인한다.
+	 * @return true(모든 원시 감정값이 None인 경우), false(하나라도 None이 아닌 값이 존재하는 경우)
+	 */
 	public boolean hasZeroEmotion()
 	{
 		return getVectorSize(JOY) == EPower.None &&

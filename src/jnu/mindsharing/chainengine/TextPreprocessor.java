@@ -12,12 +12,22 @@ import org.snu.ids.ha.ma.MExpression;
 import org.snu.ids.ha.ma.Morpheme;
 import org.snu.ids.ha.ma.MorphemeAnalyzer;
 
+/**
+ * 엔진에서 결합조건 등을 파악하기위해, 내부 태그로 변환하고 주어와 서술어를 파악하는 전처리 클래스이다.
+ * 
+ * @author nidev
+ *
+ */
 public class TextPreprocessor
 {
 	ESentence es;
 	boolean unquoted, tagged, jointed;
 	String TAG="TPreproc";
 	
+	/**
+	 * ESentence 객체를 받아 작업을 준비한다.
+	 * @param es_given ESentence 객체
+	 */
 	public TextPreprocessor(ESentence es_given)
 	{
 		es = es_given;
@@ -26,6 +36,12 @@ public class TextPreprocessor
 		jointed = false;
 	}
 	
+	/**
+	 * 첫번째 매개변수로 주어진 태그가, 두번째부터 나오는 태그들 중에 존재하는지 체크한다.
+	 * @param goal 찾으려는 태그
+	 * @param candidates 후보군
+	 * @return true(태그가 후보 중에 존재함), false(존재하지 않음)
+	 */
 	private boolean isTagIn(String goal, String...candidates)
 	{
 		for (String test: candidates)
@@ -38,6 +54,11 @@ public class TextPreprocessor
 		return false;
 	}
 	
+	/**
+	 * EmoUnit들이 모여있는 ArrayList를 하나의 EmoUnit(태그:Object)로 합친다. 명사 어휘를 합칠 때 이용한다.
+	 * @param units 명사 어휘 EmoUnit들이 포함된 배열
+	 * @return 합성된 EmoUnit 객체
+	 */
 	private EmoUnit mergeIntoObject(ArrayList<EmoUnit> units)
 	{
 		// 주어진 EmoUnit의 어휘를 합쳐서 하나의 객체로 만들고,
@@ -51,6 +72,9 @@ public class TextPreprocessor
 		return new EmoUnit(strbuff.toString().trim()).setTag(EmoUnit.WordTag.Object);
 	}
 	
+	/**
+	 * 따옴표 해체 작업을 수행하고, unquoted 플래그를 true로 바꾼다.
+	 */
 	public void performUnquoting()
 	{
 		if (es.getWholeText().contains("\""))
@@ -61,6 +85,12 @@ public class TextPreprocessor
 		unquoted = true;
 	}
 	
+	/**
+	 * 어휘를 형태소 분석기로 분석하고, 형태소 분석기 태그를 내부 태그로 변환한다. 변환이 완료되면 tagged 플래그를 true로 바꾼다.
+	 * @param ma 꼬꼬마 형태소 분석기 객체
+	 * @param eq EQueryTool 객체
+	 * @see EQueryTool
+	 */
 	public void performTagging(MorphemeAnalyzer ma, EQueryTool eq) throws Exception
 	{
 		List<MExpression> aresults = ma.analyze(es.getWholeText());
@@ -228,6 +258,9 @@ public class TextPreprocessor
 		tagged = true;
 	}
 	
+	/**
+	 * 명사 어휘들끼리 결합이나, 어근과 조사의 결합 등을 확인한다. 결합이 완료되면 jointed 플래그가 true로 설정된다.
+	 */
 	public void performJointing()
 	{
 		// phase 2: EmoUnit 배열을 순회하면서 태그 재설정 (Marker는 감정값 수신후에 다른 태그로 변경한다. phase2이후로 *Marker가 남아있으면 안됨)
@@ -389,6 +422,10 @@ public class TextPreprocessor
 		
 	}
 	
+	/**
+	 * 모든 플래그가 true인지 체크한다. (작업 완료 여부)
+	 * @return true(모두 완료), false(일부 완료)
+	 */
 	public boolean isEverythingDone()
 	{
 		if (unquoted && tagged && jointed)
@@ -401,6 +438,11 @@ public class TextPreprocessor
 		}
 	}
 	
+	/**
+	 * 전처리가 완료되면, TextProcessor 생성 때 받은 es 객체를 반환한다. 내부의 내용은 전처리기에 의해 변경되어있다.
+	 * 만약 작업이 완료되지않았다면, null을 반환한다.
+	 * @return 전처리 완료된 ESentence 객체, 또는 null
+	 */
 	public ESentence export()
 	{
 		return isEverythingDone() ? es : null;

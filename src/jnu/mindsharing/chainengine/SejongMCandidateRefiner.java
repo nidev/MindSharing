@@ -5,9 +5,21 @@ import jnu.mindsharing.common.P;
 import org.snu.ids.ha.ma.MCandidate;
 import org.snu.ids.ha.ma.MExpression;
 
+/**
+ * 세종 말뭉치를 사용한 꼬꼬마 형태소 분석기의 결과 중 일부를 정제하기 위한 클래스이다.
+ * '-하다' 의 처리와, '조금'이라는 어휘를 명사로 취급하여 부사로 처리되지 않는 문제를 임기응변한다.
+ * 
+ * @author nidev
+ *
+ */
 public class SejongMCandidateRefiner
 {
-	
+	/**
+	 * 약간의 트릭을 사용해 형태소 후보를 정제한다.
+	 * 
+	 * @param mexp 꼬꼬마 형태소 분석기의 MExpression 객체(형태소 후보 배열)
+	 * @return 최적의 형태소 후보
+	 */
 	public static MCandidate refineAndSelectBest(MExpression mexp)
 	{		
 		// 가난하다, 건강하다와 같은 표현에서 문제가 생겨서 회피하려고 함

@@ -1,5 +1,11 @@
 package jnu.mindsharing.common;
 
+/**
+ * EQueryTool에서 사용하는 상수와, 기본 데이터베이스 주소를 정의해둔 클래스
+ * 
+ * @author nidev
+ * @see EQueryTool
+ */
 public class EQueryConstants
 {
 	public final static String SQL_HOST = "localhost";
