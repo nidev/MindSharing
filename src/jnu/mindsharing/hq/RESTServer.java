@@ -7,6 +7,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.HashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -257,12 +258,13 @@ public class RESTServer extends ServerResource implements ApplicationInfo
 			{
 				if (req.getMethod() == Method.GET)
 				{
-					InputStream html = RESTServer.class.getResourceAsStream("/jnu/mindsharing/hq/webconsole.html");
-					BufferedReader reader = new BufferedReader(new InputStreamReader(html));
-					StringBuffer s = new StringBuffer();
-					String temp;
 					try
 					{
+						InputStream html = RESTServer.class.getResourceAsStream("/jnu/mindsharing/hq/webconsole.html");
+						BufferedReader reader = new BufferedReader(new InputStreamReader(html, "UTF-8"));
+						StringBuffer s = new StringBuffer();
+						String temp;
+						
 						while ((temp = reader.readLine()) != null)
 						{
 							s.append(temp);
@@ -270,6 +272,11 @@ public class RESTServer extends ServerResource implements ApplicationInfo
 						
 						}
 						res.setEntity(s.toString(), MediaType.TEXT_HTML);
+					}
+					catch (UnsupportedEncodingException e)
+					{
+						res.setEntity("Broken Encoding. Does your Java support UTF-8?", MediaType.TEXT_PLAIN);
+						e.printStackTrace();
 					}
 					catch (IOException e)
 					{
