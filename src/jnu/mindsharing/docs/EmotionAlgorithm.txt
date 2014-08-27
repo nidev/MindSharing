@@ -1,6 +1,6 @@
 Chain Engine에서 사용하는 감정 어휘 분석을 위한 처리 과정이다.
 
-간략히 전처리(preprocessing) => 태그(tagging) => 결합(jointing) => 관계 분석(identifying) => 재구성(refactoring) => 어휘 이미지 탐색(looking) => 수치화(quantifying) => 요약(summarizing) => 학습(feeding back) => 결과 제공(reporting) 단계를 거쳐서 이루어진다.
+간략히 전처리(preprocessing) => 태그(tagging) => 결합(jointing) => 어휘 이미지 탐색(looking) => 관계 분석(identifying) => 재구성(refactoring) => 수치화(quantifying) => 요약(summarizing) => 학습(feeding back) => 결과 제공(reporting) 단계를 거쳐서 이루어진다.
 
 # 변경사항
 
