@@ -6,6 +6,9 @@ package jnu.mindsharing.common;
  * @author nidev
  * @see EQueryTool
  */
+// EqueryTool 이 비권장 패키지로 변경됨
+
+@Deprecated
 public class EQueryConstants
 {
 	public final static String SQL_HOST = "localhost";

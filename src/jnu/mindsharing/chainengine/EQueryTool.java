@@ -19,6 +19,9 @@ import jnu.mindsharing.common.P;
  * @author nidev
  *
  */
+
+// 데이터 보존 및 처리 방법이 바뀌어 Deprecate 됨.
+@Deprecated
 public class EQueryTool
 {
 	final int TYPE_WORD = 0;

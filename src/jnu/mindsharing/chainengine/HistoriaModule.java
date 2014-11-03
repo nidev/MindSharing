@@ -14,6 +14,10 @@ import java.util.HashMap;
  * @author nidev
  *
  */
+
+// 데이터베이스 기반 학습 모델로 변경됨
+
+@Deprecated
 public class HistoriaModule
 {
 	private HashMap<String, double[]> history;
