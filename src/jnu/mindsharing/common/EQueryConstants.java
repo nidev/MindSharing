@@ -10,7 +10,7 @@ public class EQueryConstants
 {
 	public final static String SQL_HOST = "localhost";
 	public final static String SQL_DBNAME = "mindsharing";
-	public final static String SQL_JDBCHEAD = "jdbc:mysql://";
+	public final static String SQL_JDBCHEAD = "jdbc:postgresql://";
 	
 	// 그것, 그거해, 이거 로 지칭하는 대상을 추론하기 위한 것
 	/*

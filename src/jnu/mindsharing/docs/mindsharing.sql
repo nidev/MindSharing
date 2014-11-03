@@ -29,4 +29,7 @@ CREATE TABLE EmotionMemory (
 ) ENGINE=INNODB;
 
 
-
+-- Postgresql 버전
+-- mindsharing=# CREATE TABLE Expression (id SERIAL CONSTRAINT expr_PK PRIMARY KEY,
+-- word VARCHAR(128), type SMALLINT, joy SMALLINT, sorrow SMALLINT, growth SMALLINT
+-- , cease SMALLINT);
