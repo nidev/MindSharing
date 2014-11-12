@@ -3,8 +3,7 @@ package jnu.mindsharing.chainengine;
 import java.util.ArrayList;
 import java.util.List;
 
-import jnu.mindsharing.common.ESentence;
-import jnu.mindsharing.common.EmoUnit;
+import jnu.mindsharing.common.HList;
 import jnu.mindsharing.common.P;
 
 import org.snu.ids.ha.ma.MCandidate;
@@ -20,17 +19,18 @@ import org.snu.ids.ha.ma.MorphemeAnalyzer;
  */
 public class TextPreprocessor
 {
-	ESentence es;
 	boolean unquoted, tagged, jointed;
 	String TAG="TPreproc";
+	String contents;
+	HList internal;
 	
 	/**
 	 * ESentence 객체를 받아 작업을 준비한다.
 	 * @param es_given ESentence 객체
 	 */
-	public TextPreprocessor(ESentence es_given)
+	public TextPreprocessor(String rawText)
 	{
-		es = es_given;
+		contents = rawText;
 		unquoted = false;
 		tagged = false;
 		jointed = false;
@@ -79,6 +79,7 @@ public class TextPreprocessor
 	{
 		if (es.getWholeText().contains("\""))
 		{
+			// TODO: 실질적인 해체 작업
 			P.e(TAG, "따옴표가 포함되어있음.");
 		}
 		// over
@@ -89,11 +90,11 @@ public class TextPreprocessor
 	 * 어휘를 형태소 분석기로 분석하고, 형태소 분석기 태그를 내부 태그로 변환한다. 변환이 완료되면 tagged 플래그를 true로 바꾼다.
 	 * @param ma 꼬꼬마 형태소 분석기 객체
 	 * @param eq EQueryTool 객체
-	 * @see EQueryTool
+	 * @see EQueryTool2
 	 */
-	public void performTagging(MorphemeAnalyzer ma, EQueryTool eq) throws Exception
+	public void performTagging(MorphemeAnalyzer ma) throws Exception
 	{
-		List<MExpression> aresults = ma.analyze(es.getWholeText());
+		List<MExpression> aresults = ma.analyze(contents);
 		if (aresults == null)
 		{
 			return;
@@ -443,9 +444,9 @@ public class TextPreprocessor
 	 * 만약 작업이 완료되지않았다면, null을 반환한다.
 	 * @return 전처리 완료된 ESentence 객체, 또는 null
 	 */
-	public ESentence export()
+	public HList export()
 	{
-		return isEverythingDone() ? es : null;
+		return isEverythingDone() ? internal : null;
 	}
 
 }

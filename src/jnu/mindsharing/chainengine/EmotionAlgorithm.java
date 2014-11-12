@@ -2,11 +2,8 @@ package jnu.mindsharing.chainengine;
 
 import java.util.ArrayList;
 
-import jnu.mindsharing.common.EParagraph;
-import jnu.mindsharing.common.ESentence;
-import jnu.mindsharing.common.EmoUnit;
-import jnu.mindsharing.common.Nuri;
-import jnu.mindsharing.common.NuriTypes;
+import jnu.mindsharing.common.HList;
+import jnu.mindsharing.common.Hana;
 import jnu.mindsharing.common.P;
 
 import org.snu.ids.ha.ma.MorphemeAnalyzer;
@@ -24,8 +21,7 @@ public class EmotionAlgorithm extends ArrayList<Nuri>
 	
 	private String TAG = "Algorithm";
 	private MorphemeAnalyzer ma;
-	private HistoriaModule mlearn;
-	private ArrayList<EParagraph> epr;
+	private HList hlst;
 	
 	enum ESENTENCE_TRAVERSE_MODE {NORMAL, INCREASE_NEXT, DECREASE_NEXT, INVERT_NEXT, DESC_JOIN};
 	
@@ -34,160 +30,96 @@ public class EmotionAlgorithm extends ArrayList<Nuri>
 	 * @param hostMA 엔진에서 제공한 꼬꼬마 형태소 분석기 객체
 	 * @param ml 엔진에서 제공한 학습기 모듈 객체
 	 */
-	public EmotionAlgorithm(MorphemeAnalyzer hostMA, HistoriaModule ml)
+	public EmotionAlgorithm(MorphemeAnalyzer hostMA)
 	{
 		// TODO: null 체크
 		ma = hostMA;
-		epr = new ArrayList<EParagraph>();
-		mlearn = ml;
 	}
 	
 	/**
-	 * 새 텍스트 문단을 ArrayList<EParagraph>에 추가하여 처리할 수 있도록 준비한다.
-	 * @param text 분석할 텍스트 문단
-	 * @return 현재 문단의 인덱스
+	 * HList 객체 내부 데이터를 검토한다.
+	 * @param hl HList 객체
 	 */
-	public int createNewParagraph(String text)
-	{
-		epr.add(new EParagraph(text));
-		return epr.size()-1;
-	}
-	
-	/**
-	 * 주어진 문자열과 일치하는 EParagraph 문단을 반환한다. 없다면 null 을 반환한다.
-	 * @param text 찾아볼 문자열
-	 * @return 해당 문단을 포함하고 있는 EPragraph 객체, 또는 null
-	 * 
-	 */
-	public EParagraph findEParagraphByText(String text)
-	{
-		for (EParagraph ep: epr)
-		{
-			if (ep.getWholeText().equals(text)) // md5나 CRC같은 해시를 사용하지 않으면 비교가 느릴듯.
-			{
-				return ep;
-			}
-		}
-		return null;
-	}
-	
-	/**
-	 * 해당 인덱스에 위치한 EParagraph 객체 안에, 분석할 문장이 들어있는 ESentence 객체를 추가한다.
-	 * @param paragraph_index createNewParagraph()에서 반환한 문단 인덱스
-	 * @param es ESentence 객체
-	 */
-	public void addESentenceTo(int paragraph_index, ESentence es)
-	{
-		epr.get(paragraph_index).add(es);
-	}
-
-	
-	/**
-	 * ESentence 객체 내부 데이터를 검토한다.
-	 * @param es ESentence 객체
-	 */
-	public void inspectESentence(ESentence es)
+	public void inspectHList(HList hl)
 	{
 		// for debugging
 		P.e(TAG,  "Item Inspector");
-		for (EmoUnit inspect_em: es)
+		for (Hana inspect_hn: hl)
 		{
-			if (inspect_em == null)
+			if (inspect_hn == null)
 			{
 				P.e(TAG, " =inspect> null");
 			}
 			else
 			{
-				P.e(TAG, " =inspect> content: %s", inspect_em.getOrigin());
+				P.e(TAG, " =inspect> content: %s", inspect_hn.toString() + "/" + inspect_hn.getXTag());
 			}
 		}
 		P.e(TAG, "Inspector end");
 	}
 	
 	/**
-	 * 태깅과 결합, 관계분석 작업이 끝난 ESentence 객체로부터, 정제된 정보 객체인 Nuri를 생성한다.
-	 * @param es 분석 작업이 완료된 ESentence 객체
-	 * @return Nuri 객체
-	 */
-	public Nuri buildNuriFromESentence(ESentence es)
-	{
-		Nuri nri = new Nuri();
-		EmoUnit es_subject = es.getSubject();
-		
-		nri.setSubject(NuriTypes.PERSON, es_subject.getOrigin()+"/"+es_subject.getExt());
-		
-		// 관련 감정 어휘를 모두 Relation으로 추가한다.
-		for (EmoUnit em : es)
-		{
-			if (!em.hasZeroEmotion() || em.getTag() == EmoUnit.WordTag.Desc || em.getTag() == EmoUnit.WordTag.Object)
-			{
-				nri.addRelations(em);
-			}
-		}
-		return nri;
-	}
-	
-	/**
 	 * 주어진 인덱스에 해당하는 문단을 처리한다. 예외가 발생할 수 있다.
 	 * @param paragraph_index EParagraph의 문단 인덱스
 	 */
-	public void process(int paragraph_index) throws Exception
+	public void feed(String sourceText) throws Exception
 	{
 		// phase 1: 문장마다 형태소 분석 후 어휘 탐색
 		P.d(TAG, "Process");
-		EQueryTool eq = new EQueryTool();
+		Sense ss = new Sense();
 		
-		for (ESentence es: epr.get(paragraph_index))
+		// XXX: 왜 null?
+		if (ss == null) continue;
+		
+		TextPreprocessor preproc = new TextPreprocessor(sourceText);
+		
+		// 전처리기를 사용해서 전처리 작업을 모두 수행한다.
+		// TextPreprocessor.java 참고
+		preproc.performUnquoting(); // 따옴표 해체
+		preproc.performTagging(ma); // 세종 말뭉치 태그를 내부 태그로 변환함
+		preproc.performJointing(); // 명사 어휘 결합 또는, 'xx하다'처럼 체언과 용언이 결합한 사례를 모두 합침
+		
+		if (!preproc.isEverythingDone())
 		{
-			// XXX: 왜 null?
-			if (es == null) continue;
-			
-			TextPreprocessor es_tp= new TextPreprocessor(es);
-			// 전처리기를 사용해서 전처리 작업을 모두 수행한다.
-			// TextPreprocessor.java 참고
-			es_tp.performUnquoting(); // 따옴표 해체
-			es_tp.performTagging(ma, eq); // 세종 말뭉치 태그를 내부 태그로 변환함
-			es_tp.performJointing(); // 명사 어휘 결합 또는, 'xx하다'처럼 체언과 용언이 결합한 사례를 모두 합침
-			
-			if (es_tp.isEverythingDone())
+			throw new Exception("텍스트 전처리 부분에서 실패함");
+		}
+		
+		HList tokenized = preproc.export();
+		
+		// 현재 es 객체 내부에는 전처리 작업이 모두 완료되어있다.
+		
+		// 관계 분석 단계 - 1 : DescObject, DescSubject, Desc 태그된 어휘에 대해 감정값을 탐색한다.
+		// TODO: 동음이의어 처리는 어떻게 할 것인가?
+		for (EmoUnit em: es)
+		{
+			Enum<EmoUnit.WordTag> tag = em.getTag();
+			if (tag == EmoUnit.WordTag.Desc || tag == EmoUnit.WordTag.DescNextObject || tag == EmoUnit.WordTag.DescSubject)
 			{
-				P.d(TAG, "전처리/분해/명사결합 작업 완료: %s", es.getWholeText());
-			}
-			
-			// 현재 es 객체 내부에는 전처리 작업이 모두 완료되어있다.
-			
-			// 관계 분석 단계 - 1 : DescObject, DescSubject, Desc 태그된 어휘에 대해 감정값을 탐색한다.
-			// TODO: 동음이의어 처리는 어떻게 할 것인가?
-			for (EmoUnit em: es)
-			{
-				Enum<EmoUnit.WordTag> tag = em.getTag();
-				if (tag == EmoUnit.WordTag.Desc || tag == EmoUnit.WordTag.DescNextObject || tag == EmoUnit.WordTag.DescSubject)
+				String source = em.getOrigin();
+				EmoUnit result = eq.queryWord(source);
+				if (result == null)
 				{
-					String source = em.getOrigin();
-					EmoUnit result = eq.queryWord(source);
-					if (result == null)
+					
+					if (mlearn.findWord(source) != null)
 					{
-						
-						if (mlearn.findWord(source) != null)
-						{
-							P.e(TAG, "HistoriaModule에서 (%s) 단어의 감정값을 받았습니다.", source);
-							double[] historia_emovalue = mlearn.getHistory(source);
-							em.importVectors((int)Math.round(historia_emovalue[0]), (int)Math.round(historia_emovalue[1]),
-									(int)Math.round(historia_emovalue[2]), (int)Math.round(historia_emovalue[3]));
-						}
-						else
-						{
-							P.e(TAG, "(%s) 단어는 감정값을 알 수가 없습니다.", em.getOrigin());
-						}
-						
+						P.e(TAG, "HistoriaModule에서 (%s) 단어의 감정값을 받았습니다.", source);
+						double[] historia_emovalue = mlearn.getHistory(source);
+						em.importVectors((int)Math.round(historia_emovalue[0]), (int)Math.round(historia_emovalue[1]),
+								(int)Math.round(historia_emovalue[2]), (int)Math.round(historia_emovalue[3]));
 					}
 					else
 					{
-						P.e(TAG, "데이터베이스에서 (%s) 단어의 감정값을 받았습니다. (추정값)", source);
-						em.importVectors(result);
+						P.e(TAG, "(%s) 단어는 감정값을 알 수가 없습니다.", em.getOrigin());
 					}
+					
+				}
+				else
+				{
+					P.e(TAG, "데이터베이스에서 (%s) 단어의 감정값을 받았습니다. (추정값)", source);
+					em.importVectors(result);
 				}
 			}
+		}
 			
 			// 관계 분석 단계 - 2: 인칭 문제를 해결한다. 여기에서 주어를 발견할 수 없다면, Object 중에 주어를 선정하고, 그게 안되면 주어 '나'를 삽입한다.
 			// 아직 'Marker'와 'Skip'으로 남아있는 어휘를 모두 제거한다, NextDescDepender를 읽고 전후 관계를 파악한다.
@@ -436,21 +368,6 @@ public class EmotionAlgorithm extends ArrayList<Nuri>
 				}
 			}
 		}
-	}
-	
-
-	
-	/**
-	 * ArrayList<EParagraph>에 저장된 문장을 모두 처리한다. process() 에서 발생한 예외가 넘어올 수 있다.
-	 */
-	public void processAll() throws Exception
-	{
-		int index = 0;
-		for (index = 0; index < epr.size(); index++)
-		{
-			process(index);
-		}
-		
 	}
 	
 	/**

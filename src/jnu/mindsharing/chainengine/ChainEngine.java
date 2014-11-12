@@ -21,7 +21,6 @@ public class ChainEngine implements ApplicationInfo
 	final String versionCode = "chronicle";
 	final int versionNumber = 1;
 	private MorphemeAnalyzer kkmaMA; // 형태소 분석기
-	private HistoriaModule mlearn;  // 기계학습 모듈
 	
 	private String TAG = "Engine";
 
@@ -31,8 +30,6 @@ public class ChainEngine implements ApplicationInfo
 	public ChainEngine()
 	{
 		kkmaMA = null;
-		mlearn = new HistoriaModule();
-		mlearn.printDigest();
 	}
 	
 	/**
@@ -107,23 +104,18 @@ public class ChainEngine implements ApplicationInfo
 		}
 		// TODO: 사전 정제작업?
 		// purifier.rb 의 자바 버전!
+		
 		// 문장 단위 전처리 작업 시작
-		EmotionAlgorithm eprocess = new EmotionAlgorithm(kkmaMA, mlearn);
+		EmotionAlgorithm eprocess = new EmotionAlgorithm(kkmaMA);
 		eprocess.clear();
 		
 		try
 		{
 			P.d(TAG, "알고리즘에 필요한 문장 정보를 제공하는 중입니다.");
-			// 나중에 문단 수가 늘어나면 for 문으로 확장할 것.
-			int current_para; 
-			current_para = eprocess.createNewParagraph(source_paragraph);
 			for (String sentence: splitIntoSentences(source_paragraph))
 			{
-				eprocess.addESentenceTo(current_para, new ESentence(sentence));
+				eprocess.feed(sentence);
 			}
-			
-			eprocess.processAll();
-			
 			return eprocess.extractResultProcessor();
 			
 		}
@@ -135,11 +127,11 @@ public class ChainEngine implements ApplicationInfo
 	}
 	
 	/**
-	 * HistoriaModule의 학습 결과 요약을 가져온다.
-	 * @return HistoriaModule이 학습한 정보가 요약된 문자열
+	 * Sense 모듈로부터 데이터베이스 학습 결과 요약을 가져온다.
+	 * @return Sense가 학습한 정보가 요약된 문자열
 	 */
-	public String getHistoriaModuleDigest()
+	public String getSenseDigest()
 	{
-		return mlearn.digest();
+		return (new Sense()).getSenseStatDigest();
 	}
 }

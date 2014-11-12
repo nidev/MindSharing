@@ -1,9 +1,7 @@
 package jnu.mindsharing.chainengine;
 
-import java.util.ArrayList;
-
-import jnu.mindsharing.common.EmoUnit;
-import jnu.mindsharing.common.Nuri;
+import jnu.mindsharing.common.HList;
+import jnu.mindsharing.common.Hana;
 import jnu.mindsharing.common.P;
 
 import org.json.simple.JSONArray;
@@ -30,7 +28,7 @@ public class ResultProcessor
 	 * @param ea_result EmotionAlgorithm 객체
 	 */
 	@SuppressWarnings(value = { "unchecked" })
-	public ResultProcessor(ArrayList<Nuri> ea_result)
+	public ResultProcessor(HList ea_result)
 	{
 		TAG = TAG + hashCode();
 		json = new JSONObject();
@@ -41,38 +39,9 @@ public class ResultProcessor
 		else
 		{
 			JSONArray nri_array = new JSONArray();
-			for (Nuri nri: ea_result)
+			for (Hana nri: ea_result)
 			{
-				JSONObject subject = new JSONObject();
-				subject.put("subject", nri.getSubjectName());
-				subject.put("subject_type", nri.getSubjectType());
 				
-				JSONArray contextEmo = new JSONArray();
-				double[] conem = nri.getContextEmo();
-				contextEmo.add(conem[0]);
-				contextEmo.add(conem[1]);
-				contextEmo.add(conem[2]);
-				contextEmo.add(conem[3]);
-				
-				subject.put("context", contextEmo);
-				
-				
-				JSONArray relations_array = new JSONArray();
-				for (EmoUnit em: nri.getRelations())
-				{
-					JSONObject relation_object = new JSONObject();
-					relation_object.put("text", em.getOrigin()+"/"+em.getExt());
-					relation_object.put("tag", em.getTag().toString());
-					relation_object.put(em.JOY, EmoUnit.epowerToInt(em.getVectorSize(em.JOY)));
-					relation_object.put(em.SORROW, EmoUnit.epowerToInt(em.getVectorSize(em.SORROW)));
-					relation_object.put(em.GROWTH, EmoUnit.epowerToInt(em.getVectorSize(em.GROWTH)));
-					relation_object.put(em.CEASE, EmoUnit.epowerToInt(em.getVectorSize(em.CEASE)));
-					
-					relations_array.add(relation_object);
-					
-				}
-				subject.put("relations", relations_array);
-				nri_array.add(subject);
 			}
 			json.put("data", nri_array);
 			
