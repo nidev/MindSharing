@@ -8,5 +8,16 @@
 	<classpathentry kind="lib" path="lib/org.snu.ids.ha.jar"/>
 	<classpathentry kind="lib" path="lib/json-simple-1.1.1.jar"/>
 	<classpathentry kind="lib" path="lib/postgresql-9.3-1100.jdbc4.jar"/>
+	<classpathentry kind="lib" path="lib/jfreeplot/hamcrest-core-1.3.jar"/>
+	<classpathentry kind="lib" path="lib/jfreeplot/jcommon-1.0.23.jar"/>
+	<classpathentry kind="lib" path="lib/jfreeplot/jfreechart-1.0.19-experimental.jar"/>
+	<classpathentry kind="lib" path="lib/jfreeplot/jfreechart-1.0.19-swt.jar"/>
+	<classpathentry kind="lib" path="lib/jfreeplot/jfreechart-1.0.19.jar"/>
+	<classpathentry kind="lib" path="lib/jfreeplot/jfreesvg-2.0.jar"/>
+	<classpathentry kind="lib" path="lib/jfreeplot/junit-4.11.jar"/>
+	<classpathentry kind="lib" path="lib/jfreeplot/orsoncharts-1.4-eval-nofx.jar"/>
+	<classpathentry kind="lib" path="lib/jfreeplot/orsonpdf-1.6-eval.jar"/>
+	<classpathentry kind="lib" path="lib/jfreeplot/servlet.jar"/>
+	<classpathentry kind="lib" path="lib/jfreeplot/swtgraphics2d.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

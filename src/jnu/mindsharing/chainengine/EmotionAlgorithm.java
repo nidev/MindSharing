@@ -89,28 +89,31 @@ public class EmotionAlgorithm
 		
 		// 현재 preprocessor를 통과한 모든 어휘는 기본적인 감정값 평가가 모두 완료되어있다!
 		// 복합 서술어 처리
-		// '크게 퍼뜨리다' 를 '크다 + 퍼뜨리다'로 결합시켜 새로운 Hana을 구성한다.
-		for (int es_idx=0; es_idx < es.size() ; es_idx++)
+		// '크게 퍼뜨리다' 를 '크다/퍼뜨리다'로 결합시켜 새로운 Hana을 구성한다.
+		for (int hn_idx=0; hn_idx < hlist.size() ; hn_idx++)
 		{
-			if (es.get(es_idx).getXTag() == XTag_atomize.NextDescDepender)
+			// TODO: DescOp 식별 함수
+			if (hlist.get(hn_idx).getXTag().equals(XTag_atomize.DescOp))
 			{
-				if (es_idx > 0 && es_idx+1 < es.size())
+				if (true) // XXX: 만약 서술어를 연결하는 어휘라면
+				if (hn_idx > 0 && hn_idx+1 < hlist.size())
 				{
-					if (es.get(es_idx-1).getXTag() == XTag_atomize.Desc &&
-						es.get(es_idx+1).getXTag() == XTag_atomize.Desc)
+					if (hlist.get(hn_idx-1).getXTag() == XTag_atomize.Desc &&
+						hlist.get(hn_idx+1).getXTag() == XTag_atomize.Desc)
 					{
-						Hana baseemo = es.get(es_idx-1);
-						Hana auxemo = es.get(es_idx+1);
-						Hana newemo = new Hana(baseemo.getOrigin() + " " + auxemo.getOrigin());
-						newemo.importVectors(baseemo);
-						newemo.setTag(XTag_atomize.Desc);
-						es.get(es_idx-1).setTag(XTag_atomize.Skip);
-						es.get(es_idx).setTag(XTag_atomize.Skip);
-						es.set(es_idx+1, newemo);
+						Hana base_hn = hlist.prev(hn_idx);
+						Hana aux_hn = hlist.next(hn_idx);
+						Hana new_hn = new Hana(base_hn.toString() + "/" + aux_hn.toString());
+						
+						new_hn.merge(base_hn).merge(aux_hn);
+						new_hn.setXTag(XTag_atomize.Desc);
+						hlist.prev(hn_idx).setXTag(XTag_atomize.Skip);
+						hlist.next(hn_idx).setXTag(XTag_atomize.Skip);
+						hlist.set(hn_idx+1, new_hn);
 						
 					}
-					else if(es.get(es_idx+1).getXTag() == XTag_atomize.Subject
-							|| es.get(es_idx+1).getXTag() == XTag_atomize.Object)
+					else if(hlist.get(hn_idx+1).getXTag() == XTag_atomize.Subject
+							|| hlist.get(hn_idx+1).getXTag() == XTag_atomize.Object)
 					{
 						// ~하는데 ~가 하다
 					}
@@ -136,7 +139,7 @@ public class EmotionAlgorithm
 		// 
 
 		// 주어가 없는 경우에 탐색 작업을 진행
-		if (!es.hasSubject())
+		if (!hlist.hasSubject())
 		{
 			// 혹시 대명사가 주어일 수도 있다. (우선순위 1)
 			for (Hana em:es)
@@ -148,7 +151,7 @@ public class EmotionAlgorithm
 				}
 			}
 			
-			if (!es.hasSubject())
+			if (!hlist.hasSubject())
 			{
 				// 일단, 첫번째로 Object 로 마크된 Hana를 주어로 선정한다. (우선순위 2)
 				for (Hana em : es)
@@ -164,10 +167,10 @@ public class EmotionAlgorithm
 				}
 			}
 			
-			if (!es.hasSubject())
+			if (!hlist.hasSubject())
 			{
 				// .. 최후의 방법. (우선순위 3)
-				es.add(0, new Hana("나").setTag(XTag_atomize.Subject));
+				hlist.add(0, new Hana("나").setTag(XTag_atomize.Subject));
 			}
 		}
 		
