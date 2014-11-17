@@ -1,35 +1,3 @@
-USE mindsharing;
-
--- 어휘 표현
-CREATE TABLE Expression (
-	id INT NOT NULL AUTO_INCREMENT,
-	word    VARCHAR(128) NOT NULL, -- 단어
-	type    SMALLINT     NOT NULL, -- 단어유형(형용사, 동사, 이모티콘)
-	joy     SMALLINT     NOT NULL, -- joy
-	sorrow  SMALLINT     NOT NULL, -- sorrow
-	growth  SMALLINT     NOT NULL, -- growth
-	cease   SMALLINT     NOT NULL,  -- cease
-	PRIMARY KEY (id)
-) ENGINE=INNODB;
-
--- 해시키와 단어에 대해 인덱스를 생성한다.
-CREATE INDEX ExprIndex ON Expression (id, word);
-
-CREATE TABLE EmotionMemory (
-	id         INT      NOT NULL AUTO_INCREMENT, -- 번호
-	exprid     INT      NOT NULL,
-	n_joy      DOUBLE       NOT NULL, -- 정규화 joy값
-	n_sorrow   DOUBLE       NOT NULL, -- 정규화 sorrow값
-	n_growth   DOUBLE       NOT NULL, -- 정규화 growth값
-	n_cease    DOUBLE       NOT NULL, -- 정규화 cease값
-	timestamp  DATE         NOT NULL, -- 입력 시간(초)
-	sourcetext VARCHAR(255) NULL ,     -- sourcesentence
-	PRIMARY KEY(id),
-	CONSTRAINT fk_exprid FOREIGN KEY (exprid) REFERENCES expression (id) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=INNODB;
-
-
--- Postgresql 버전
--- mindsharing=# CREATE TABLE Expression (id SERIAL CONSTRAINT expr_PK PRIMARY KEY,
--- word VARCHAR(128), type SMALLINT, joy SMALLINT, sorrow SMALLINT, growth SMALLINT
--- , cease SMALLINT);
+CREATE TABLE IF NOT EXIST Newdex (id SERIAL CONSTRAINT expr_PK PRIMARY KEY, expression TEXT NOT NULL, exprtype SMALLINT NOT NULL, locked BOOLEAN DEFAULT FALSEeprob_lock NUMERIC DEFAULT 0.0, sprob_lock NUMERIC DEFAULT 0.0, exprhash TEXT NOT NULL);
+CREATE TABLE IF NOT EXIST Dexrecord (id SERIAL CONSTRAINT expr_PK PRIMARY KEY, exprhash TEXT NOT NULL, birthdate DATE NOT NULL, eprob NUMERIC DEFAULT 0.0, sprob NUMERIC DEFAULT 0.0, rate NUMERIC DEFAULT 0.0;
+CREATE TABLE IF NOT EXIST Newdex (id SERIAL CONSTRAINT expr_PK PRIMARY KEY, evtype SMALLINT NOT NULL, words_given SMALLINT NOT NULL, words_emotional SMALLINT NOT NULL, source_name TEXT NOT NULL);
