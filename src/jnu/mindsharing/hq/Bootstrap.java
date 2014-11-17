@@ -17,6 +17,7 @@ import org.restlet.resource.ServerResource;
 public class Bootstrap extends ServerResource
 {
 	static String TAG = "CEBoot";
+	enum RUN_MODE {NORMAL, SENSE_TEST};
 
 	/**
 	 * 서버와 메시지 로거를 가동한다. 메시지는 기본적으로 표준 출력을 통해 출력된다.
@@ -25,6 +26,8 @@ public class Bootstrap extends ServerResource
 	 */
 	public static void main(String[] args)
 	{
+		RUN_MODE mode = RUN_MODE.NORMAL;
+		
 		P.d(TAG, "엔진 가동. 버전 정보를 확인합니다.");
 		
 		ChainEngine chainEngine = new ChainEngine();
@@ -39,19 +42,31 @@ public class Bootstrap extends ServerResource
 		P.d(TAG, "사전 로딩 및 데이터베이스 연결 작업을 수행합니다.");
 		//으어아으 나중에
 		chainEngine.createKKMAAnalyzer();
-		P.d(TAG, "API 서버 시작");
-		try
+		
+		switch(mode)
 		{
-			restServer.run(chainEngine);
+		case NORMAL:
+			P.d(TAG, "API 서버 시작");
+			try
+			{
+				restServer.run(chainEngine);
+			}
+			catch (Exception e)
+			{
+				P.b();
+				P.e(TAG, "API 서버의 서브릿 시작 도중 오류가 발생하였습니다.");
+				P.e(TAG, "이 오류는 API 서버 오류이거나 체인 엔진 내부의 오류일 수 있습니다. 자세한 내용은 아래의 Traceback을 확인해주십시오.");
+				e.printStackTrace();
+				P.e(TAG, "Exception class: %s,  Exception message: %s", e.toString(), e.getMessage());
+				P.e(TAG, "이 오류는 로그 시스템에 기록되었습니다.");
+			}
+			break;
+		case SENSE_TEST:
+			P.d(TAG, "감정값 평가 및 학습 모듈 Sense를 테스트합니다.");
+			break;
+		default:
+			;
 		}
-		catch (Exception e)
-		{
-			P.b();
-			P.e(TAG, "API 서버의 서브릿 시작 도중 오류가 발생하였습니다.");
-			P.e(TAG, "이 오류는 API 서버 오류이거나 체인 엔진 내부의 오류일 수 있습니다. 자세한 내용은 아래의 Traceback을 확인해주십시오.");
-			e.printStackTrace();
-			P.e(TAG, "Exception class: %s,  Exception message: %s", e.toString(), e.getMessage());
-			P.e(TAG, "이 오류는 로그 시스템에 기록되었습니다.");
-		}
+		
 	}
 }
