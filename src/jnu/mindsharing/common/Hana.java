@@ -49,9 +49,10 @@ public class Hana extends DatabaseConstants implements Serializable
 	
 	public Hana(String expr)
 	{
-		// slower lookup
 		configuredAs = configuration[1];
-		extendedTag = "-";
+		extendedTag = "";
+		content = expr;
+		// slower lookup
 	}
 	
 	public Hana(String expr, int wt)
@@ -60,7 +61,12 @@ public class Hana extends DatabaseConstants implements Serializable
 		configuredAs = configuration[1];
 		content = expr;
 		wordtype = wt;
-		extendedTag = "-";
+		extendedTag = "";
+	}
+	
+	public String getConfiguration()
+	{
+		return configuredAs;
 	}
 	
 	public int getMultiplier()
@@ -68,9 +74,10 @@ public class Hana extends DatabaseConstants implements Serializable
 		return multiplier;
 	}
 	
-	public void setMultiplier(int mult)
+	public Hana setMultiplier(int mult)
 	{
 		multiplier = mult;
+		return this; // joined 연산 지원
 	}
 	
 	public int getAmplifier()
@@ -78,9 +85,10 @@ public class Hana extends DatabaseConstants implements Serializable
 		return amplifier;
 	}
 	
-	public void setAmplifier(int amp)
+	public Hana setAmplifier(int amp)
 	{
 		amplifier = amp;
+		return this; // joined 연산 지원
 	}
 	
 	public double[] getProb()
@@ -88,9 +96,12 @@ public class Hana extends DatabaseConstants implements Serializable
 		return null;
 	}
 	
-	public void setProb()
+	public Hana setProb(double given_eprob, double given_sprob)
 	{
+		eprob = given_eprob;
+		sprob = given_sprob;
 		cutProbVector();
+		return this; // joined 연산 지원
 	}
 	
 	public void cutProbVector()
@@ -106,15 +117,17 @@ public class Hana extends DatabaseConstants implements Serializable
 			sprob = 1.0;
 	}
 	
-	public double vectorSum(Hana operand)
+	public Hana merge(Hana operand)
 	{
-		// return Meta vector
-		return 0.0;
+		// 합친다....
+		// TODO: 몰라
+		return this;
 	}
 	
-	public void setXTag(String msg)
+	public Hana setXTag(String msg)
 	{
 		extendedTag = msg;
+		return this; // joined 연산 지원
 	}
 	
 	public String getXTag()
@@ -122,9 +135,10 @@ public class Hana extends DatabaseConstants implements Serializable
 		return extendedTag;
 	}
 	
-	public void setWordtype(int wordtype)
+	public Hana setWordtype(int wordtype)
 	{
 		this.wordtype = wordtype;
+		return this; // joined 연산 지원
 	}
 	
 	public int getWordtype()
@@ -132,11 +146,20 @@ public class Hana extends DatabaseConstants implements Serializable
 		return wordtype;
 	}
 	
+	public String debugString()
+	{
+		return String.format("<Object:Hana expr=%s, wt=%d, ep=%f, sp=%f, amp=%d>",
+			content, wordtype, eprob, sprob, amplifier);
+	}
+	
+	/**
+	 * 내부에 저장된 문자열을 반환한다. configuredAs=meta 인 경우에는 null이 반환된다.
+	 * @return 객체 컨텐츠(생성시 입력된 문자열), 없다면 null
+	 */
 	@Override
 	public String toString()
 	{
-		return String.format("<Object:Hana expr=%s, wt=%d, ep=%f, sp=%f, amp=%d>",
-				content, wordtype, eprob, sprob, amplifier);
+		return content;
 	}
 
 }
