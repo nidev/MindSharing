@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.StringTokenizer;
 
 import jnu.mindsharing.common.ApplicationInfo;
-import jnu.mindsharing.common.ESentence;
+import jnu.mindsharing.common.HList;
 import jnu.mindsharing.common.P;
 
 import org.snu.ids.ha.ma.MorphemeAnalyzer;
@@ -107,16 +107,12 @@ public class ChainEngine implements ApplicationInfo
 		
 		// 문장 단위 전처리 작업 시작
 		EmotionAlgorithm eprocess = new EmotionAlgorithm(kkmaMA);
-		eprocess.clear();
-		
 		try
 		{
 			P.d(TAG, "알고리즘에 필요한 문장 정보를 제공하는 중입니다.");
-			for (String sentence: splitIntoSentences(source_paragraph))
-			{
-				eprocess.feed(sentence);
-			}
-			return eprocess.extractResultProcessor();
+			
+			ArrayList<HList> result = eprocess.feed(source_paragraph);
+			return EmotionAlgorithm.extractResultProcessor(result);
 			
 		}
 		catch (Exception e)

@@ -1,5 +1,7 @@
 package jnu.mindsharing.chainengine;
 
+import java.util.ArrayList;
+
 import jnu.mindsharing.common.HList;
 import jnu.mindsharing.common.Hana;
 import jnu.mindsharing.common.P;
@@ -25,21 +27,21 @@ public class ResultProcessor
 	
 	/**
 	 * Nuri 객체를 담고 있는 배열(ex. EmotionAlgorithm 객체)를 JSON나 TXT로 변환한다.
-	 * @param ea_result EmotionAlgorithm 객체
+	 * @param hlist EmotionAlgorithm 객체
 	 */
 	@SuppressWarnings(value = { "unchecked" })
-	public ResultProcessor(HList ea_result)
+	public ResultProcessor(ArrayList<HList> hlist)
 	{
 		TAG = TAG + hashCode();
 		json = new JSONObject();
-		if (ea_result == null)
+		if (hlist == null)
 		{
 			json.put("data", new JSONArray());
 		}
 		else
 		{
 			JSONArray nri_array = new JSONArray();
-			for (Hana nri: ea_result)
+			for (Hana nri: hlist)
 			{
 				
 			}
@@ -51,7 +53,7 @@ public class ResultProcessor
 		StringBuffer buffer = new StringBuffer(1024);
 		buffer.append("# -- START OF ANALYSIS RECORD --\r\n");
 		buffer.append("# -- ENCODING: UTF-8 --\r\n");
-		if (ea_result == null)
+		if (hlist == null)
 		{
 			buffer.append("# No result\r\n");
 		}
@@ -59,7 +61,7 @@ public class ResultProcessor
 		{
 			buffer.append("# Structured sentences\r\n");
 			
-			for (Nuri nri: ea_result)
+			for (Nuri nri: hlist)
 			{
 				buffer.append(String.format("# Subject on %s (%d relations)", nri.getSubjectName(), nri.getRelations().size()));
 				buffer.append("\r\n");

@@ -152,6 +152,7 @@ public class Sense extends DatabaseConstants
 					"CREATE TABLE IF NOT EXIST Dexrecord ("
 					+ "id SERIAL CONSTRAINT expr_PK PRIMARY KEY, "
 					+ "exprhash TEXT NOT NULL, "
+					+ "birthdate DATE NOT NULL, " // 입력일시
 					+ "eprob NUMERIC DEFAULT 0.0, "
 					+ "sprob NUMERIC DEFAULT 0.0, "
 					+ "rate NUMERIC DEFAULT 0.0;"
@@ -202,45 +203,101 @@ public class Sense extends DatabaseConstants
 	{
 		P.d(TAG, "Query Emotional/State information on (%s)", word);
 		P.d(TAG, "... Searching on BaseIdioms");
-		if (isBaseIdiom(word) != null)
+		BaseIdioms.Idiom idiom = isBaseIdiom(word);
+		if (idiom != null)
 		{
-			Hana baseidiom = new Hana
+			Hana hn = new Hana();
+			hn.getConfiguration(); // == Meta, should be consume()d by original object.
+			// XXX: multiplier는 가져오십시오. 그럼 이만
+			hn.setAmplifier(1).setMultiplier(1).setProb(idiom.getE(), idiom.getP());
+			return hn; // TODO: more configuration?
 		}
-			
-		try
+		else
 		{
-			PreparedStatement stmt = db.prepareStatement("SELECT * FROM Expression WHERE word = ? AND type = ?");
-			
-			stmt.setString(1, word);
-			stmt.setInt(2, type);
-			ResultSet res = stmt.executeQuery();
-			
-			EmoUnit em = null;
-			while (res.next())
+			// Not a base idiom. searching database.
+			try
 			{
-				if (em == null)
+				PreparedStatement stmt = db.prepareStatement("SELECT * FROM Newdex WHERE expression = ?");
+				stmt.setString(1, word);
+
+				ResultSet res = stmt.executeQuery();
+				// 어휘의 중복은 아직 고려하지 않았다. 동음이의어 처리 불가능
+				if (res.next())
 				{
-					em = new EmoUnit(word);
-					// XXX: Hardcoded titles
-					em.importVectors(res.getInt("joy"), res.getInt("sorrow"), res.getInt("growth"), res.getInt("cease"));
-					break;
+
+					Hana hn = new Hana();
+					
+					// 이번 행을 첫 정보로 확인하고, 고정되었는지 체크한다.
+					if (res.getBoolean("locked"))
+					{
+						
+						hn.getConfiguration(); // == Meta
+						hn.setMultiplier(1).setAmplifier(1);
+						hn.setProb(res.getDouble("eprob_locked"), res.getDouble("sprob_locked"));
+						
+					}
+					// inferFromRecords()를 실행한다.
+					// 만약 고정되어있지 않다면, 추론된 eprob과 sprob을 추가로 가져오고, 여기에서 출력을 결정한다. 배수는 항상 1이다.
+					double[] inferred = inferFromRecords(res.getString("exprhash"));
+					// 순서대로 amplifier, eprob_guessed, sprob_guessed 이다.
+					hn.setAmplifier((int) inferred[0]);
+					hn.setProb(inferred[0], inferred[1]);
+					return hn;
+				}
+				else
+				{
+					// 데이터 베이스에 없는 어휘이다. 새로 추가한다.
+					// addNewdex() 를 사용한다.
+					addNewdex(word);
+					return new Hana(word);
 				}
 			}
-			return em;
-		}
-		catch (SQLException e)
-		{
-			P.e(TAG, "쿼리 도중 오류가 발생하였습니다.");
-			e.printStackTrace();
-			return null;
+			catch (SQLException e)
+			{
+				P.e(TAG, "쿼리 도중 오류가 발생하였습니다.");
+				e.printStackTrace();
+				return null;
+			}
 		}
 	}
 	
-	public boolean addRecord()
+	public double[] inferFromRecords(String expr_hash)
+	{
+		// inferFromRecords는 마지막 레코드 1000개만을 처리한다. LIMIT 1000
+		try
+		{
+			PreparedStatement sql = db.prepareStatement("SELECT eprob, sprob, rate FROM Dexrecord WHERE exprhash = ? ORDER BY id LIMIT 1000");
+			ResultSet res = sql.executeQuery();
+			int num_records;
+			double eprob = 0.0;
+			double sprob = 0.0;
+			double et, st;
+			// 정규분포를 위한 변수들
+			double mean, variance;
+			while (res.next())
+			{
+			// XXX: 공사 중	
+			}
+			
+		}
+		catch (SQLException e)
+		{
+			P.e(TAG, "데이터 추론 도중 오류가 발생했습니다. (SQL오류)");
+			e.printStackTrace();
+			return null;
+		}
+		return null;
+	}
+	
+	public boolean addRecord(String exprhash, double eprob, double sprob, double rate, long timestamp)
 	{
 		return false; // stub
 	}
 	
+	public boolean addNewdex(String word)
+	{
+		return false; // stub
+	}
 	
 	public String getSenseStatDigest()
 	{
