@@ -23,7 +23,7 @@ public class HList extends ArrayList<Hana>
 		{
 			return get(size()-1);
 		}
-		return null; // TODO: 차라리 null 대신에 더미 객체를 주면 훨씬 좋지 않을까!
+		return new Hana(); // TODO: 차라리 null 대신에 더미 객체를 주면 훨씬 좋지 않을까!
 	}
 	
 	public Hana first()
@@ -32,7 +32,7 @@ public class HList extends ArrayList<Hana>
 		{
 			return get(0);
 		}
-		return null;
+		return new Hana();
 	}
 	
 	public Hana next(int pos)
@@ -41,7 +41,7 @@ public class HList extends ArrayList<Hana>
 		{
 			return get(pos+1);
 		}
-		return null;
+		return new Hana();
 	}
 	
 	public Hana prev(int pos)
@@ -50,7 +50,7 @@ public class HList extends ArrayList<Hana>
 		{
 			return get(pos);
 		}
-		return null;
+		return new Hana();
 	}
 	
 	/**
