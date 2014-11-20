@@ -6,6 +6,7 @@ import jnu.mindsharing.common.HList;
 import jnu.mindsharing.common.Hana;
 import jnu.mindsharing.common.P;
 import jnu.mindsharing.common.XTag_atomize;
+import jnu.mindsharing.common.XTag_logical;
 
 import org.snu.ids.ha.ma.MorphemeAnalyzer;
 
@@ -78,7 +79,7 @@ public class EmotionAlgorithm
 		// TextPreprocessor.java 참고
 		preproc.performUnquoting(); // 따옴표 해체
 		preproc.performTagging(ma); // 세종 말뭉치 태그를 내부 태그로 변환함
-		preproc.performJointing(); // 명사 어휘 결합 또는, 'xx하다'처럼 체언과 용언이 결합한 사례를 모두 합침
+		preproc.performJointing(); // 명사 어휘 결합 
 		
 		if (!preproc.isEverythingDone())
 		{
@@ -89,17 +90,56 @@ public class EmotionAlgorithm
 		
 		// 현재 preprocessor를 통과한 모든 어휘는 기본적인 감정값 평가가 모두 완료되어있다!
 		// 복합 서술어 처리
-		// '크게 퍼뜨리다' 를 '크다/퍼뜨리다'로 결합시켜 새로운 Hana을 구성한다.
+		// '크게 퍼뜨리다' 를 '크다/퍼뜨리다'로 결합시켜 새로운 정보 객체를 구성한다.
+		// 구성이 완료되면 이전 객체는 null 로 설정하고 compaction 시에 사라질 수 있도록 변경한다.
 		for (int hn_idx=0; hn_idx < hlist.size() ; hn_idx++)
 		{
-			// TODO: DescOp 식별 함수
 			if (hlist.get(hn_idx).getXTag().equals(XTag_atomize.DescOp))
 			{
-				if (true) // XXX: 만약 서술어를 연결하는 어휘라면
-				if (hn_idx > 0 && hn_idx+1 < hlist.size())
+				Hana base = hlist.get(hn_idx);
+				// Increase와 Decrease는 출력 레벨을 조절한다.
+				// Log10 을 출력함수로 사용한다면 10 으로 레벨을 감소하거나 증가시킨다.
+				// logE를 사용한다면 e 로 조절
+				String descop_type = identifyDescOp(base.toString());
+				if (descop_type.equals(XTag_logical.DescOp_Decrease))
 				{
-					if (hlist.get(hn_idx-1).getXTag() == XTag_atomize.Desc &&
-						hlist.get(hn_idx+1).getXTag() == XTag_atomize.Desc)
+					
+				}
+				else if (descop_type.equals(XTag_logical.DescOp_Increase))
+				{
+					
+				}
+				else if (descop_type.equals(XTag_logical.DescOp_InvertPrev))
+				{
+					
+				}
+				else if (descop_type.equals(XTag_logical.DescOp_InvertNext))
+				{
+					
+				}
+				else
+				{
+					// should not reach here, or skip
+				}
+			}
+		}
+		
+		hlist.compaction();
+		
+		for (int hn_idx=0; hn_idx < hlist.size(); hn_idx++)
+		{
+			if (hlist.get(hn_idx).getXTag().equals(XTag_atomize.DescOp))
+			{
+				Hana base = hlist.get(hn_idx);
+				// 여기에서 부사 + 형용사 -> 형용사, 반전이나 강화/감소 연산이 완료된 서술어를 필요하다면 연결한다.
+				String descop_type = identifyDescOp(base.toString());
+				if (descop_type.equals(XTag_logical.DescOp_Join))
+				{
+					
+					// NullPointerException 으로부터 first, prev, next, last 연산은 안전하므로
+					// 마음 놓고 비교가 가능하다.
+					if (hlist.prev(hn_idx).getXTag().equals(XTag_atomize.Desc) &&
+						hlist.next(hn_idx).getXTag().equals(XTag_atomize.Desc))
 					{
 						Hana base_hn = hlist.prev(hn_idx);
 						Hana aux_hn = hlist.next(hn_idx);
@@ -112,11 +152,6 @@ public class EmotionAlgorithm
 						hlist.set(hn_idx+1, new_hn);
 						
 					}
-					else if(hlist.get(hn_idx+1).getXTag() == XTag_atomize.Subject
-							|| hlist.get(hn_idx+1).getXTag() == XTag_atomize.Object)
-					{
-						// ~하는데 ~가 하다
-					}
 				}
 			}
 		}
@@ -128,9 +163,9 @@ public class EmotionAlgorithm
 		// 문장 요소 별로 HList 를 새로 구성하고, 주어와 목적어, 서술어<->부사 사이의 관계를 정리한다.
 		ArrayList<HList> allText;
 		// allText 내부의 HList는 다음과 같은 구조로 구성한다.
-		//   0                       |   1   2   3   4  5  6  7  8  9 ....
+		//   0                       |   1   2   3   4  5  6  7  8  9 .... ... last
 		// --------------------------|---------------------------------------------------------------
-		// 머리 부분으로써 전체 요약 |
+		// 머리 부분으로써 문장 전체 |  주어 ................................. 주어서술어
 		// 아무런 내용이 없더라도 0번은 항상 존재해야한다.
 		// 삽입 순서는 주어/{서술어}/주어서술 동사
 		
@@ -138,7 +173,7 @@ public class EmotionAlgorithm
 		// 아직 'Marker'와 'Skip'으로 남아있는 어휘를 모두 제거한다, NextDescDepender를 읽고 전후 관계를 파악한다.
 		// 
 
-		// 주어가 없는 경우에 탐색 작업을 진행
+		// 주어가 없는 경우에 탐색 작업을 진행 (Object 끌어올림)
 		if (!hlist.hasSubject())
 		{
 			// 혹시 대명사가 주어일 수도 있다. (우선순위 1)
@@ -177,115 +212,29 @@ public class EmotionAlgorithm
 		
 		// TODO: HList를 연산하여 감정값을 내놓는다. 
 		
-		for (HList sentence: allText)
-		{
-			Hana op_src = null;
-			Enum<ESENTENCE_TRAVERSE_MODE> tm;
-			tm = ESENTENCE_TRAVERSE_MODE.NORMAL;
-			for (Hana hn: sentence)
-			{
-				String xtag = hn.getXTag();
-				if (xtag.equals(XTag_atomize.DescOp))
-				{
-				// P.e(TAG, "탐색 중, 현재 : %s, 모드 %s", hn.getOrigin(), tm.toString());
-					if (tm == ESENTENCE_TRAVERSE_MODE.NORMAL)
-					{
-						if (hn.getXTag() == XTag_atomize.DescNextObject)
-						{
-							op_src = em;
-							tm = ESENTENCE_TRAVERSE_MODE.DESC_JOIN;
-						}
-						else if (hn.getXTag() == XTag_atomize.NextDescReducer)
-						{
-							op_src = em;
-							tm = ESENTENCE_TRAVERSE_MODE.DECREASE_NEXT;
-						}
-						else if (hn.getXTag() == XTag_atomize.NextDescEnhancer)
-						{
-							op_src = em;
-							tm = ESENTENCE_TRAVERSE_MODE.INCREASE_NEXT;
-						}
-						else if (hn.getXTag() == XTag_atomize.InvertNextDesc)
-						{
-							op_src = em;
-							tm = ESENTENCE_TRAVERSE_MODE.INVERT_NEXT;
-						}
-					}
-				}
-				else
-				{
-					if (hn.getXTag() == XTag_atomize.Subject || hn.getXTag() == XTag_atomize.Object)
-					{
-						if (tm == ESENTENCE_TRAVERSE_MODE.DESC_JOIN)
-						{
-							
-							hn.setExt(op_src.getOrigin()+"+"+op_src.getExt());
-							hn.importVectors(op_src);
-							// 감정값 복사 후, 연산자로 사용된 Hana을 폐기한다.
-							op_src.setTag(XTag_atomize.Skip);
-							op_src.defaultTable();
-							tm = ESENTENCE_TRAVERSE_MODE.NORMAL;
-						}
-					}
-					else if (hn.getXTag() == XTag_atomize.Desc
-							|| hn.getXTag() == XTag_atomize.DescNextObject
-							|| hn.getXTag() == XTag_atomize.DescSubject)
-					{
-						if (tm == ESENTENCE_TRAVERSE_MODE.DECREASE_NEXT)
-						{
-							hn.reduce(hn.JOY);
-							hn.reduce(hn.SORROW);
-							hn.setExt(op_src.getOrigin());
-							// 나머지는 인과관계이므로 안줄여도 될듯.
-							op_src.setTag(XTag_atomize.Skip);
-							// 다음에 서술어가 추가로 존재하므로 DESC_JOIN 모드로 변경한다.
-							op_src = em;
-							tm = ESENTENCE_TRAVERSE_MODE.DESC_JOIN;
-						}
-						else if (tm == ESENTENCE_TRAVERSE_MODE.INCREASE_NEXT)
-						{
-							hn.enhance(hn.JOY);
-							hn.enhance(hn.SORROW);
-							hn.setExt(op_src.getOrigin());
-							// 나머지는 인과관계이므로 안줄여도 될듯.
-							op_src.setTag(XTag_atomize.Skip);
-							// 다음에 서술어가 추가로 존재하므로 DESC_JOIN 모드로 변경한다.
-							op_src = em;
-							tm = ESENTENCE_TRAVERSE_MODE.DESC_JOIN;
-						}
-						else if (tm == ESENTENCE_TRAVERSE_MODE.INVERT_NEXT)
-						{
-							hn.invertAll();
-							hn.setExt(op_src.getOrigin());
-							// 나머지는 인과관계이므로 안줄여도 될듯.
-							op_src.setTag(XTag_atomize.Skip);
-							// 다음에 서술어가 추가로 존재하므로 DESC_JOIN 모드로 변경한다.
-							op_src = em;
-							tm = ESENTENCE_TRAVERSE_MODE.DESC_JOIN;
-						}
-						else
-						{
-							continue;
-						}
-					}
-					else
-					{
-						continue;
-					}
-				}
-			}
-		}
 		
 		
 		
-		
-		// TODO: ^^^^^^^^^^^ 관계 분석 단계에서 가능한 모든 결합조건을 파악해서 문장 태그를 마친다.
-		// CAUTION: 여기에서부터는 Destructive routine이 실행된다. 위에서 태그된 자료 중 일부는 사라지고, ESentence는 Nuri로 완전히 재구성된다.
+		// ^^^^^^^^^^^ 관계 분석 단계에서 가능한 모든 결합조건을 파악해서 문장 태그를 마쳤다.
+		// 문장의 감정 정보를 정리하고, 모르는 어휘에 대한 학습을 마친다.
 
 		
 		//TODO:  allText로부터 글 전체의 감정값을 요약한다. 강세 어휘를 추출한다.
 		
 		return allText;
+	}
+	
+	/**
+	 * DescOp 으로 분류된 어휘가 어떤 연산을 수행하는지 분류해낸다.
+	 * @return 연산자 유형 정수로 반환한다.
+	 */
+	public String identifyDescOp(String word)
+	{
+		// DescOp 안에는 꼬꼬마 형태소 분석기 태그의 MAG나 ECE에 해당하는 어휘가 입력된다.
+		// ECE: 고(~하고), 지만(~하지만 ~하다), ㄴ데(그러한데)
+		// MAG: 너무, 매우, 정말, 조금(뒤에 명사나 서술어가 올때 부사로 처리됨), 약간, 안(아니), 별로, 
+		
+		return ""; // stub
 	}
 	
 	/**

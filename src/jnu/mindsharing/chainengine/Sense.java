@@ -268,7 +268,7 @@ public class Sense extends DatabaseConstants
 		{
 			PreparedStatement sql = db.prepareStatement("SELECT eprob, sprob, rate FROM Dexrecord WHERE exprhash = ? ORDER BY id LIMIT 1000");
 			ResultSet res = sql.executeQuery();
-			int num_records;
+			int num_records = 0;
 			double eprob = 0.0;
 			double sprob = 0.0;
 			double et, st;
@@ -276,7 +276,9 @@ public class Sense extends DatabaseConstants
 			double mean, variance;
 			while (res.next())
 			{
-			// XXX: 공사 중	
+			// XXX: 공사 중
+				num_records++;
+				
 			}
 			
 		}

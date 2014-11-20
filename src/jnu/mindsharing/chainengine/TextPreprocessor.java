@@ -134,7 +134,7 @@ public class TextPreprocessor
 					// 꼬꼬마 형태소의 태그를, 내부의 태그로 새롭게 변환한다.
 					String mtag = cur_morpheme.getTag();
 					String word = cur_morpheme.getString();
-					if (isTagIn(mtag, "MAG"))
+					if (isTagIn(mtag, "MAG", "ECE")) // 부사, ~하고
 					{
 						internal.add(new Hana(word, WORD_TYPE.op).setXTag(XTag_atomize.DescOp));
 					}
@@ -237,9 +237,10 @@ public class TextPreprocessor
 					}
 					
 				}
-				i = j; // 내부 루프에서 전진한만큼 동기화
+				i = j-1; // 내부 루프에서 전진한만큼 동기화
 				
 				internal.add(new Hana(emoticon_base, WORD_TYPE.noun).setXTag(XTag_atomize.NounMarker)); // 내부적으로 명사로 간주한다.
+				continue;
 			}
 			
 			
