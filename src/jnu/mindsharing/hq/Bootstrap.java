@@ -37,6 +37,7 @@ public class Bootstrap extends ServerResource
 		P.d(TAG, "내부 라이브러리: %s", restServer.getLicenseInfo());
 		P.d(TAG, "체인 엔진 버전\t= %d (%s)", chainEngine.getVersionNumber(), chainEngine.getVersionCode());
 		P.d(TAG, "내부 라이브러리: %s", chainEngine.getLicenseInfo());
+		P.d(TAG, "2D 차트 라이브러리\t= JFreeChart (LGPL 라이센스를 따릅니다.)");
 		P.b();
 		P.d(TAG, "메모리 부족으로 프로그램이 종료될 경우, -xm512M 옵션을 추가하여 재가동하십시오.");
 		P.d(TAG, "사전 로딩 및 데이터베이스 연결 작업을 수행합니다.");
