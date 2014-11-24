@@ -68,10 +68,6 @@ public class EmotionAlgorithm
 	{
 		// phase 1: 문장마다 형태소 분석 후 어휘 탐색
 		P.d(TAG, "Process");
-		Sense ss = new Sense();
-		
-		// XXX: 왜 null?
-		if (ss == null) continue;
 		
 		TextPreprocessor preproc = new TextPreprocessor(sourceText);
 		
@@ -86,17 +82,17 @@ public class EmotionAlgorithm
 			throw new Exception("텍스트 전처리 부분에서 실패함");
 		}
 		
-		HList hlist = preproc.export();
+		HList atoms = preproc.export();
 		
 		// 현재 preprocessor를 통과한 모든 어휘는 기본적인 감정값 평가가 모두 완료되어있다!
 		// 복합 서술어 처리
 		// '크게 퍼뜨리다' 를 '크다/퍼뜨리다'로 결합시켜 새로운 정보 객체를 구성한다.
 		// 구성이 완료되면 이전 객체는 null 로 설정하고 compaction 시에 사라질 수 있도록 변경한다.
-		for (int hn_idx=0; hn_idx < hlist.size() ; hn_idx++)
+		for (int hn_idx=0; hn_idx < atoms.size() ; hn_idx++)
 		{
-			if (hlist.get(hn_idx).getXTag().equals(XTag_atomize.DescOp))
+			if (atoms.get(hn_idx).getXTag().equals(XTag_atomize.DescOp))
 			{
-				Hana base = hlist.get(hn_idx);
+				Hana base = atoms.get(hn_idx);
 				// Increase와 Decrease는 출력 레벨을 조절한다.
 				// Log10 을 출력함수로 사용한다면 10 으로 레벨을 감소하거나 증가시킨다.
 				// logE를 사용한다면 e 로 조절
@@ -124,13 +120,13 @@ public class EmotionAlgorithm
 			}
 		}
 		
-		hlist.compaction();
+		atoms.compaction();
 		
-		for (int hn_idx=0; hn_idx < hlist.size(); hn_idx++)
+		for (int hn_idx=0; hn_idx < atoms.size(); hn_idx++)
 		{
-			if (hlist.get(hn_idx).getXTag().equals(XTag_atomize.DescOp))
+			if (atoms.get(hn_idx).getXTag().equals(XTag_atomize.DescOp))
 			{
-				Hana base = hlist.get(hn_idx);
+				Hana base = atoms.get(hn_idx);
 				// 여기에서 부사 + 형용사 -> 형용사, 반전이나 강화/감소 연산이 완료된 서술어를 필요하다면 연결한다.
 				String descop_type = identifyDescOp(base.toString());
 				if (descop_type.equals(XTag_logical.DescOp_Join))
@@ -138,18 +134,18 @@ public class EmotionAlgorithm
 					
 					// NullPointerException 으로부터 first, prev, next, last 연산은 안전하므로
 					// 마음 놓고 비교가 가능하다.
-					if (hlist.prev(hn_idx).getXTag().equals(XTag_atomize.Desc) &&
-						hlist.next(hn_idx).getXTag().equals(XTag_atomize.Desc))
+					if (atoms.prev(hn_idx).getXTag().equals(XTag_atomize.Desc) &&
+						atoms.next(hn_idx).getXTag().equals(XTag_atomize.Desc))
 					{
-						Hana base_hn = hlist.prev(hn_idx);
-						Hana aux_hn = hlist.next(hn_idx);
+						Hana base_hn = atoms.prev(hn_idx);
+						Hana aux_hn = atoms.next(hn_idx);
 						Hana new_hn = new Hana(base_hn.toString() + "/" + aux_hn.toString());
 						
 						new_hn.merge(base_hn).merge(aux_hn);
 						new_hn.setXTag(XTag_atomize.Desc);
-						hlist.prev(hn_idx).setXTag(XTag_atomize.Skip);
-						hlist.next(hn_idx).setXTag(XTag_atomize.Skip);
-						hlist.set(hn_idx+1, new_hn);
+						atoms.prev(hn_idx).setXTag(XTag_atomize.Skip);
+						atoms.next(hn_idx).setXTag(XTag_atomize.Skip);
+						atoms.set(hn_idx, new_hn);
 						
 					}
 				}
@@ -157,11 +153,27 @@ public class EmotionAlgorithm
 		}
 		// TODO: 있다, 없다, 하다 에 대한 처리도 필요함. 이 경우는 Object Desc(sentence end)식으로 구성된 경우가 많음.
 		// Compaction 한번 더 실시
-		hlist.compaction();
+		atoms.compaction();
 		
 		// TODO: 현재 hlist 내부의 어휘에 대해 논리 관계를 파악하며 EndOfSentence 키워드를 기준으로 문장을 분할한다.
 		// 문장 요소 별로 HList 를 새로 구성하고, 주어와 목적어, 서술어<->부사 사이의 관계를 정리한다.
-		ArrayList<HList> allText;
+		ArrayList<HList> sentences = new ArrayList<HList>();
+		sentences.add(new HList());
+		int pos = 0;
+		for (Hana hn : atoms)
+		{
+			if (hn.getXTag().equals(XTag_atomize.EndOfSentence))
+			{
+				sentences.add(new HList());
+				pos++;
+			}
+			else
+			{
+				sentences.get(pos).add(hn);
+			}
+		}
+		
+		atoms.clear();
 		// allText 내부의 HList는 다음과 같은 구조로 구성한다.
 		//   0                       |   1   2   3   4  5  6  7  8  9 .... ... last
 		// --------------------------|---------------------------------------------------------------
@@ -174,8 +186,55 @@ public class EmotionAlgorithm
 		// 
 
 		// 주어가 없는 경우에 탐색 작업을 진행 (Object 끌어올림)
-		if (!hlist.hasSubject())
+		for (HList hl : sentences)
 		{
+			alignHList(hl);
+		}
+		
+		
+		
+		// TODO: HList를 연산하여 감정값을 내놓는다. 
+		
+		
+		
+		
+		// ^^^^^^^^^^^ 관계 분석 단계에서 가능한 모든 결합조건을 파악해서 문장 태그를 마쳤다.
+		// 문장의 감정 정보를 정리하고, 모르는 어휘에 대한 학습을 마친다.
+
+		
+		//TODO:  allText로부터 글 전체의 감정값을 요약한다. 강세 어휘를 추출한다.
+		
+		return sentences;
+	}
+	
+	/**
+	 * DescOp 으로 분류된 어휘가 어떤 연산을 수행하는지 분류해낸다.
+	 * @return 연산자 유형 정수로 반환한다.
+	 */
+	public String identifyDescOp(String word)
+	{
+		// DescOp 안에는 꼬꼬마 형태소 분석기 태그의 MAG나 ECE에 해당하는 어휘가 입력된다.
+		// ECE: 고(~하고), 지만(~하지만 ~하다), ㄴ데(그러한데)
+		// MAG: 너무, 매우, 정말, 조금(뒤에 명사나 서술어가 올때 부사로 처리됨), 약간, 안(아니), 별로, 
+		
+		return ""; // stub
+	}
+	
+	/**
+	 * HList 내부의 객체들을, (헤더) - (주어) ------------{(수식 어휘들)}------------ (최종 서술어) 구조로 재정렬한다.
+	 * @return 없음
+	 */
+	public void alignHList(HList hl)
+	{
+		hl.add(0, new Hana()); // 헤더
+		
+		if (hl.findFirstPosForXTag(XTag_atomize.Subject) != -1)
+		{
+			hl.swap(hl.findFirstPosForXTag(XTag_atomize.Subject), 1);	
+		}
+		else
+		{
+			// 주어 탐색
 			// 혹시 대명사가 주어일 수도 있다. (우선순위 1)
 			for (Hana em:es)
 			{
@@ -186,7 +245,7 @@ public class EmotionAlgorithm
 				}
 			}
 			
-			if (!hlist.hasSubject())
+			if (hl.findFirstPosForXTag(XTag_atomize.Subject) == -1)
 			{
 				// 일단, 첫번째로 Object 로 마크된 Hana를 주어로 선정한다. (우선순위 2)
 				for (Hana em : es)
@@ -202,39 +261,12 @@ public class EmotionAlgorithm
 				}
 			}
 			
-			if (!hlist.hasSubject())
+			if (hl.findFirstPosForXTag(XTag_atomize.Subject) == -1)
 			{
 				// .. 최후의 방법. (우선순위 3)
-				hlist.add(0, new Hana("나").setTag(XTag_atomize.Subject));
+				hl.add(1, new Hana("나").setXTag(XTag_atomize.Subject));
 			}
 		}
-		
-		
-		// TODO: HList를 연산하여 감정값을 내놓는다. 
-		
-		
-		
-		
-		// ^^^^^^^^^^^ 관계 분석 단계에서 가능한 모든 결합조건을 파악해서 문장 태그를 마쳤다.
-		// 문장의 감정 정보를 정리하고, 모르는 어휘에 대한 학습을 마친다.
-
-		
-		//TODO:  allText로부터 글 전체의 감정값을 요약한다. 강세 어휘를 추출한다.
-		
-		return allText;
-	}
-	
-	/**
-	 * DescOp 으로 분류된 어휘가 어떤 연산을 수행하는지 분류해낸다.
-	 * @return 연산자 유형 정수로 반환한다.
-	 */
-	public String identifyDescOp(String word)
-	{
-		// DescOp 안에는 꼬꼬마 형태소 분석기 태그의 MAG나 ECE에 해당하는 어휘가 입력된다.
-		// ECE: 고(~하고), 지만(~하지만 ~하다), ㄴ데(그러한데)
-		// MAG: 너무, 매우, 정말, 조금(뒤에 명사나 서술어가 올때 부사로 처리됨), 약간, 안(아니), 별로, 
-		
-		return ""; // stub
 	}
 	
 	/**

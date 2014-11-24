@@ -8,6 +8,7 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 
 import jnu.mindsharing.chainengine.baseidioms.BaseIdioms;
 import jnu.mindsharing.common.DatabaseConstants;
@@ -36,6 +37,17 @@ public class Sense extends DatabaseConstants
 	private BaseIdioms bi = null;
 	
 	private String last_err_msg;
+	
+	private class Pair<GivenType>
+	{
+		public GivenType first, second;
+		
+		public Pair(GivenType f, GivenType s)
+		{
+			first = f;
+			second = s;
+		}
+	}
 	
 
 	/**
@@ -154,8 +166,7 @@ public class Sense extends DatabaseConstants
 					+ "exprhash TEXT NOT NULL, "
 					+ "birthdate DATE NOT NULL, " // 입력일시
 					+ "eprob NUMERIC DEFAULT 0.0, "
-					+ "sprob NUMERIC DEFAULT 0.0, "
-					+ "rate NUMERIC DEFAULT 0.0;"
+					+ "sprob NUMERIC DEFAULT 0.0;"
 					);
 			create_record_table.execute();
 			// Statistics record
@@ -169,6 +180,8 @@ public class Sense extends DatabaseConstants
 					+ "source_name TEXT NOT NULL);"
 					);
 			create_stat_table.execute();
+			P.d(TAG, "데이터베이스 준비 완료");
+			return true;
 		}
 		catch (SQLException e)
 		{
@@ -224,24 +237,27 @@ public class Sense extends DatabaseConstants
 				// 어휘의 중복은 아직 고려하지 않았다. 동음이의어 처리 불가능
 				if (res.next())
 				{
-
 					Hana hn = new Hana();
+					
+					// inferFromRecords()를 실행한다. 여기에서 출력의 세기와 추론된 확률을 수신한다.
+					double[] inferred = inferFromRecords(res.getString("exprhash"));
 					
 					// 이번 행을 첫 정보로 확인하고, 고정되었는지 체크한다.
 					if (res.getBoolean("locked"))
 					{
-						
 						hn.getConfiguration(); // == Meta
-						hn.setMultiplier(1).setAmplifier(1);
 						hn.setProb(res.getDouble("eprob_locked"), res.getDouble("sprob_locked"));
-						
 					}
-					// inferFromRecords()를 실행한다.
-					// 만약 고정되어있지 않다면, 추론된 eprob과 sprob을 추가로 가져오고, 여기에서 출력을 결정한다. 배수는 항상 1이다.
-					double[] inferred = inferFromRecords(res.getString("exprhash"));
-					// 순서대로 amplifier, eprob_guessed, sprob_guessed 이다.
+					else
+					{
+						// 고정되어있지 않으므로 추론된 값을 사용한다.
+						hn.setProb(inferred[1], inferred[2]);
+					}
+
 					hn.setAmplifier((int) inferred[0]);
-					hn.setProb(inferred[0], inferred[1]);
+					
+					// 현재 커서를 닫는다
+					res.close();
 					return hn;
 				}
 				else
@@ -261,25 +277,54 @@ public class Sense extends DatabaseConstants
 		}
 	}
 	
+	/**
+	 * 데이터베이스 레코드로부터 eprob과 sprob을 추정하고, 출현 빈도수(amplifier)를 내놓는다.
+	 * @param expr_hash UTF-8로 작성된 단어의 sha-1 해시값
+	 * @return double 배열, 0번은 출현 빈도수(amplifier), 1번은 eprob 추정값, 2번은 sprob 추정값
+	 */
 	public double[] inferFromRecords(String expr_hash)
 	{
 		// inferFromRecords는 마지막 레코드 1000개만을 처리한다. LIMIT 1000
 		try
 		{
-			PreparedStatement sql = db.prepareStatement("SELECT eprob, sprob, rate FROM Dexrecord WHERE exprhash = ? ORDER BY id LIMIT 1000");
+			PreparedStatement sql = db.prepareStatement("SELECT eprob, sprob FROM Dexrecord WHERE exprhash = ? ORDER BY id LIMIT 1000");
 			ResultSet res = sql.executeQuery();
-			int num_records = 0;
-			double eprob = 0.0;
-			double sprob = 0.0;
-			double et, st;
-			// 정규분포를 위한 변수들
-			double mean, variance;
+			ArrayList<Pair<Double>> pair_probs = new ArrayList<Pair<Double>>();			
+			double[] final_output = {0, 0, 0};
+			
+			
 			while (res.next())
 			{
-			// XXX: 공사 중
-				num_records++;
-				
+				Pair<Double> v = new Pair<Double>(res.getDouble("eprob"), res.getDouble("sprob"));
+				pair_probs.add(v);
 			}
+			res.close();
+
+			
+			// 레코드에 들어온 결과들을 바탕으로 정규분포 값을 구한다.
+			double[] ndist = normalDistributionOnProbs(pair_probs);
+			
+			// TODO:
+			// 1*v = 68.3% / 2*v = 95.5% / 3*v = 99.7%
+			int[] count_pairs = countPairsInRangeOf(pair_probs,
+					new Pair<Double>(ndist[0]-ndist[1], ndist[2] - ndist[3]),
+					new Pair<Double>(ndist[0]+ndist[1], ndist[2] + ndist[3])); 
+			if (count_pairs[0] >= ((int) pair_probs.size()* 0.68) && count_pairs[1] >= ((int) pair_probs.size()* 0.68))
+			{
+				// 만약 1*v에서 만족한다면, 평균치를 그대로 출력한다.
+				final_output[0] = pair_probs.size();
+				final_output[1] = ndist[0]; 
+				final_output[2] = ndist[2];
+			}
+			else
+			{
+				// 정규분포를 만족하지 못하는 경우, 표준편차를 빼서 보정된 값을 출력한다.
+				final_output[0] = pair_probs.size();
+				final_output[1] = ndist[0] - ndist[1]; 
+				final_output[2] = ndist[2] - ndist[3];
+			}			
+			return final_output;
+			
 			
 		}
 		catch (SQLException e)
@@ -288,10 +333,71 @@ public class Sense extends DatabaseConstants
 			e.printStackTrace();
 			return null;
 		}
-		return null;
+	}
+	/**
+	 * Pair<Double> 가 들어있는 배열을 받아서, 주어진 범위의 원소 갯수를 카운트한다.
+	 * @return int배열, 0번은 eprob에 대한 카운트 1번은 sprob에 대한 카운트
+	 */
+	public int[] countPairsInRangeOf(ArrayList<Pair<Double>> pair_probs, Pair<Double> from, Pair<Double> to)
+	{
+		int[] counts = {0, 0};
+		for (Pair<Double> p: pair_probs)
+		{
+			if (p.first >= from.first && p.first <= to.first)
+				counts[0] += 1;
+			if (p.second >= from.second && p.second <= to.second)
+				counts[1] += 1;
+		}
+		return counts;
 	}
 	
-	public boolean addRecord(String exprhash, double eprob, double sprob, double rate, long timestamp)
+	/**
+	 * Pair<Double> 가 들어있는 배열을 받아서 정규분포를 계산한다. 반환하는 순서는 return 을 참고
+	 * @param pair_probs Pair<Double> 가 들어있는 배열 
+	 * @return double 배열. 순서는 감정확률, 감정확률 표준 편차, 상태변이확률, 상태변이확률 표준 편차
+	 */
+	public double[] normalDistributionOnProbs(ArrayList<Pair<Double>> pair_probs)
+	{
+		// 정규분포를 위한 변수들(평균, 표준편차)
+		double emean = 0, smean = 0, e_stddevi = 0, s_stddevi = 0;
+		double sum_eprob = 0.0, sum_sprob = 0.0;
+		double[] final_output = {0.0, 0.0, 0.0, 0.0};
+		
+		int num_records = pair_probs.size();
+		
+		for (Pair<Double> p: pair_probs)
+		{
+			sum_eprob += p.first;
+			sum_sprob += p.second;
+		}
+		
+		
+		emean = sum_eprob / num_records;
+		smean = sum_sprob / num_records;
+		
+		// 표준편차 계산
+		sum_eprob = sum_sprob = 0.0;
+		for (Pair<Double> p: pair_probs)
+		{
+			sum_eprob += Math.pow(p.first - emean, 2);
+			sum_sprob += Math.pow(p.second - smean, 2);
+		}
+		e_stddevi = Math.pow(sum_eprob / num_records, 0.5);
+		s_stddevi = Math.pow(sum_sprob / num_records, 0.5);
+		
+		final_output[0] = emean;
+		final_output[0] = e_stddevi;
+		final_output[0] = smean;
+		final_output[0] = s_stddevi;
+		return final_output;
+	}
+	
+	public boolean addRecord(String exprhash, double eprob, double sprob, long timestamp)
+	{
+		return false; // stub
+	}
+	
+	public boolean setLockedProbs(String exprhash, double eprob_locked, double sprob_locked)
 	{
 		return false; // stub
 	}
