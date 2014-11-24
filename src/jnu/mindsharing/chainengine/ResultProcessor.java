@@ -30,22 +30,49 @@ public class ResultProcessor
 	 * @param hlist EmotionAlgorithm 객체
 	 */
 	@SuppressWarnings(value = { "unchecked" })
-	public ResultProcessor(ArrayList<HList> hlist)
+	public ResultProcessor(ArrayList<HList> sentences)
 	{
 		TAG = TAG + hashCode();
 		json = new JSONObject();
-		if (hlist == null)
+		if (sentences == null)
 		{
 			json.put("data", new JSONArray());
 		}
 		else
 		{
-			JSONArray nri_array = new JSONArray();
-			for (Hana nri: hlist)
+			JSONArray hn_array = new JSONArray();
+			for (HList hlist: sentences)
 			{
+				JSONObject json_sentence = new JSONObject();
+				int amp = hlist.get(0).getAmplifier();
+				double[] vp = hlist.get(0).getProb();
+				double[] value = hlist.get(0).getProjectiles();
+				json_sentence.put("ctx_eprob", vp[0]);
+				json_sentence.put("ctx_sprob", vp[1]);
+				json_sentence.put("amp", amp);
+				json_sentence.put("ctx_evalue", value[0]);
+				json_sentence.put("ctx_svalue", value[1]);
 				
+				JSONArray json_wordlist = new JSONArray();
+				for (Hana hn: hlist.subList(1, -1))
+				{
+					double[] mapped_to = hn.getProjectiles();
+					
+					JSONObject json_word = new JSONObject();
+					json_word.put("word", hn.toString());
+					json_word.put("tag", hn.getXTag());
+					json_word.put("eprob", hn.getProb()[0]);
+					json_word.put("sprob", hn.getProb()[1]);
+					json_word.put("amp", hn.getAmplifier());
+					json_word.put("evalue", mapped_to[0]);
+					json_word.put("svalue", mapped_to[1]);
+					json_wordlist.add(json_word);
+				}
+				
+				json_sentence.put("words", json_wordlist);
+				hn_array.add(json_sentence);
 			}
-			json.put("data", nri_array);
+			json.put("data", hn_array);
 			
 		}
 		P.d(TAG, "JSON 데이터 생성완료.");
@@ -53,7 +80,7 @@ public class ResultProcessor
 		StringBuffer buffer = new StringBuffer(1024);
 		buffer.append("# -- START OF ANALYSIS RECORD --\r\n");
 		buffer.append("# -- ENCODING: UTF-8 --\r\n");
-		if (hlist == null)
+		if (sentences == null)
 		{
 			buffer.append("# No result\r\n");
 		}
@@ -61,23 +88,24 @@ public class ResultProcessor
 		{
 			buffer.append("# Structured sentences\r\n");
 			
-			for (Nuri nri: hlist)
+			int sentence_no = 0;
+			
+			for (HList hlist: sentences)
 			{
-				buffer.append(String.format("# Subject on %s (%d relations)", nri.getSubjectName(), nri.getRelations().size()));
+				sentence_no++;
+				buffer.append(String.format("# Sentence #%d has Subject as %s (%d words)", sentence_no, hlist.get(1).toString()));
 				buffer.append("\r\n");
-				double[] conem = nri.getContextEmo();
-				buffer.append(String.format("# Context emotion : JOY(%.5f),SORROW(%.5f),GROWTH(%.5f),CEASE(%.5f)", conem[0], conem[1], conem[2], conem[3]));
+				int amp = hlist.get(0).getAmplifier();
+				double[] vp = hlist.get(0).getProb();
+				buffer.append(String.format("# Emotional p-vector %.4f / State p-vector %.4f / Amplifier: %d ", vp[0], vp[1], amp));
 				buffer.append("\r\n");
-				buffer.append("# Emotional expression related to subject\r\n");
-				for (EmoUnit em: nri.getRelations())
+				buffer.append("# Expressions in this sentence are:\r\n");
+				for (Hana hn: hlist.subList(1, -1))
 				{
-					buffer.append(String.format("%s(%d),%s(%d),%s(%d),%s(%d) %s/%s",
-							em.JOY, EmoUnit.epowerToInt(em.getVectorSize(em.JOY)),
-							em.SORROW, EmoUnit.epowerToInt(em.getVectorSize(em.SORROW)),
-							em.GROWTH, EmoUnit.epowerToInt(em.getVectorSize(em.GROWTH)),
-							em.CEASE, EmoUnit.epowerToInt(em.getVectorSize(em.CEASE)),
-							em.getOrigin(), em.getExt()
-							));
+					double[] mapped_to = hn.getProjectiles();
+					buffer.append(String.format("%s(tag:%s) [e %.4f s %.4f ^ %d ] mapped to (%4f, %4f)",
+							hn.toString(), hn.getXTag(), hn.getProb()[0], hn.getProb()[1], hn.getAmplifier(),
+							mapped_to[0], mapped_to[1]));
 					buffer.append("\r\n");
 				}
 					
@@ -97,7 +125,6 @@ public class ResultProcessor
 	@SuppressWarnings(value = { "unchecked" })
 	public void addErrorInfo(String error_code, String error_message)
 	{
-		// XXX: 좋은 코드가 아님. Object를 통으로 받기 때문에, 경고가 뜬다.
 		json.put("error", error_code);
 		json.put("error_msg", error_message);
 		// null check?
