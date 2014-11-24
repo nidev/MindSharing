@@ -53,6 +53,34 @@ public class HList extends ArrayList<Hana>
 		return new Hana();
 	}
 	
+	public Hana findHanaForXTag(String target_xtag)
+	{
+		for (Hana hn : this)
+		{
+			if (hn.getXTag().equalsIgnoreCase(target_xtag))
+				return hn;
+		}
+		return null;
+	}
+	
+	public int findFirstPosForXTag(String target_xtag)
+	{
+		int i = 0;
+		
+		for (Hana hn : this)
+		{
+			if (hn.getXTag().equalsIgnoreCase(target_xtag))
+				return i;
+			else
+				i++;
+		}
+		return -1;
+	}
+	
+	public boolean swap(int i, int j)
+	{
+		return false; // STUB
+	}
 	/**
 	 * HList에서 Skip으로 태그된 어휘를 모두 제거하고, 전후 사이즈 차이를 반환한다.
 	 * @return
