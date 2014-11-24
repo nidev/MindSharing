@@ -18,7 +18,10 @@ import java.io.Serializable;
  * 
  * 벡터의 최대 크기는 sqrt(2)이며 각 벡터는 x, y 각각 [-1, 1] 내에서만 결정한다. 
  * 
- * 이 객체는 emotionOrigin(감정 어휘 문자열)을 설정하지않고도, 감정값을 주고 받는 자료구조로 사용할 수 있다.
+ * 이 객체는 감정값을 주고 받는 자료구조로 사용할 수 있다. (getConfiguration().equals("Meta"))
+ * 기본적으로 당연히 Expression을 전달하는 자료구조이다. (getConfiguration().equals("Expression"))
+ * 
+ * Expression으로 객체가 생성될 때는 Sense 모듈을 통하여 자동으로 감정값을 평가 받는다.
  * 
  * @author nidev
  *
@@ -26,10 +29,9 @@ import java.io.Serializable;
 
 public class Hana extends DatabaseConstants implements Serializable
 {
-
-	/**
-	 * 
-	 */
+	enum PROJECTILE_FUNCTIONS {LOGARITHM_BASE10, LOGARITHM_NATURAL, LINEAR};
+	final PROJECTILE_FUNCTIONS useFunction = PROJECTILE_FUNCTIONS.LOGARITHM_BASE10;
+	
 	public static String[] configuration = {"Meta", "Expression"};
 	private static final long serialVersionUID = -7264959704236402603L;
 	private String configuredAs;
@@ -150,6 +152,35 @@ public class Hana extends DatabaseConstants implements Serializable
 	{
 		return String.format("<Object:Hana expr=%s, wt=%d, ep=%f, sp=%f, amp=%d>",
 			content, wordtype, eprob, sprob, amplifier);
+	}
+	
+	/**
+	 * 출현빈도(Amp)와 eprob/sprob를 입력으로하여, 지정된 함수를 사용해 전사시켜 감정값을 추출한다.
+	 * @return 0번은 eprob기반 감정값, 1번은 sprob기반 감정값
+	 */
+	public double[] getProjectiles()
+	{
+		double[] projects = new double[2];
+		switch(useFunction)
+		{
+		case LOGARITHM_BASE10:
+			projects[0] = ProjectileFunction.projectileFunctionLog10(eprob, amplifier);
+			projects[1] = ProjectileFunction.projectileFunctionLog10(sprob, amplifier);
+			break;
+		case LOGARITHM_NATURAL:
+			projects[0] = ProjectileFunction.projectileFunctionLn(eprob, amplifier);
+			projects[1] = ProjectileFunction.projectileFunctionLn(sprob, amplifier);
+			break;
+		case LINEAR:
+			projects[0] = ProjectileFunction.projectileFunctionLinear(eprob, amplifier);
+			projects[1] = ProjectileFunction.projectileFunctionLinear(sprob, amplifier);
+			break;
+		default:
+			projects[0] = eprob;
+			projects[1] = sprob;
+			break;
+		}
+		return projects;
 	}
 	
 	/**
