@@ -215,7 +215,11 @@ public class EmotionAlgorithm
 	{
 		// DescOp 안에는 꼬꼬마 형태소 분석기 태그의 MAG나 ECE에 해당하는 어휘가 입력된다.
 		// ECE: 고(~하고), 지만(~하지만 ~하다), ㄴ데(그러한데)
-		// MAG: 너무, 매우, 정말, 조금(뒤에 명사나 서술어가 올때 부사로 처리됨), 약간, 안(아니), 별로, 
+		// MAG: 너무, 매우, 정말, 조금(뒤에 명사나 서술어가 올때 부사로 처리됨), 약간, 안(아니), 별로,
+		String[] join = {"고", "지만", "ㄴ데"};
+		String[] negate = {"안", "아니", "별로" };
+		String[] emphasize = {"너무", "매우", "정말"};
+		String[] minimize = {"조금", "약간", "살짝", "좀"};
 		
 		return ""; // stub
 	}
@@ -236,28 +240,19 @@ public class EmotionAlgorithm
 		{
 			// 주어 탐색
 			// 혹시 대명사가 주어일 수도 있다. (우선순위 1)
-			for (Hana em:es)
+			if (hl.findFirstPosForXTag(XTag_atomize.ReferenceMarker) != -1)
 			{
-				if (hn.getXTag() == XTag_atomize.ReferenceMarker)
-				{
-					hn.setTag(XTag_atomize.Subject);
-					break;
-				}
+				hl.findHanaForXTag(XTag_atomize.ReferenceMarker).setXTag(XTag_atomize.Subject);
+				hl.swap(hl.findFirstPosForXTag(XTag_atomize.Subject), 1);
 			}
 			
 			if (hl.findFirstPosForXTag(XTag_atomize.Subject) == -1)
 			{
 				// 일단, 첫번째로 Object 로 마크된 Hana를 주어로 선정한다. (우선순위 2)
-				for (Hana em : es)
+				if (hl.findFirstPosForXTag(XTag_atomize.Object) != -1)
 				{
-					if (hn.getXTag() == XTag_atomize.Object)
-					{
-						// XXX: 현재 휴리스틱 규칙은 없음
-						// 분명 오류를 내는 알고리즘임
-						hn.setTag(XTag_atomize.Subject);
-						break;
-					}
-						
+					hl.findHanaForXTag(XTag_atomize.Object).setXTag(XTag_atomize.Subject);
+					hl.swap(hl.findFirstPosForXTag(XTag_atomize.Subject), 1);
 				}
 			}
 			

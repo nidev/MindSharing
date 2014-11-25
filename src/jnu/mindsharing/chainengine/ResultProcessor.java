@@ -72,6 +72,7 @@ public class ResultProcessor
 				json_sentence.put("words", json_wordlist);
 				hn_array.add(json_sentence);
 			}
+			json.put("mapping_graph_url", "/graph/graph.jpg"); // 학습된 어휘를 그리는 그래프
 			json.put("data", hn_array);
 			
 		}
