@@ -12,4 +12,5 @@ public class XTag_logical
 	public static final String DescOp_InvertPrev = "!DO"; // ~지 않다.
 	public static final String DescOp_Increase = "DO^";
 	public static final String DescOp_Decrease = "DOv";
+	public static final String DescOp_Undefined = "?DO?";
 }

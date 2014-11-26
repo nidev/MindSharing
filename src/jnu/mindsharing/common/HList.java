@@ -4,6 +4,7 @@
 package jnu.mindsharing.common;
 
 import java.util.ArrayList;
+import java.util.Collections;
 
 /**
  * @author nidev
@@ -53,33 +54,57 @@ public class HList extends ArrayList<Hana>
 		return new Hana();
 	}
 	
-	public Hana findHanaForXTag(String target_xtag)
+	public Hana findHanaForXTagFrom(String target_xtag, int start_idx)
 	{
-		for (Hana hn : this)
+		if (start_idx < size())
 		{
-			if (hn.getXTag().equalsIgnoreCase(target_xtag))
-				return hn;
+			for (Hana hn : subList(start_idx, size()))
+			{
+				if (hn.getXTag().equalsIgnoreCase(target_xtag))
+					return hn;
+			}
 		}
 		return null;
 	}
 	
-	public int findFirstPosForXTag(String target_xtag)
+	public int findFirstPosForXTagFrom(String target_xtag, int start_idx)
 	{
 		int i = 0;
-		
-		for (Hana hn : this)
+		if (start_idx < size())
 		{
-			if (hn.getXTag().equalsIgnoreCase(target_xtag))
-				return i;
-			else
-				i++;
+		
+			for (Hana hn : subList(start_idx, size()))
+			{
+				if (hn.getXTag().equalsIgnoreCase(target_xtag))
+					return start_idx+i;
+				else
+					i++;
+			}
 		}
 		return -1;
 	}
 	
+	public Hana findHanaForXTag(String target_xtag)
+	{
+		return findHanaForXTagFrom(target_xtag, 0);
+	}
+	
+	public int findFirstPosForXTag(String target_xtag)
+	{
+		return findFirstPosForXTagFrom(target_xtag, 0);
+	}
+	
 	public boolean swap(int i, int j)
 	{
-		return false; // STUB
+		if (i > 0 && j > 0 && i < size() && j < size() && i != j)
+		{
+			Collections.swap(this, i,  j);
+			return true;
+		}
+		else
+		{
+			return false;
+		}
 	}
 	/**
 	 * HList에서 Skip으로 태그된 어휘를 모두 제거하고, 전후 사이즈 차이를 반환한다.
