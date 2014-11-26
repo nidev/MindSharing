@@ -9,9 +9,11 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Date;
 
 import jnu.mindsharing.chainengine.baseidioms.BaseIdioms;
 import jnu.mindsharing.common.DatabaseConstants;
+import jnu.mindsharing.common.ExprHash;
 import jnu.mindsharing.common.Hana;
 import jnu.mindsharing.common.P;
 
@@ -172,7 +174,7 @@ public class Sense extends DatabaseConstants
 			// Statistics record
 			// Every learning should be recorded
 			PreparedStatement create_stat_table = db.prepareStatement(
-					"CREATE TABLE IF NOT EXIST Newdex ("
+					"CREATE TABLE IF NOT EXIST Stats ("
 					+ "id SERIAL CONSTRAINT expr_PK PRIMARY KEY, "
 					+ "evtype SMALLINT NOT NULL, "
 					+ "words_given SMALLINT NOT NULL, "
@@ -288,6 +290,7 @@ public class Sense extends DatabaseConstants
 		try
 		{
 			PreparedStatement sql = db.prepareStatement("SELECT eprob, sprob FROM Dexrecord WHERE exprhash = ? ORDER BY id LIMIT 1000");
+			sql.setString(1,  expr_hash);
 			ResultSet res = sql.executeQuery();
 			ArrayList<Pair<Double>> pair_probs = new ArrayList<Pair<Double>>();			
 			double[] final_output = {0, 0, 0};
@@ -394,6 +397,22 @@ public class Sense extends DatabaseConstants
 	
 	public boolean addRecord(String exprhash, double eprob, double sprob, long timestamp)
 	{
+		try
+		{
+			PreparedStatement sql = db.prepareStatement("INSERT INTO Dexrecord VALUES (null, ?, ?, ?, ?, ?, ?);");
+			sql.setString(1, exprhash);
+			sql.setDate(2,  new java.sql.Date(System.currentTimeMillis()));
+			sql.setBoolean(3, false);
+			sql.setDouble(4, eprob);
+			sql.setDouble(5, sprob);
+			sql.setDouble(6, 1.0);
+			
+			sql.execute();
+		}
+		catch (SQLException e)
+		{
+			// XXX: Please implement here
+		}
 		return false; // stub
 	}
 	
@@ -404,6 +423,22 @@ public class Sense extends DatabaseConstants
 	
 	public boolean addNewdex(String word)
 	{
+		try
+		{
+			PreparedStatement sql = db.prepareStatement("INSERT INTO Newdex VALUES (null, ?, ?, ?, ?, ?, ?);");
+			sql.setString(1, word);
+			sql.setInt(2, WORD_TYPE.verb);
+			sql.setBoolean(3, false);
+			sql.setDouble(4, 0.0);
+			sql.setDouble(5, 0.0);
+			sql.setString(6, (new ExprHash(word).toString()));
+			
+			sql.execute();
+		}
+		catch (SQLException e)
+		{
+			// XXX: Please implement here
+		}
 		return false; // stub
 	}
 	

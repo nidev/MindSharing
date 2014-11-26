@@ -2,6 +2,7 @@ package jnu.mindsharing.chainengine;
 
 import java.util.ArrayList;
 
+import jnu.mindsharing.common.DescOpHelper;
 import jnu.mindsharing.common.HList;
 import jnu.mindsharing.common.Hana;
 import jnu.mindsharing.common.P;
@@ -73,21 +74,12 @@ public class EmotionAlgorithm
 		
 		// 전처리기를 사용해서 전처리 작업을 모두 수행한다.
 		// TextPreprocessor.java 참고
-		preproc.performUnquoting(); // 따옴표 해체
-		preproc.performTagging(ma); // 세종 말뭉치 태그를 내부 태그로 변환함
-		preproc.performJointing(); // 명사 어휘 결합 
-		
-		if (!preproc.isEverythingDone())
-		{
-			throw new Exception("텍스트 전처리 부분에서 실패함");
-		}
-		
-		HList atoms = preproc.export();
+		HList atoms = preproc.atomize(ma);
 		
 		// 현재 preprocessor를 통과한 모든 어휘는 기본적인 감정값 평가가 모두 완료되어있다!
 		// 복합 서술어 처리
-		// '크게 퍼뜨리다' 를 '크다/퍼뜨리다'로 결합시켜 새로운 정보 객체를 구성한다.
 		// 구성이 완료되면 이전 객체는 null 로 설정하고 compaction 시에 사라질 수 있도록 변경한다.
+		// 문장 요소 별로 HList 를 새로 구성하고, 주어와 목적어, 서술어<->부사 사이의 관계를 정리한다.
 		for (int hn_idx=0; hn_idx < atoms.size() ; hn_idx++)
 		{
 			if (atoms.get(hn_idx).getXTag().equals(XTag_atomize.DescOp))
@@ -99,23 +91,43 @@ public class EmotionAlgorithm
 				String descop_type = identifyDescOp(base.toString());
 				if (descop_type.equals(XTag_logical.DescOp_Decrease))
 				{
-					
+					// XXX: Fix
+					int pos = atoms.findFirstPosForXTagFrom(XTag_atomize.Desc, hn_idx);
+					if (pos != -1)
+						atoms.get(pos).setAmplifier(atoms.get(0).getAmplifier()/10);
+					// 연산 역할을 성공적으로 수행하였는지와 무관하게, 현재 토큰은 파괴된다.
+					atoms.get(hn_idx).setXTag(XTag_atomize.Skip);
 				}
 				else if (descop_type.equals(XTag_logical.DescOp_Increase))
 				{
-					
+					// XXX: Fix
+					int pos = atoms.findFirstPosForXTagFrom(XTag_atomize.Desc, hn_idx);
+					if (pos != -1)
+						atoms.get(pos).setAmplifier(atoms.get(0).getAmplifier()*10);
+					// 연산 역할을 성공적으로 수행하였는지와 무관하게, 현재 토큰은 파괴된다.
+					atoms.get(hn_idx).setXTag(XTag_atomize.Skip);
 				}
 				else if (descop_type.equals(XTag_logical.DescOp_InvertPrev))
 				{
-					
+					// XXX: Fix
+					int pos = atoms.findFirstPosForXTagFrom(XTag_atomize.Desc, hn_idx);
+					if (pos != -1)
+						atoms.prev(pos).setAmplifier(atoms.get(0).getAmplifier());
+					// 연산 역할을 성공적으로 수행하였는지와 무관하게, 현재 토큰은 파괴된다.
+					atoms.get(hn_idx).setXTag(XTag_atomize.Skip);
 				}
 				else if (descop_type.equals(XTag_logical.DescOp_InvertNext))
 				{
-					
+					// XXX: Fix
+					int pos = atoms.findFirstPosForXTagFrom(XTag_atomize.Desc, hn_idx);
+					if (pos != -1)
+						atoms.get(pos).setAmplifier(atoms.get(0).getAmplifier());
+					// 연산 역할을 성공적으로 수행하였는지와 무관하게, 현재 토큰은 파괴된다.
+					atoms.get(hn_idx).setXTag(XTag_atomize.Skip);
 				}
 				else
 				{
-					// should not reach here, or skip
+					// nothing to do
 				}
 			}
 		}
@@ -155,8 +167,7 @@ public class EmotionAlgorithm
 		// Compaction 한번 더 실시
 		atoms.compaction();
 		
-		// TODO: 현재 hlist 내부의 어휘에 대해 논리 관계를 파악하며 EndOfSentence 키워드를 기준으로 문장을 분할한다.
-		// 문장 요소 별로 HList 를 새로 구성하고, 주어와 목적어, 서술어<->부사 사이의 관계를 정리한다.
+		// 현재 hlist 내부의 어휘에 대해 EndOfSentence 키워드를 기준으로 문장을 분할한다.
 		ArrayList<HList> sentences = new ArrayList<HList>();
 		sentences.add(new HList());
 		int pos = 0;
@@ -193,35 +204,21 @@ public class EmotionAlgorithm
 		
 		
 		
-		// TODO: HList를 연산하여 감정값을 내놓는다. 
+		// TODO: HList를 연산하여 감정값을 내놓는다. 확률 출력과 감정값 출력으로 나눠, 확률은 Sense모듈이 모르는 어휘를 학습할 수 있도록 던져준다.
 		
-		
-		
-		
-		// ^^^^^^^^^^^ 관계 분석 단계에서 가능한 모든 결합조건을 파악해서 문장 태그를 마쳤다.
-		// 문장의 감정 정보를 정리하고, 모르는 어휘에 대한 학습을 마친다.
-
-		
-		//TODO:  allText로부터 글 전체의 감정값을 요약한다. 강세 어휘를 추출한다.
+		//TODO:  sentences로부터 글 전체의 감정값을 요약한다. 강세 어휘를 추출한다.
 		
 		return sentences;
 	}
 	
 	/**
-	 * DescOp 으로 분류된 어휘가 어떤 연산을 수행하는지 분류해낸다.
+	 * DescOp 으로 분류된 어휘가 어떤 연산을 수행하는지 분류해낸다. DescOpHelper 의 간편 메소드로 제작되었다.
 	 * @return 연산자 유형 정수로 반환한다.
 	 */
 	public String identifyDescOp(String word)
 	{
-		// DescOp 안에는 꼬꼬마 형태소 분석기 태그의 MAG나 ECE에 해당하는 어휘가 입력된다.
-		// ECE: 고(~하고), 지만(~하지만 ~하다), ㄴ데(그러한데)
-		// MAG: 너무, 매우, 정말, 조금(뒤에 명사나 서술어가 올때 부사로 처리됨), 약간, 안(아니), 별로,
-		String[] join = {"고", "지만", "ㄴ데"};
-		String[] negate = {"안", "아니", "별로" };
-		String[] emphasize = {"너무", "매우", "정말"};
-		String[] minimize = {"조금", "약간", "살짝", "좀"};
-		
-		return ""; // stub
+		// 구현은 common 패키지의 DescOpHelper에 되어있다.
+		return (new DescOpHelper()).identify(word);
 	}
 	
 	/**

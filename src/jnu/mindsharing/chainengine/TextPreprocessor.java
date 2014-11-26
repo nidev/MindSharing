@@ -21,7 +21,6 @@ import org.snu.ids.ha.ma.MorphemeAnalyzer;
  */
 public class TextPreprocessor
 {
-	boolean unquoted, tagged, jointed;
 	String TAG="TPreproc";
 	String contents;
 	HList internal;
@@ -33,9 +32,6 @@ public class TextPreprocessor
 	public TextPreprocessor(String rawText)
 	{
 		contents = rawText;
-		unquoted = false;
-		tagged = false;
-		jointed = false;
 	}
 	
 	/**
@@ -77,15 +73,13 @@ public class TextPreprocessor
 	/**
 	 * 따옴표 해체 작업을 수행하고, unquoted 플래그를 true로 바꾼다.
 	 */
-	public void performUnquoting()
+	private void performUnquoting()
 	{
 		if (contents.contains("\""))
 		{
 			// TODO: 실질적인 해체 작업
 			P.e(TAG, "따옴표가 포함되어있음.");
 		}
-		// over
-		unquoted = true;
 	}
 	
 	/**
@@ -96,7 +90,7 @@ public class TextPreprocessor
 	 * @param ma 꼬꼬마 형태소 분석기 객체
 	 * @see EmotionAlgorithm
 	 */
-	public void performTagging(MorphemeAnalyzer ma) throws Exception
+	private void performTagging(MorphemeAnalyzer ma) throws Exception
 	{
 		List<MExpression> aresults = ma.analyze(contents);
 		if (aresults == null)
@@ -207,6 +201,8 @@ public class TextPreprocessor
 						/*
 						 * 주목: UN 은 형태소 분석기에서 '명사'로 추정한 어휘이다. '인명'도 엄밀히 명사의 범주에 속하기 때문에, 인명 인식을 위해서 추가한다.
 						 */
+						// DescOp 중에는 명사 어휘도 존재한다.
+						
 						internal.add(new Hana(cur_morpheme.getString()).setXTag(XTag_atomize.NounMarker));
 					}
 					else
@@ -249,14 +245,12 @@ public class TextPreprocessor
 		// Skip 으로 끝나지 않았다면, 패딩을 추가해준다.
 
 		internal.add(new Hana(".").setXTag(XTag_atomize.EndOfSentence));		
-		// over
-		tagged = true;
 	}
 	
 	/**
 	 * 명사 어휘들끼리 결합이나, 어근과 조사의 결합 등을 확인한다. 결합이 완료되면 jointed 플래그가 true로 설정된다.
 	 */
-	public void performJointing()
+	private void performJointing()
 	{
 		// phase 2: Hana 배열을 순회하면서 태그 재설정 (Marker는 감정값 수신후에 다른 태그로 변경한다. phase2이후로 *Marker가 남아있으면 안됨)
 		// NounMarker 끼리 뭉쳐서 Object 태그로 만든다.
@@ -398,44 +392,55 @@ public class TextPreprocessor
 		}
 		
 		// 모든 작업이 완료된 후에도, 마지막 서술어가 Desc라면 DescSubject로 변환한다.
+		// TODO: 실행 위치 변경
+		/*
 		if (internal.last().getXTag() == XTag_atomize.Desc)
 		{
 			// XXX: 목적어를 취하는 동사라면?
 			// 이것을 체크할 방법은?
 			internal.last().setXTag(XTag_atomize.DescSubject);
 		}
+		*/
 		
 		// Compaction 코드는 ESentence 내부로 옮겼음.
 		internal.compaction();
-		// over
-		jointed = true;
+	}
+	
+	/**
+	 * Sense 모듈로 부터 토큰의 기본감정 확률/추정감정 확률을 수신한다.
+	 * @param ss
+	 */
+	private void performHListEvaluation(Sense ss)
+	{
+		for (Hana hn : internal)
+		{
+			if (hn.getXTag().equals(XTag_atomize.Desc))
+			{
+				Hana value = ss.ask(hn.toString());
+				if (value != null)
+				{
+					hn.merge(value);
+				}
+			}
+		}
 		
 	}
 	
 	/**
-	 * 모든 플래그가 true인지 체크한다. (작업 완료 여부)
-	 * @return true(모두 완료), false(일부 완료)
-	 */
-	public boolean isEverythingDone()
-	{
-		if (unquoted && tagged && jointed)
-		{
-			return true;
-		}
-		else
-		{
-			return false;
-		}
-	}
-	
-	/**
-	 * 전처리가 완료되면, TextProcessor 생성 때 받은 es 객체를 반환한다. 내부의 내용은 전처리기에 의해 변경되어있다.
+	 * 전처리가 완료되면, TextProcessor 생성 후 결과물을 HList로 반환한다. 내부의 내용은 전처리기에 의해 변경되어있다.
 	 * 만약 작업이 완료되지않았다면, null을 반환한다.
+	 * 
 	 * @return 전처리 완료된 ESentence 객체, 또는 null
+	 * @throws Exception 
 	 */
-	public HList export()
+	public HList atomize(MorphemeAnalyzer ma) throws Exception
 	{
-		return isEverythingDone() ? internal : null;
+		
+		performUnquoting();
+		performTagging(ma);
+		performJointing();
+		performHListEvaluation(new Sense());
+		return internal;
 	}
 
 }
