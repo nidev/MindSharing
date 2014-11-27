@@ -9,7 +9,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Date;
 
 import jnu.mindsharing.chainengine.baseidioms.BaseIdioms;
 import jnu.mindsharing.common.DatabaseConstants;
@@ -69,42 +68,51 @@ public class Sense extends DatabaseConstants
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} // 기본 어휘는 100개 세트를 사용한다.
+		
+		negotiateDatabaseConnection();
 	}
 	
 	public Sense(int dsc_size)
 	{
-		// 
+		boolean load_okay = false;
+		
 		P.d(TAG, "Sense Class created (With baseIdioms = %d)", dsc_size);
 		bi = new BaseIdioms();
+		
 		try
 		{
 			switch(dsc_size)
 			{
 			case 20:
-				bi.loadSet(BaseIdioms.DSC.SET20);
+				load_okay |= bi.loadSet(BaseIdioms.DSC.SET20);
+				if (load_okay) break;
 			case 50:
-				bi.loadSet(BaseIdioms.DSC.SET50);
+				load_okay |= bi.loadSet(BaseIdioms.DSC.SET50);
+				if (load_okay) break;
 			case 100:
-				bi.loadSet(BaseIdioms.DSC.SET100);
+				load_okay |= bi.loadSet(BaseIdioms.DSC.SET100);
+				if (load_okay) break;
 			case 200:
-				bi.loadSet(BaseIdioms.DSC.SET200);
+				load_okay |= bi.loadSet(BaseIdioms.DSC.SET200);
+				if (load_okay) break;
 			default:
 				P.e(TAG, "Couldn't identify dataset size. Load SET100");
-				bi.loadSet(BaseIdioms.DSC.SET100);
+				load_okay |= bi.loadSet(BaseIdioms.DSC.SET100);
 			}
 		}
 		catch (Exception e)
 		{
-			// stub
 			e.printStackTrace();
 		}
+		
+		negotiateDatabaseConnection();
 	}
 	
 	/**
 	 * 주소와 데이터베이스 이름을 사용해 데이터베이스 Connection을 가져온다. 예외가 발생하면 null 을 반환한다.
 	 * @return 데이터베이스 Connection, 또는 null
 	 */
-	public Connection getDatabaseConnection()
+	private Connection negotiateDatabaseConnection()
 	{
 		String uri = (new DB_URI()).toString();
 		String localTAG = "GET-DB";
@@ -151,11 +159,11 @@ public class Sense extends DatabaseConstants
 		{
 			// Newly-learned words
 			PreparedStatement create_newdex_table = db.prepareStatement(
-					"CREATE TABLE IF NOT EXIST Newdex ("
-					+ "id SERIAL CONSTRAINT expr_PK PRIMARY KEY, "
+					"CREATE TABLE IF NOT EXISTS Newdex ("
+					+ "id SERIAL CONSTRAINT nexdex_PK PRIMARY KEY, "
 					+ "expression TEXT NOT NULL, "
 					+ "exprtype SMALLINT NOT NULL, "
-					+ "locked BOOLEAN DEFAULT FALSE"
+					+ "locked BOOLEAN DEFAULT FALSE, "
 					+ "eprob_lock NUMERIC DEFAULT 0.0, "
 					+ "sprob_lock NUMERIC DEFAULT 0.0, "
 					+ "exprhash TEXT NOT NULL);"
@@ -163,19 +171,19 @@ public class Sense extends DatabaseConstants
 			create_newdex_table.execute();
 			// Machine Learning record
 			PreparedStatement create_record_table = db.prepareStatement(
-					"CREATE TABLE IF NOT EXIST Dexrecord ("
-					+ "id SERIAL CONSTRAINT expr_PK PRIMARY KEY, "
+					"CREATE TABLE IF NOT EXISTS Dexrecord ("
+					+ "id SERIAL CONSTRAINT dexrecord_PK PRIMARY KEY, "
 					+ "exprhash TEXT NOT NULL, "
 					+ "birthdate DATE NOT NULL, " // 입력일시
 					+ "eprob NUMERIC DEFAULT 0.0, "
-					+ "sprob NUMERIC DEFAULT 0.0;"
+					+ "sprob NUMERIC DEFAULT 0.0);"
 					);
 			create_record_table.execute();
 			// Statistics record
 			// Every learning should be recorded
 			PreparedStatement create_stat_table = db.prepareStatement(
-					"CREATE TABLE IF NOT EXIST Stats ("
-					+ "id SERIAL CONSTRAINT expr_PK PRIMARY KEY, "
+					"CREATE TABLE IF NOT EXISTS Stats ("
+					+ "id SERIAL CONSTRAINT stats_PK PRIMARY KEY, "
 					+ "evtype SMALLINT NOT NULL, "
 					+ "words_given SMALLINT NOT NULL, "
 					+ "words_emotional SMALLINT NOT NULL, "
@@ -395,29 +403,33 @@ public class Sense extends DatabaseConstants
 		return final_output;
 	}
 	
-	public boolean addRecord(String exprhash, double eprob, double sprob, long timestamp)
+	public boolean addRecord(String exprhash, double eprob, double sprob, long timestamp_milli)
 	{
 		try
 		{
-			PreparedStatement sql = db.prepareStatement("INSERT INTO Dexrecord VALUES (null, ?, ?, ?, ?, ?, ?);");
+			PreparedStatement sql = db.prepareStatement("INSERT INTO Dexrecord (exprhash, birthdate, eprob, sprob) VALUES (?, ?, ?, ?);");
 			sql.setString(1, exprhash);
-			sql.setDate(2,  new java.sql.Date(System.currentTimeMillis()));
-			sql.setBoolean(3, false);
-			sql.setDouble(4, eprob);
-			sql.setDouble(5, sprob);
-			sql.setDouble(6, 1.0);
+			sql.setDate(2,  new java.sql.Date(timestamp_milli));
+			sql.setDouble(3, eprob);
+			sql.setDouble(4, sprob);
+			
 			
 			sql.execute();
 		}
 		catch (SQLException e)
 		{
 			// XXX: Please implement here
+			e.printStackTrace();
 		}
 		return false; // stub
 	}
 	
+	@Deprecated
 	public boolean setLockedProbs(String exprhash, double eprob_locked, double sprob_locked)
 	{
+		/*
+		 * Not implemented
+		 */
 		return false; // stub
 	}
 	
@@ -425,7 +437,7 @@ public class Sense extends DatabaseConstants
 	{
 		try
 		{
-			PreparedStatement sql = db.prepareStatement("INSERT INTO Newdex VALUES (null, ?, ?, ?, ?, ?, ?);");
+			PreparedStatement sql = db.prepareStatement("INSERT INTO Newdex (expression, exprtype, locked, eprob_lock, sprob_lock, exprhash) VALUES (?, ?, ?, ?, ?, ?);");
 			sql.setString(1, word);
 			sql.setInt(2, WORD_TYPE.verb);
 			sql.setBoolean(3, false);
@@ -438,6 +450,7 @@ public class Sense extends DatabaseConstants
 		catch (SQLException e)
 		{
 			// XXX: Please implement here
+			e.printStackTrace();
 		}
 		return false; // stub
 	}
