@@ -435,11 +435,12 @@ public class TextPreprocessor
 	 */
 	public HList atomize(MorphemeAnalyzer ma) throws Exception
 	{
+		Sense ss = new Sense();
 		
 		performUnquoting();
 		performTagging(ma);
 		performJointing();
-		performHListEvaluation(new Sense());
+		performHListEvaluation(ss);
 		return internal;
 	}
 
