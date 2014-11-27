@@ -68,8 +68,7 @@ public class BaseIdioms
 			source = getClass().getResourceAsStream("set-200.csv");
 			break;
 		default:
-			throw new Exception("Invalid datasetLength is given. Available enums are SET20/50/100/200.");
-			
+			return false;
 		}
 		
 		idioms.clear();
@@ -78,14 +77,16 @@ public class BaseIdioms
 		String line;
 		while ((line = br.readLine()) != null)
 		{
+			if (line.startsWith(("#")))
+				continue;
+			
 			StringTokenizer rcsv = new StringTokenizer(line, ",");
 			// WordName, E Prob(-1, +1),  
 			idioms.add(new Idiom(rcsv.nextToken(), Integer.valueOf(rcsv.nextToken()), Integer.valueOf(rcsv.nextToken())));
-	
 		}
 		br.close();
 		P.d(TAG, "기본 단어 세트 변경: %s", datasetLength.toString());
-		return false; // stub
+		return true;
 	}
 	
 	public boolean isLoaded()
