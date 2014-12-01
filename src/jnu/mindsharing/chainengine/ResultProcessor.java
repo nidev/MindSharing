@@ -54,7 +54,7 @@ public class ResultProcessor
 				json_sentence.put("ctx_svalue", value[1]);
 				
 				JSONArray json_wordlist = new JSONArray();
-				for (Hana hn: hlist.subList(1, -1))
+				for (Hana hn: hlist.subList(1, hlist.size()))
 				{
 					double[] mapped_to = hn.getProjectiles();
 					
@@ -94,14 +94,14 @@ public class ResultProcessor
 			for (HList hlist: sentences)
 			{
 				sentence_no++;
-				buffer.append(String.format("# Sentence #%d has Subject as %s (%d words)", sentence_no, hlist.get(1).toString()));
+				buffer.append(String.format("# Sentence #%d has Subject as %s (%d words)", sentence_no, hlist.get(1).toString(), hlist.size()));
 				buffer.append("\r\n");
 				int amp = hlist.get(0).getAmplifier();
 				double[] vp = hlist.get(0).getProb();
 				buffer.append(String.format("# Emotional p-vector %.4f / State p-vector %.4f / Amplifier: %d ", vp[0], vp[1], amp));
 				buffer.append("\r\n");
 				buffer.append("# Expressions in this sentence are:\r\n");
-				for (Hana hn: hlist.subList(1, -1))
+				for (Hana hn: hlist.subList(1, hlist.size()))
 				{
 					double[] mapped_to = hn.getProjectiles();
 					buffer.append(String.format("%s(tag:%s) [e %.4f s %.4f ^ %d ] mapped to (%4f, %4f)",

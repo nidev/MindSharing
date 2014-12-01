@@ -20,11 +20,8 @@ import org.snu.ids.ha.ma.MorphemeAnalyzer;
  */
 public class EmotionAlgorithm
 {
-	private static final long serialVersionUID = -6004998827195979333L;
-	
 	private String TAG = "Algorithm";
 	private MorphemeAnalyzer ma;
-	private HList hlst;
 	
 	enum ESENTENCE_TRAVERSE_MODE {NORMAL, INCREASE_NEXT, DECREASE_NEXT, INVERT_NEXT, DESC_JOIN};
 	

@@ -165,7 +165,10 @@ public class RESTServer extends ServerResource implements ApplicationInfo
 						ResultProcessor rp = null;
 						if (body != null)
 						{
+							String source;
 							String req_id;
+							
+							source = body.split("text=")[1];
 							req_id = String.format("r%x", req.hashCode());
 							// null 이 들어간 동안은 임시 데이터이다.
 							// 작업 처리 중을 의미한다. 작업이 완료되면 진짜 ResultProcessor 객체가 들어간다.
@@ -174,7 +177,7 @@ public class RESTServer extends ServerResource implements ApplicationInfo
 							res.commit(); // 현재 응답을 커밋하고, 후에 처리를 함.
 							try
 							{
-								rp = getEngine().analyze(body);
+								rp = getEngine().analyze(source);
 								rp.addErrorInfo("success", "No error");
 							}
 							catch (Exception e) // 어떤 오류가 발생할지모르지만,

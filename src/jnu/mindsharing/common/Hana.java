@@ -54,12 +54,10 @@ public class Hana extends DatabaseConstants implements Serializable
 		configuredAs = configuration[1];
 		extendedTag = "";
 		content = expr;
-		// slower lookup
 	}
 	
 	public Hana(String expr, int wt)
 	{
-		// faster lookup with word type
 		configuredAs = configuration[1];
 		content = expr;
 		wordtype = wt;
@@ -95,7 +93,10 @@ public class Hana extends DatabaseConstants implements Serializable
 	
 	public double[] getProb()
 	{
-		return null;
+		double[] vp = new double[2];
+		vp[0] = eprob;
+		vp[1] = sprob;
+		return vp;
 	}
 	
 	public Hana setProb(double given_eprob, double given_sprob)
@@ -129,7 +130,7 @@ public class Hana extends DatabaseConstants implements Serializable
 	public Hana setXTag(String msg)
 	{
 		extendedTag = msg;
-		return this; // joined 연산 지원
+		return this;
 	}
 	
 	public String getXTag()

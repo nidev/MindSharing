@@ -18,6 +18,11 @@ public class HList extends ArrayList<Hana>
 	 */
 	private static final long serialVersionUID = 1986635344537411432L;
 	
+	public HList()
+	{
+		super();
+	}
+	
 	public Hana last()
 	{
 		if (size() > 0)

@@ -32,6 +32,7 @@ public class TextPreprocessor
 	public TextPreprocessor(String rawText)
 	{
 		contents = rawText;
+		internal = new HList();
 	}
 	
 	/**
@@ -135,57 +136,57 @@ public class TextPreprocessor
 					else if (isTagIn(mtag, "VA", "VXA"))
 					{
 						// 형용사 어휘
-						internal.add(new Hana(cur_morpheme.getString()+"다").setXTag(XTag_atomize.AdjectMarker));
+						internal.add(new Hana(word+"다").setXTag(XTag_atomize.AdjectMarker));
 					}
 					else if (isTagIn(mtag, "VV"))
 					{
 						// 동사 어휘
 						// VV 태그는 명사+하다 의 조합이 아닌 동사들
 						// TODO: 현재는 인과 관계파악없이 서술어의 어감으로 파악한다.
-						internal.add(new Hana(cur_morpheme.getString()+"다").setXTag(XTag_atomize.VerbMarker));
+						internal.add(new Hana(word+"다").setXTag(XTag_atomize.VerbMarker));
 					}
 					else if (isTagIn(mtag, "VXV", "VX"))
 					{
 						// 있다/없다/(명사)하다 와 같은 보조동사 어휘
 						// 처리할지 말지는 고민 중
-						internal.add(new Hana(cur_morpheme.getString()+"다").setXTag(XTag_atomize.VerbMarker));
+						internal.add(new Hana(word+"다").setXTag(XTag_atomize.VerbMarker));
 					}
 					else if (isTagIn(mtag, "ECD")) // 의존적 종결어미 (--하'지')
 					{
-						internal.add(new Hana(cur_morpheme.getString()).setXTag(XTag_atomize.DescOp));
+						internal.add(new Hana(word).setXTag(XTag_atomize.DescOp));
 					}
 					else if (isTagIn(mtag, "MDT", "MDN"))
 					{
 						// 관형사... 체언을 자세히 꾸며준다.
 						// 따라서 뒤에오는 Object를 자세히 설명해준다.
-						internal.add(new Hana(cur_morpheme.getString()).setXTag(XTag_atomize.DeterminerMarker));
+						internal.add(new Hana(word).setXTag(XTag_atomize.DeterminerMarker));
 						
 					}
 					else if (isTagIn(mtag, "EFN"))
 					{
 						// 마침표 등지의 끝나는 위치에 Skip 토큰을 추가한다.
-						internal.add(new Hana(cur_morpheme.getString()).setXTag(XTag_atomize.EndOfSentence));
+						internal.add(new Hana(word).setXTag(XTag_atomize.EndOfSentence));
 					}
 					else if (isTagIn(mtag, "JKS", "JX"))
 					{
 						// TODO: 앞부분의 명사(NNG)태그의 연속을 주어로 파악할 수 있도록 한다.
-						internal.add(new Hana(cur_morpheme.getString()).setXTag(XTag_atomize.SubjectTrailMarker));
+						internal.add(new Hana(word).setXTag(XTag_atomize.SubjectTrailMarker));
 					}
 					else if (isTagIn(mtag, "XSV", "XSA"))
 					{
-						internal.add(new Hana(cur_morpheme.getString()+"다").setXTag(XTag_atomize.DescTrailMarker));
+						internal.add(new Hana(word+"다").setXTag(XTag_atomize.DescTrailMarker));
 					}
 					else if (isTagIn(mtag, "JKM", "JKG", "JKC", "JKQ"))
 					{
 						// XXX: 부사격/관형격/보격/인용격 조사 사용안함
 						// 필요하면 2단계를 고치시오
-						internal.add(new Hana(cur_morpheme.getString()).setXTag(XTag_atomize.UnhandledTrailMarker));
+						internal.add(new Hana(word).setXTag(XTag_atomize.UnhandledTrailMarker));
 						
 					}
 					else if (isTagIn(mtag, "JKO"))
 					{
 						// TODO: 앞부분의 명사(NNG)태그의 연속을 목적어나 일반 객체 어휘로 파악할 수 있도록 한다.
-						internal.add(new Hana(cur_morpheme.getString()).setXTag(XTag_atomize.ObjectTrailMarker));
+						internal.add(new Hana(word).setXTag(XTag_atomize.ObjectTrailMarker));
 					}
 					else if (isTagIn(mtag, "XR", "XSN"))
 					{
@@ -193,7 +194,7 @@ public class TextPreprocessor
 						 * XR 은 어근 태그 (복잡+하다 에서 복잡 부분)
 						 * 동사로 분류하고 사전에서는 명사로 찾아서 효율성을 높힌다.
 						 */
-						internal.add(new Hana(cur_morpheme.getString(), WORD_TYPE.verb).setXTag(XTag_atomize.VerbMarker));
+						internal.add((new Hana(word, WORD_TYPE.verb)).setXTag(XTag_atomize.VerbMarker));
 					}
 					else if (isTagIn(mtag, "NNG", "NP", "NNP", "NNB", "UN")) // UN 태그에 주목
 					{
@@ -202,8 +203,7 @@ public class TextPreprocessor
 						 * 주목: UN 은 형태소 분석기에서 '명사'로 추정한 어휘이다. '인명'도 엄밀히 명사의 범주에 속하기 때문에, 인명 인식을 위해서 추가한다.
 						 */
 						// DescOp 중에는 명사 어휘도 존재한다.
-						
-						internal.add(new Hana(cur_morpheme.getString()).setXTag(XTag_atomize.NounMarker));
+						internal.add((new Hana(word)).setXTag(XTag_atomize.NounMarker));
 					}
 					else
 					{
@@ -233,9 +233,12 @@ public class TextPreprocessor
 					}
 					
 				}
-				i = j-1; // 내부 루프에서 전진한만큼 동기화
+				i = j; // 내부 루프에서 전진한만큼 동기화
 				
-				internal.add(new Hana(emoticon_base, WORD_TYPE.noun).setXTag(XTag_atomize.NounMarker)); // 내부적으로 명사로 간주한다.
+				P.d(TAG, "이모티콘 JOIN 완료: %s", emoticon_base);
+				
+				internal.add((new Hana(emoticon_base, WORD_TYPE.noun)).setXTag(XTag_atomize.NounMarker)); // 내부적으로 명사로 간주한다.
+				P.d(TAG, "삽입 완료");
 				continue;
 			}
 			

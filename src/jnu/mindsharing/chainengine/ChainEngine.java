@@ -73,24 +73,6 @@ public class ChainEngine implements ApplicationInfo
 	}
 	
 	/**
-	 * 주어진 텍스트를 문장 단위로 나눈다.
-	 * @param source 입력 텍스트
-	 * @return 문장으로 나눠진 텍스트가 담긴 ArrayList<String>
-	 */
-	public ArrayList<String> splitIntoSentences(String source)
-	{
-		// jnu.mindsharing.legacy 패키지는 제거되었음. (20140610)
-		// 구버전 코드로부터 가져옴.
-		ArrayList<String> sentences = new ArrayList<String>();
-		StringTokenizer st = new StringTokenizer(source,".!?");
-		while(st.hasMoreElements())//list에 " "단위로 저장
-		{
-			sentences.add(st.nextToken());
-		}
-		return sentences;
-	}
-	
-	/**
 	 * 주어진 텍스트를 분석하고, 그 결과가 담긴 ResultProcess를 내놓는다.
 	 * @param source_paragraph 입력 텍스트
 	 * @return JSON과 TXT 포맷으로 결과를 얻을 수 있는 ResultProcessor 객체
