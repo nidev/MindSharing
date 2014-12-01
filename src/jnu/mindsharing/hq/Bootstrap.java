@@ -4,6 +4,9 @@
 package jnu.mindsharing.hq;
 
 import jnu.mindsharing.chainengine.ChainEngine;
+import jnu.mindsharing.chainengine.Sense;
+import jnu.mindsharing.common.ExprHash;
+import jnu.mindsharing.common.Hana;
 import jnu.mindsharing.common.P;
 
 import org.restlet.resource.ServerResource;
@@ -41,15 +44,15 @@ public class Bootstrap extends ServerResource
 		P.b();
 		P.d(TAG, "메모리 부족으로 프로그램이 종료될 경우, -xm512M 옵션을 추가하여 재가동하십시오.");
 		P.d(TAG, "사전 로딩 및 데이터베이스 연결 작업을 수행합니다.");
-		//으어아으 나중에
-		chainEngine.createKKMAAnalyzer();
-		
+
 		switch(mode)
 		{
 		case NORMAL:
 			P.d(TAG, "API 서버 시작");
 			try
 			{
+				//으어아으 나중에
+				chainEngine.createKKMAAnalyzer();
 				restServer.run(chainEngine);
 			}
 			catch (Exception e)
@@ -64,6 +67,19 @@ public class Bootstrap extends ServerResource
 			break;
 		case SENSE_TEST:
 			P.d(TAG, "감정값 평가 및 학습 모듈 Sense를 테스트합니다.");
+			Sense ss = new Sense(20);
+			ss.sanitizeTableStructure();
+			ss.addNewdex("테스트");
+			ss.addRecord((new ExprHash("테스트")).toString(), 0.0, 0.0, System.currentTimeMillis());
+			Hana test_res = ss.ask("테스트");
+			if (test_res != null)
+			{
+				P.d(TAG, "감정값 수신 완료");
+			}
+			else
+			{
+				P.d(TAG, "테스트 결과 수신 실패");
+			}
 			break;
 		default:
 			;

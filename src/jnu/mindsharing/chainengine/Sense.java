@@ -9,6 +9,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.List;
+
+import org.jfree.util.Log;
 
 import jnu.mindsharing.chainengine.baseidioms.BaseIdioms;
 import jnu.mindsharing.common.DatabaseConstants;
@@ -237,6 +240,7 @@ public class Sense extends DatabaseConstants
 		}
 		else
 		{
+			P.d(TAG, "... Inferring from Database");
 			// Not a base idiom. searching database.
 			try
 			{
@@ -274,6 +278,7 @@ public class Sense extends DatabaseConstants
 				{
 					// 데이터 베이스에 없는 어휘이다. 새로 추가한다.
 					// addNewdex() 를 사용한다.
+					P.d(TAG, "Found new word : " + word);
 					addNewdex(word);
 					return new Hana(word);
 				}
@@ -453,6 +458,11 @@ public class Sense extends DatabaseConstants
 			e.printStackTrace();
 		}
 		return false; // stub
+	}
+	
+	public List<ArrayList<String>> genearteNewdexMap()
+	{
+		return null; // stub
 	}
 	
 	public String getSenseStatDigest()
