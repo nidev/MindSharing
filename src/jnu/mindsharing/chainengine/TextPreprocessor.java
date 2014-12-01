@@ -142,8 +142,7 @@ public class TextPreprocessor
 					{
 						// 동사 어휘
 						// VV 태그는 명사+하다 의 조합이 아닌 동사들
-						// TODO: 현재는 인과 관계파악없이 서술어의 어감으로 파악한다.
-						internal.add(new Hana(word+"다").setXTag(XTag_atomize.VerbMarker));
+						internal.add(new Hana(word+"다").setXTag(XTag_atomize.DescTrailMarker));
 					}
 					else if (isTagIn(mtag, "VXV", "VX"))
 					{
@@ -205,6 +204,10 @@ public class TextPreprocessor
 						// DescOp 중에는 명사 어휘도 존재한다.
 						internal.add((new Hana(word)).setXTag(XTag_atomize.NounMarker));
 					}
+					else if (isTagIn(mtag, "SW"))
+					{
+						// 공백 태그. 띄어쓰기 오류를 보정하기 위해서 삽입된 태그이므로, internal에 삽입하지 않는다.
+					}
 					else
 					{
 						// 관심 없는 어휘는 ESentence 객체에 변환된 태그로 넣지않고 무시한다.
@@ -247,7 +250,13 @@ public class TextPreprocessor
 		
 		// Skip 으로 끝나지 않았다면, 패딩을 추가해준다.
 
-		internal.add(new Hana(".").setXTag(XTag_atomize.EndOfSentence));		
+		internal.add(new Hana(".").setXTag(XTag_atomize.EndOfSentence));
+		
+		// 디버깅용
+		for (Hana hn: internal)
+		{
+			P.d(TAG, "%s -> %s", hn.toString(), hn.getXTag());
+		}
 	}
 	
 	/**
@@ -264,32 +273,28 @@ public class TextPreprocessor
 		{
 			Hana em = internal.get(es_idx);
 			String tag = em.getXTag();
-			if (tag == XTag_atomize.DescTrailMarker)
+			if (tag.equals(XTag_atomize.DescTrailMarker))
 			{
-				// (명사)+하다 의 어휘를 다시 하나의 서술어로 합친다.
-				if (es_idx > 0)
+				// (명사)+하다 의 어휘를 '명사'로만 남기고 서술어로 태그한다..
+				//P.d(TAG, "더 뒤에는, %s => %s", internal.prev(es_idx-2).toString(), internal.prev(es_idx-2).getXTag());
+				if (internal.prev(es_idx).getXTag().equals(XTag_atomize.NounMarker))
 				{
-					if (internal.get(es_idx-1).getXTag() == XTag_atomize.NounMarker)
-					{
-						// XXX: 수정 필요
-						Hana new_em = new Hana(internal.get(es_idx-1).toString() + internal.get(es_idx).toString());
-						internal.set(es_idx-1, new Hana().setXTag(XTag_atomize.Skip));
-						internal.set(es_idx, new_em.setXTag(XTag_atomize.Desc));
-						
-					}
-					else
-					{
-						P.e(TAG, "-하다 표현 앞에는 명사 어휘가 와야합니다. 그런데 오지 않았습니다. 심각한 오류입니다.");
-						internal.get(es_idx).setXTag(XTag_atomize.Skip);
-					}
-					
+					// XXX: 수정 필요
+					Hana new_em = new Hana(internal.prev(es_idx).toString());
+					internal.set(es_idx-1, new Hana().setXTag(XTag_atomize.Skip));
+					internal.set(es_idx, new_em.setXTag(XTag_atomize.Desc));
+				}
+				else
+				{
+					P.e(TAG, "-하다 표현 앞에는 명사 어휘가 와야합니다. 그런데 오지 않았습니다. 심각한 오류입니다.");
+					internal.get(es_idx).setXTag(XTag_atomize.Skip);
 				}
 			}
-			else if (tag == XTag_atomize.VerbMarker)
+			else if (tag.equals(XTag_atomize.VerbMarker))
 			{
 				em.setXTag(XTag_atomize.Desc);
 			}
-			else if (tag == XTag_atomize.AdjectMarker)
+			else if (tag.equals(XTag_atomize.AdjectMarker))
 			{
 				em.setXTag(XTag_atomize.Desc);
 			}
@@ -357,6 +362,9 @@ public class TextPreprocessor
 			}
 			else if (tag == XTag_atomize.Desc)
 			{
+				// XXX: 추후 삭제할 것
+				
+				/*
 				if ((es_idx+2) <= internal.size())
 				{
 					// (서술어)한 (명사) ex) 예쁜 그녀
@@ -364,7 +372,7 @@ public class TextPreprocessor
 					if (internal.get(es_idx+1).getXTag() == XTag_atomize.Object || internal.get(es_idx+1).getXTag() == XTag_atomize.Subject)
 					{
 						// XXX: 수정 필요
-						em.setXTag(XTag_atomize.DescOp);
+						// em.setXTag(XTag_atomize.DescOp);
 					}
 					else
 					{
@@ -387,6 +395,7 @@ public class TextPreprocessor
 						}
 					}
 				}
+				*/
 			}
 			else 
 			{

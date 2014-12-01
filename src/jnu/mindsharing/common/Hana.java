@@ -123,7 +123,12 @@ public class Hana extends DatabaseConstants implements Serializable
 	public Hana merge(Hana operand)
 	{
 		// 합친다....
-		// TODO: 몰라
+		if (operand != null)
+		{
+			eprob = operand.getProb()[0];
+			eprob = operand.getProb()[1];
+			amplifier = operand.getAmplifier();
+		}
 		return this;
 	}
 	

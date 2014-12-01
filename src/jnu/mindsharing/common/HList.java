@@ -52,9 +52,9 @@ public class HList extends ArrayList<Hana>
 	
 	public Hana prev(int pos)
 	{
-		if (size() > pos)
+		if (0 < pos)
 		{
-			return get(pos);
+			return get(pos-1);
 		}
 		return new Hana();
 	}

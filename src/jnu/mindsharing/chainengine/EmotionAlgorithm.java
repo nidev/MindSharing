@@ -245,8 +245,18 @@ public class EmotionAlgorithm
 				// 일단, 첫번째로 Object 로 마크된 Hana를 주어로 선정한다. (우선순위 2)
 				if (hl.findFirstPosForXTag(XTag_atomize.Object) != -1)
 				{
-					hl.findHanaForXTag(XTag_atomize.Object).setXTag(XTag_atomize.Subject);
-					hl.swap(hl.findFirstPosForXTag(XTag_atomize.Subject), 1);
+					// 단, Object 앞에 Desc가 있다면 데려올 수 없다. 독립된 명사 어휘만 데려올 수 있다.
+					/*
+					 * Ex) 가능한 경우
+					 * 전남대학교 좋은 학교다. -> '전남대학교'를 주어로 가져갈 수 있음
+					 * Ex) 불가능한 경우
+					 * 봉사하는 마음가짐으로 행복하게 산다. -> '마음가짐'이라는 명사를 가져올 수 없음
+					 */
+					if (!hl.prev(hl.findFirstPosForXTag(XTag_atomize.Object)).getXTag().equals(XTag_atomize.Desc))
+					{
+						hl.findHanaForXTag(XTag_atomize.Object).setXTag(XTag_atomize.Subject);
+						hl.swap(hl.findFirstPosForXTag(XTag_atomize.Subject), 1);
+					}
 				}
 			}
 			
