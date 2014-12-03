@@ -4,8 +4,10 @@
 package jnu.mindsharing.hq;
 
 import jnu.mindsharing.chainengine.ChainEngine;
+import jnu.mindsharing.chainengine.MappingGraphDrawer;
 import jnu.mindsharing.chainengine.Sense;
 import jnu.mindsharing.common.ExprHash;
+import jnu.mindsharing.common.HList;
 import jnu.mindsharing.common.Hana;
 import jnu.mindsharing.common.P;
 
@@ -20,7 +22,7 @@ import org.restlet.resource.ServerResource;
 public class Bootstrap extends ServerResource
 {
 	static String TAG = "CEBoot";
-	enum RUN_MODE {NORMAL, SENSE_TEST};
+	enum RUN_MODE {NORMAL, SENSE_TEST, MAPGRAPH_TEST};
 
 	/**
 	 * 서버와 메시지 로거를 가동한다. 메시지는 기본적으로 표준 출력을 통해 출력된다.
@@ -40,7 +42,6 @@ public class Bootstrap extends ServerResource
 		P.d(TAG, "내부 라이브러리: %s", restServer.getLicenseInfo());
 		P.d(TAG, "체인 엔진 버전\t= %d (%s)", chainEngine.getVersionNumber(), chainEngine.getVersionCode());
 		P.d(TAG, "내부 라이브러리: %s", chainEngine.getLicenseInfo());
-		P.d(TAG, "2D 차트 라이브러리\t= JFreeChart (LGPL 라이센스를 따릅니다.)");
 		P.b();
 		P.d(TAG, "메모리 부족으로 프로그램이 종료될 경우, -xm512M 옵션을 추가하여 재가동하십시오.");
 		P.d(TAG, "사전 로딩 및 데이터베이스 연결 작업을 수행합니다.");
@@ -80,6 +81,19 @@ public class Bootstrap extends ServerResource
 			{
 				P.d(TAG, "테스트 결과 수신 실패");
 			}
+			break;
+		case MAPGRAPH_TEST:
+			P.d(TAG, "감정어휘 매핑 그래프 도구를 테스트합니다.");
+			HList hl = new HList();
+			Hana dummy = new Hana("테스트").setAmplifier(100).setMultiplier(1).setProb(0.5, 0.5);
+			hl.add(dummy);
+			
+			MappingGraphDrawer mgd = new MappingGraphDrawer();
+			mgd.drawXYcoordinates();
+			mgd.drawEmotionalWords(hl);
+			mgd.writeImage();
+			P.d(TAG, "테스트 종료");
+			
 			break;
 		default:
 			;
