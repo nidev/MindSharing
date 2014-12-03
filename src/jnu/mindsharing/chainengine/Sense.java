@@ -11,8 +11,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.jfree.util.Log;
-
 import jnu.mindsharing.chainengine.baseidioms.BaseIdioms;
 import jnu.mindsharing.common.DatabaseConstants;
 import jnu.mindsharing.common.ExprHash;
@@ -142,6 +140,27 @@ public class Sense extends DatabaseConstants
 		}
 	}
 	
+	/**
+	 * Sense 모듈은 객체 생성과 동시에 데이터베이스 커넥션을 하나 소모한다. 가비지 컬렉션이 이루어지기 전에는 닫히지 않는다.
+	 * 따라서, 전역적으로 사용할 게 아니라면 명시적으로 닫는 함수를 사용해줘야한다.
+	 * @return DB커넥션이 열려서 닫은 경우는 true, 이미 닫힌 경우에는 false
+	 */
+	public boolean closeExplicitly()
+	{
+		try
+		{
+			if (!db.isClosed())
+			{
+				db.close();
+				return true;
+			}
+		}
+		catch (SQLException e)
+		{
+			e.printStackTrace();
+		}
+		return false;
+	}
 	/**
 	 * getDatabaseConnection에서 null을 반환받은 경우, 오류메시지를 확인할 수 있다.
 	 * 만약 오류가 발생하지 않았다면 null을 반환한다.
@@ -313,6 +332,7 @@ public class Sense extends DatabaseConstants
 			{
 				Pair<Double> v = new Pair<Double>(res.getDouble("eprob"), res.getDouble("sprob"));
 				pair_probs.add(v);
+				final_output[0] += 1;
 			}
 			res.close();
 
@@ -420,6 +440,7 @@ public class Sense extends DatabaseConstants
 			
 			
 			sql.execute();
+			sql.close();
 		}
 		catch (SQLException e)
 		{
@@ -440,6 +461,8 @@ public class Sense extends DatabaseConstants
 	
 	public boolean addNewdex(String word)
 	{
+		// XXX: 트랜잭션 문제 있음
+		// 데이터베이스 락킹, 또는 유니크 옵션을 해시 속성에 추가할 것
 		try
 		{
 			PreparedStatement sql = db.prepareStatement("INSERT INTO Newdex (expression, exprtype, locked, eprob_lock, sprob_lock, exprhash) VALUES (?, ?, ?, ?, ?, ?);");
@@ -451,13 +474,14 @@ public class Sense extends DatabaseConstants
 			sql.setString(6, (new ExprHash(word).toString()));
 			
 			sql.execute();
+			sql.close();
 		}
 		catch (SQLException e)
 		{
 			// XXX: Please implement here
 			e.printStackTrace();
 		}
-		return false; // stub
+		return false;
 	}
 	
 	public List<ArrayList<String>> genearteNewdexMap()
