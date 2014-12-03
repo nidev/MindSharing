@@ -3,6 +3,7 @@ package jnu.mindsharing.chainengine;
 import java.util.ArrayList;
 
 import jnu.mindsharing.common.DescOpHelper;
+import jnu.mindsharing.common.ExprHash;
 import jnu.mindsharing.common.HList;
 import jnu.mindsharing.common.Hana;
 import jnu.mindsharing.common.P;
@@ -193,15 +194,22 @@ public class EmotionAlgorithm
 		// 아직 'Marker'와 'Skip'으로 남아있는 어휘를 모두 제거한다, NextDescDepender를 읽고 전후 관계를 파악한다.
 		// 
 
-		// 주어가 없는 경우에 탐색 작업을 진행 (Object 끌어올림)
+		
 		for (HList hl : sentences)
 		{
+			// 주어를 인덱스 1번 위치에 항상 위치시킨다. 만약 가져올 수 없다면 추론 작업을 통해 주어를 추출한다.
 			alignHList(hl);
+			
+			// 감정값이 없는 단어/서술어에 대해 문맥 추정값에 증감값을 적절히 적용해 추론한다. 문장 전체의 평가값을 0번에 저장하고 종료한다.
+			evaluateAllOnHList(hl);
+			
+			
+			// 0번에서 추론된 값을 Sense 학습 모듈의 데이터베이스로 전송한다. 단 2번 인덱스(0, 1, 2...)부터 전송한다.
+			// 0번은 헤더, 1번은 주어이기 때문에 다른 감정 요소만 전달한다.
+			senseFeedBackFromHList(hl);
+			
+			
 		}
-		
-		
-		
-		// TODO: HList를 연산하여 감정값을 내놓는다. 확률 출력과 감정값 출력으로 나눠, 확률은 Sense모듈이 모르는 어휘를 학습할 수 있도록 던져준다.
 		
 		//TODO:  sentences로부터 글 전체의 감정값을 요약한다. 강세 어휘를 추출한다.
 		
@@ -266,6 +274,54 @@ public class EmotionAlgorithm
 				hl.add(1, new Hana("나").setXTag(XTag_atomize.Subject));
 			}
 		}
+	}
+	
+	/**
+	 * HList의 0번과 1번을 제외한 나머지 감정정보 객체로부터, 확률이 평가되지 않은 어휘를 평가한다. 평가된 추정 감정확률은 0번 객체에 기억된다.
+	 * @param hl
+	 * @return alignHList 함수에 의해 제대로 배열이 처리되었다면 true, 처리 불가능이면 false
+	 */
+	public boolean evaluateAllOnHList(HList hl)
+	{
+		if (hl.size() < 3)
+			return false; // 더이상 왜 처리를 하지?
+		else
+		{
+			double[] accumulated_probs = {0.0, 0.0};
+			int hl_size = hl.size();
+			for (Hana hn : hl.subList(2, hl_size))
+			{
+				// XXX: 태그 속성에 따라 가중치를 별도로 적용하자.
+				accumulated_probs[0] += hn.getProb()[0];
+				accumulated_probs[1] += hn.getProb()[1];
+			}
+			
+			hl.get(0).setAmplifier(1).setProb(accumulated_probs[0]/(hl_size - 2), accumulated_probs[0]/(hl_size - 2));
+		}
+		return true;
+	}
+	
+	/**
+	 * HList의 0번에 저장된 감정값을 0번과 1번을 제외한 객체에 담긴 어휘들을 이용해 Sense 학습 모듈에,
+	 * 이 문장에서 평가된 감정정보를 제공한다. 어휘의 출현 빈도수 증가와 동시에 앞으로 추론될 값을 변화시킨다.
+	 * @param hl
+	 * @return
+	 */
+	public boolean senseFeedBackFromHList(HList hl)
+	{
+		if (hl.size() < 3)
+			return false; // 더이상 왜 처리를 하지?
+		else
+		{
+			Sense ss = new Sense();
+			Hana baseHn = hl.get(0);
+			for (Hana hn : hl.subList(2, hl.size()))
+			{
+				ss.addRecord(new ExprHash(hn.toString()).toString(), baseHn.getProb()[0], baseHn.getProb()[1], System.currentTimeMillis());
+			}
+			ss.closeExplicitly();
+		}
+		return true;
 	}
 	
 	/**

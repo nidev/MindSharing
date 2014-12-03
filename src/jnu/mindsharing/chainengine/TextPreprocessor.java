@@ -45,7 +45,12 @@ public class TextPreprocessor
 	{
 		for (String test: candidates)
 		{
-			if (goal.equalsIgnoreCase(test))
+			if (goal == null)
+			{
+				P.e(TAG, "isTagIn : NULL warning");
+				return false;
+			}
+			if (goal.equals(test))
 			{
 				return true;
 			}
@@ -58,7 +63,7 @@ public class TextPreprocessor
 	 * @param units 명사 어휘 Hana들이 포함된 배열
 	 * @return 합성된 Hana 객체
 	 */
-	private Hana mergeIntoObject(HList units)
+	private Hana mergeIntoOneNoun(HList units)
 	{
 		// 주어진 Hana의 어휘를 합쳐서 하나의 객체로 만들고,
 		// 그 객체를 Object 어휘로 태그한다.
@@ -68,7 +73,7 @@ public class TextPreprocessor
 			strbuff.append(unit.toString());
 			strbuff.append(" ");
 		}
-		return new Hana(strbuff.toString().trim()).setXTag(XTag_atomize.Object);
+		return new Hana(strbuff.toString().trim()).setXTag(XTag_atomize.NounMarker);
 	}
 	
 	/**
@@ -142,7 +147,7 @@ public class TextPreprocessor
 					{
 						// 동사 어휘
 						// VV 태그는 명사+하다 의 조합이 아닌 동사들
-						internal.add(new Hana(word+"다").setXTag(XTag_atomize.DescTrailMarker));
+						internal.add(new Hana(word+"다").setXTag(XTag_atomize.VerbMarker));
 					}
 					else if (isTagIn(mtag, "VXV", "VX"))
 					{
@@ -272,7 +277,7 @@ public class TextPreprocessor
 		// 디버깅용
 		for (Hana hn: internal)
 		{
-			P.d(TAG, "%s -> %s", hn.toString(), hn.getXTag());
+			//P.d(TAG, "%s -> %s", hn.toString(), hn.getXTag());
 		}
 	}
 	
@@ -285,7 +290,6 @@ public class TextPreprocessor
 		// NounMarker 끼리 뭉쳐서 Object 태그로 만든다.
 		
 		// 2-1: 명사 결합 문제로 인해 서술어를 먼저 변환한다.
-		HList noun_queue = new HList();
 		for (int es_idx=0; es_idx < internal.size(); es_idx++)
 		{
 			Hana em = internal.get(es_idx);
@@ -322,12 +326,13 @@ public class TextPreprocessor
 		}
 		
 		// 2-2: 명사 어휘를 결합한다.
+		HList noun_queue = new HList();
 		for (int es_idx=0; es_idx < internal.size(); es_idx++)
 		{
 			Hana hn = internal.get(es_idx);
 			String tag = hn.getXTag();
 			// 명사 파생 접미사(XSN)는 반드시 본 명사에 붙어야한다.
-			if (tag == XTag_atomize.NounMarker && noun_queue.isEmpty())
+			if (tag.equals(XTag_atomize.NounMarker)) //  && noun_queue.isEmpty()
 			{
 				P.e("NOUN_MERGER", "명사 어휘 합성 중 - %s", hn.toString());
 				noun_queue.add(hn);
@@ -339,7 +344,7 @@ public class TextPreprocessor
 				if (!noun_queue.isEmpty())
 				{
 					// noun_queue를 한 Hana으로 합친다.
-					Hana new_em = mergeIntoObject(noun_queue);
+					Hana new_em = mergeIntoOneNoun(noun_queue);
 					for (int backoffset=1; backoffset <= noun_queue.size(); backoffset++)
 					{
 						internal.set(es_idx-backoffset, new Hana().setXTag(XTag_atomize.Skip));
@@ -365,11 +370,11 @@ public class TextPreprocessor
 			{
 				if (es_idx > 0)
 				{
-					if (internal.get(es_idx-1).getXTag() == XTag_atomize.Object)
+					if (internal.prev(es_idx).getXTag().equals(XTag_atomize.Object))
 					{
-						internal.get(es_idx - 1).setXTag(tag == XTag_atomize.SubjectTrailMarker ? XTag_atomize.Subject : XTag_atomize.Object);
+						internal.prev(es_idx).setXTag(tag.equals(XTag_atomize.SubjectTrailMarker) ? XTag_atomize.Subject : XTag_atomize.Object);
 					}
-					internal.set(es_idx, new Hana().setXTag(XTag_atomize.Skip));
+					internal.get(es_idx).setXTag(XTag_atomize.Skip);
 				}
 				else
 				{
@@ -419,6 +424,8 @@ public class TextPreprocessor
 				;
 			}
 		}
+		
+		
 		
 		// 모든 작업이 완료된 후에도, 마지막 서술어가 Desc라면 DescSubject로 변환한다.
 		// TODO: 실행 위치 변경
@@ -470,6 +477,8 @@ public class TextPreprocessor
 		performTagging(ma);
 		performJointing();
 		performHListEvaluation(ss);
+		
+		ss.closeExplicitly();
 		return internal;
 	}
 
