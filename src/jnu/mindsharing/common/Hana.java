@@ -107,6 +107,11 @@ public class Hana extends DatabaseConstants implements Serializable
 		return this; // joined 연산 지원
 	}
 	
+	public boolean areZeroProbs()
+	{
+		return (eprob == 0.0 && sprob == 0.0) ? true : false;
+	}
+	
 	public void cutProbVector()
 	{
 		if (eprob < -1.0)

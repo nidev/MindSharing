@@ -113,7 +113,7 @@ public class HList extends ArrayList<Hana>
 	}
 	/**
 	 * HList에서 Skip으로 태그된 어휘를 모두 제거하고, 전후 사이즈 차이를 반환한다.
-	 * @return
+	 * @return 압축 전후의 차이. 반드시 0이상의 숫자
 	 */
 	public int compaction()
 	{
