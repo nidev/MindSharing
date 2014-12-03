@@ -161,9 +161,11 @@ public class TextPreprocessor
 						internal.add(new Hana(word).setXTag(XTag_atomize.DeterminerMarker));
 						
 					}
-					else if (isTagIn(mtag, "EFN"))
+					else if (isTagIn(mtag, "EFN", "EFA"))
 					{
 						// 마침표 등지의 끝나는 위치에 Skip 토큰을 추가한다.
+						// EFN: 일반 종결 어미
+						// EFA: 제안형 종결 어미
 						internal.add(new Hana(word).setXTag(XTag_atomize.EndOfSentence));
 					}
 					else if (isTagIn(mtag, "JKS", "JX"))
@@ -218,30 +220,45 @@ public class TextPreprocessor
 			{
 				// 한글이 아닌 경우, 이모티콘 탐색 등을 시도한다.
 				// TODO: 다음 문자가 한글이 아닐때까지 이모티콘 join을 한 후에 한 객체로 정리한다.
-				P.d(TAG, "한글이 아닌 문자를 한 덩어리로 합성합니다.");
-				String emoticon_base;
-				int j = i;
-				emoticon_base = "";
-				while (j < (aresults.size()-1))
+				P.d(TAG, "한글이 아닌 문자입니다. 문장 부호인지 결정합니다.");
+				MCandidate nonhangul_mc = mexp.getBest();
+				if (isTagIn(nonhangul_mc.getTag(), "SF"))
 				{
-					mexp = aresults.get(j);
-					emoticon_base += mexp.getExp();
-					if (aresults.get(j).isNotHangul())
-					{
-						j++;
-					}
-					else
-					{
-						break;
-					}
-					
+					// 문장을 종결하는 어미 ! . ?
+					internal.add(new Hana(nonhangul_mc.getExp()).setXTag(XTag_atomize.EndOfSentence));
 				}
-				i = j; // 내부 루프에서 전진한만큼 동기화
+				else if (isTagIn(nonhangul_mc.getTag(), "SP", "SS", "SE"))
+				{
+					// 문장 구성에 우선순위가 있는 기호. 쉼표 말줄임표 따옴표
+					// 토큰 자체를 무시한다.
+				}
+				else
+				{
+					P.d(TAG, "문장에 사용되지않은 부호를 합성합니다. 이모티콘일 수 있습니다.");
+					String emoticon_base;
+					int j = i;
+					emoticon_base = "";
+					while (j < (aresults.size()-1))
+					{
+						mexp = aresults.get(j);
+						emoticon_base += mexp.getExp();
+						if (aresults.get(j).isNotHangul())
+						{
+							j++;
+						}
+						else
+						{
+							break;
+						}
+						
+					}
+					i = j; // 내부 루프에서 전진한만큼 동기화
+					
+					P.d(TAG, "이모티콘 JOIN 완료: %s", emoticon_base);
+					internal.add((new Hana(emoticon_base, WORD_TYPE.noun)).setXTag(XTag_atomize.NounMarker)); // 내부적으로 명사로 간주한다.
+					P.d(TAG, "삽입 완료");
+				}
 				
-				P.d(TAG, "이모티콘 JOIN 완료: %s", emoticon_base);
-				
-				internal.add((new Hana(emoticon_base, WORD_TYPE.noun)).setXTag(XTag_atomize.NounMarker)); // 내부적으로 명사로 간주한다.
-				P.d(TAG, "삽입 완료");
 				continue;
 			}
 			

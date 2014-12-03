@@ -63,21 +63,14 @@
 		        	// for 문과 동일함
 		        	$.each(result.data, function (index) {
 		        		addline("---- 문장 시작 ----")
-		        		addline("주어 : " + result.data[index].subject);
-		        		var emounit = result.data[index].context;
-	        			addline("[문장의 감정] 즐거움: " + emounit[0] +
-	        				", 슬픔: " + emounit[1] +
-	        				", 희망/성장/발전: " + emounit[2] +
-	        				", 절망/파괴/쇠락: " + emounit[3]);
-		        		var relations = result.data[index].relations;
-		        		addline("[연관 감정 표현]");
-		        		$.each(relations, function (index2) {
-		        			var emounit = relations[index2];
-		        			addline(" >> " + emounit.text + "(" + "태그" + ":" + emounit.tag + ")");
-		        			addline(" --- 즐거움: " + emounit.joy +
-		        				", 슬픔: " + emounit.sorrow +
-		        				", 희망/성장/발전: " + emounit.growth +
-		        				", 절망/파괴/쇠락: " + emounit.cease);
+		        		addline("문맥의 감정분석값 출력 [ 감정적인 변화 : " + result.data[index].ctx_evalue + " / 인과적인 변화: " + result.data[index].ctx_svalue + " ] ");
+		        		addline("[문장 속 표현들]");
+		        		var words = result.data[index].words;
+		        		$.each(words, function (index2) {
+		        			var hn = words[index2];
+		        			addline(" >> " + hn.word + "(" + "태그" + ":" + hn.tag + ")");
+		        			addline(" --- 감정적 긍정/부정 확률: " + hn.eprob + " 인과적 긍정/부정 확률: " + hn.sprob);
+		        			addline(" --- 빈도수 " + hn.amp + "에 따른 출력(X축 좌표:감정, Y축 좌표:인과) (" + hn.evalue + ", " + hn.svalue +")");
 		        		});
 		        		addline(" ----------------- " + request_id + " 결과 수신 끝");
 		        	});
