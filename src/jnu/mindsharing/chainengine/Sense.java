@@ -9,11 +9,11 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.List;
 
 import jnu.mindsharing.chainengine.baseidioms.BaseIdioms;
 import jnu.mindsharing.common.DatabaseConstants;
 import jnu.mindsharing.common.ExprHash;
+import jnu.mindsharing.common.HList;
 import jnu.mindsharing.common.Hana;
 import jnu.mindsharing.common.P;
 
@@ -246,8 +246,8 @@ public class Sense extends DatabaseConstants
 	 */
 	public Hana ask(String word)
 	{
-		P.d(TAG, "Query Emotional/State information on (%s)", word);
-		P.d(TAG, "... Searching on BaseIdioms");
+		//P.d(TAG, "Query Emotional/State information on (%s)", word);
+		//P.d(TAG, "... Searching on BaseIdioms");
 		BaseIdioms.Idiom idiom = isBaseIdiom(word);
 		if (idiom != null)
 		{
@@ -259,7 +259,7 @@ public class Sense extends DatabaseConstants
 		}
 		else
 		{
-			P.d(TAG, "... Inferring from Database");
+			//P.d(TAG, "... Inferring from Database");
 			// Not a base idiom. searching database.
 			try
 			{
@@ -484,9 +484,45 @@ public class Sense extends DatabaseConstants
 		return false;
 	}
 	
-	public List<ArrayList<String>> genearteNewdexMap()
+	/**
+	 * 데이터베이스에 학습된 어휘들을 모두 수신하여 추정 감정값과 세기를 함께 반환해준다.
+	 * @return HList 배열
+	 */
+	public HList genearteNewdexMap()
 	{
-		return null; // stub
+		try
+		{
+			PreparedStatement sql = db.prepareStatement("SELECT expression, exprhash FROM Newdex;");
+			ArrayList<Pair<String>> dexes = new ArrayList<Pair<String>>();
+			ResultSet res = sql.executeQuery();
+			while (res.next())
+			{
+				dexes.add(new Pair<String>(res.getString("expression"), res.getString("exprhash")));
+			}
+			
+			if (dexes.size() == 0)
+			{
+				return new HList();
+			}
+			else
+			{
+				HList finalResults = new HList();
+				for (Pair<String> expr_exprhash_pair: dexes)
+				{
+					Hana hn = ask(expr_exprhash_pair.first);
+					if (hn != null)
+						finalResults.add(new Hana(expr_exprhash_pair.first).merge(hn));
+				}
+				return finalResults;
+				
+			}
+			
+		}
+		catch (SQLException e)
+		{
+			e.printStackTrace();
+		}
+		return new HList();
 	}
 	
 	public String getSenseStatDigest()
