@@ -11,6 +11,8 @@ import jnu.mindsharing.common.HList;
 import jnu.mindsharing.common.Hana;
 import jnu.mindsharing.common.P;
 
+import org.kohsuke.args4j.CmdLineParser;
+import org.kohsuke.args4j.Option;
 import org.restlet.resource.ServerResource;
 
 /**
@@ -22,8 +24,45 @@ import org.restlet.resource.ServerResource;
 public class Bootstrap extends ServerResource
 {
 	static String TAG = "CEBoot";
-	enum RUN_MODE {NORMAL, SENSE_TEST, MAPGRAPH_TEST};
+	
+	@Option(name="-cfg", usage="Override builtin configuration", metaVar="ConfigFile")
+	private static String configurationFile = "(default)";
+	@Option(name="-v", usage="Enable verbose mode for debugging")
+	private static boolean verboseMode;
+	@Option(name="-extbipath", usage="Override internal baseIdiom dictionary", metaVar="folder")
+	private static String externalBaseIdiomPath = ".";
+	@Option(name="-h", usage="Show this help message")
+	private static boolean showHelp;
+	
 
+	public static void showMemoryWarning()
+	{
+		P.d(TAG, "메모리 부족으로 프로그램이 종료될 경우, -xm512M 옵션을 추가하여 재가동하십시오.");
+	}
+	
+	public static void initiateFullSystem(ChainEngine chainEngine, RESTServer restServer)
+	{
+		P.d(TAG, "API 서버 버전\t= %d (%s)", restServer.getVersionNumber(), restServer.getVersionCode());
+		P.d(TAG, "내부 라이브러리: %s", restServer.getLicenseInfo());
+		P.d(TAG, "체인 엔진 버전\t= %d (%s)", chainEngine.getVersionNumber(), chainEngine.getVersionCode());
+		P.d(TAG, "내부 라이브러리: %s", chainEngine.getLicenseInfo());
+		try
+		{
+			//으어아으 나중에
+			chainEngine.createKKMAAnalyzer();
+			restServer.run(chainEngine);
+		}
+		catch (Exception e)
+		{
+			P.b();
+			P.e(TAG, "API 서버의 서브릿 시작 도중 오류가 발생하였습니다. 이 오류는 API 서버 오류이거나 체인 엔진 내부의 오류일 수 있습니다. 자세한 내용은 아래의 Traceback을 확인해주십시오.");
+			e.printStackTrace();
+			P.e(TAG, "Exception class: %s,  Exception message: %s", e.toString(), e.getMessage());
+			P.e(TAG, "이 오류는 로그 시스템에 기록되었습니다. 서버가 가동될 수 없습니다.");
+			System.exit(-1);
+		}
+	}
+	
 	/**
 	 * 서버와 메시지 로거를 가동한다. 메시지는 기본적으로 표준 출력을 통해 출력된다.
 	 * @param args 명령행 옵션들(사용되지 않음)
@@ -31,73 +70,25 @@ public class Bootstrap extends ServerResource
 	 */
 	public static void main(String[] args)
 	{
-		RUN_MODE mode = RUN_MODE.NORMAL;
+		CmdLineParser parser = new CmdLineParser(new Bootstrap());
 		
-		P.d(TAG, "엔진 가동. 버전 정보를 확인합니다.");
+		P.d(TAG, "MindSharing Bootstrapper started");
+		ChainEngine chainEngine;
+		RESTServer restServer;
 		
-		ChainEngine chainEngine = new ChainEngine();
-		RESTServer restServer = new RESTServer(); // TODO: passing chainEngine
-		
-		P.d(TAG, "API 서버 버전\t= %d (%s)", restServer.getVersionNumber(), restServer.getVersionCode());
-		P.d(TAG, "내부 라이브러리: %s", restServer.getLicenseInfo());
-		P.d(TAG, "체인 엔진 버전\t= %d (%s)", chainEngine.getVersionNumber(), chainEngine.getVersionCode());
-		P.d(TAG, "내부 라이브러리: %s", chainEngine.getLicenseInfo());
-		P.b();
-		P.d(TAG, "메모리 부족으로 프로그램이 종료될 경우, -xm512M 옵션을 추가하여 재가동하십시오.");
-		P.d(TAG, "사전 로딩 및 데이터베이스 연결 작업을 수행합니다.");
-
-		switch(mode)
+		if (parser.getArguments().size() == 0)
 		{
-		case NORMAL:
-			P.d(TAG, "API 서버 시작");
-			try
-			{
-				//으어아으 나중에
-				chainEngine.createKKMAAnalyzer();
-				restServer.run(chainEngine);
-			}
-			catch (Exception e)
-			{
-				P.b();
-				P.e(TAG, "API 서버의 서브릿 시작 도중 오류가 발생하였습니다.");
-				P.e(TAG, "이 오류는 API 서버 오류이거나 체인 엔진 내부의 오류일 수 있습니다. 자세한 내용은 아래의 Traceback을 확인해주십시오.");
-				e.printStackTrace();
-				P.e(TAG, "Exception class: %s,  Exception message: %s", e.toString(), e.getMessage());
-				P.e(TAG, "이 오류는 로그 시스템에 기록되었습니다.");
-			}
-			break;
-		case SENSE_TEST:
-			P.d(TAG, "감정값 평가 및 학습 모듈 Sense를 테스트합니다.");
-			Sense ss = new Sense(20);
-			ss.sanitizeTableStructure();
-			ss.addNewdex("테스트");
-			ss.addRecord((new ExprHash("테스트")).toString(), 0.0, 0.0, System.currentTimeMillis());
-			Hana test_res = ss.ask("테스트");
-			if (test_res != null)
-			{
-				P.d(TAG, "감정값 수신 완료");
-			}
-			else
-			{
-				P.d(TAG, "테스트 결과 수신 실패");
-			}
-			break;
-		case MAPGRAPH_TEST:
-			P.d(TAG, "감정어휘 매핑 그래프 도구를 테스트합니다.");
-			HList hl = new HList();
-			Hana dummy = new Hana("테스트").setAmplifier(100).setMultiplier(1).setProb(0.5, 0.5);
-			hl.add(dummy);
-			
-			MappingGraphDrawer mgd = new MappingGraphDrawer();
-			mgd.drawXYcoordinates();
-			mgd.drawEmotionalWords(hl);
-			mgd.writeImage();
-			P.d(TAG, "테스트 종료");
-			
-			break;
-		default:
-			;
+			chainEngine = new ChainEngine();
+			restServer = new RESTServer(); // TODO: passing chainEngine
+			initiateFullSystem(chainEngine, restServer);
 		}
-		
+		else
+		{
+			if (showHelp)
+			{
+				parser.printUsage(System.out);
+			}
+			// XXX: 다른 옵션이 처리 되지 않음
+		}
 	}
 }
