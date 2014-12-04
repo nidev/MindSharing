@@ -41,11 +41,29 @@ public class MappingGraphDrawer
 	
 	public void drawLegend()
 	{
+		int point;
+		String[] labels = {"-5", "-4", "-3", "-2", "-1", "0", "1", "2", "3", "4", "5"};
 		drawText("MindSharing Emotional Word Mapping Graph", 15, 15);
 		drawText("감정+", X-60, Y/2 - 20);
 		drawText("감정-", 20, Y/2 - 20);
 		drawText("인과적+", X/2 + 20, 20);
 		drawText("인과적-", X/2 + 20, Y-20);
+		
+		// 눈금 그리기
+		// XXX: 아직 스케일링은 구현되어있지 않아서 고정 스케일로 그려야할듯
+		// X눈금
+		for (point = 0; point < labels.length; point++)
+		{
+			g2d.drawLine(12 + 100*point, Y/2 + 10, 12 + 100*point, Y/2 - 10);
+			drawText(labels[point], 14 + 100*point, Y/2 + 10);
+		}
+		// Y눈금
+		for (point = 0; point < labels.length; point++)
+		{
+			g2d.drawLine(X/2 - 10, Y - 100*point - 12, X/2 + 10, Y - 100*point - 12);
+			drawText(labels[point], X/2 + 5, Y - 100*point -12);
+		}
+		
 	}
 	
 	public void drawText(String msg, int x, int y)
