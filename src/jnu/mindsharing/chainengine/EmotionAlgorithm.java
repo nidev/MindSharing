@@ -194,6 +194,7 @@ public class EmotionAlgorithm
 		// 아직 'Marker'와 'Skip'으로 남아있는 어휘를 모두 제거한다, NextDescDepender를 읽고 전후 관계를 파악한다.
 		// 
 
+		Sense ss = new Sense();
 		
 		for (HList hl : sentences)
 		{
@@ -206,10 +207,9 @@ public class EmotionAlgorithm
 			
 			// 0번에서 추론된 값을 Sense 학습 모듈의 데이터베이스로 전송한다. 단 2번 인덱스(0, 1, 2...)부터 전송한다.
 			// 0번은 헤더, 1번은 주어이기 때문에 다른 감정 요소만 전달한다.
-			senseFeedBackFromHList(hl);
-			
-			
+			senseFeedBackFromHList(hl, ss);
 		}
+		ss.closeExplicitly();
 		
 		//TODO:  sentences로부터 글 전체의 감정값을 요약한다. 강세 어휘를 추출한다.
 		
@@ -277,7 +277,7 @@ public class EmotionAlgorithm
 	}
 	
 	/**
-	 * HList의 0번과 1번을 제외한 나머지 감정정보 객체로부터, 확률이 평가되지 않은 어휘를 평가한다. 평가된 추정 감정확률은 0번 객체에 기억된다.
+	 * HList의 0번과 1번을 제외한 나머지 감정정보 객체로부터, 벡터가 평가되지 않은 어휘를 평가할 근거를 만든다. 문장의 값은 0번 객체에 기억된다.
 	 * @param hl
 	 * @return alignHList 함수에 의해 제대로 배열이 처리되었다면 true, 처리 불가능이면 false
 	 */
@@ -307,19 +307,17 @@ public class EmotionAlgorithm
 	 * @param hl
 	 * @return
 	 */
-	public boolean senseFeedBackFromHList(HList hl)
+	public boolean senseFeedBackFromHList(HList hl, Sense ss)
 	{
 		if (hl.size() < 3)
 			return false; // 더이상 왜 처리를 하지?
 		else
 		{
-			Sense ss = new Sense();
 			Hana baseHn = hl.get(0);
 			for (Hana hn : hl.subList(2, hl.size()))
 			{
 				ss.addRecord(new ExprHash(hn.toString()).toString(), baseHn.getProb()[0], baseHn.getProb()[1], System.currentTimeMillis());
 			}
-			ss.closeExplicitly();
 		}
 		return true;
 	}

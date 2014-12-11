@@ -97,8 +97,8 @@ public class Sense extends DatabaseConstants
 				load_okay |= bi.loadSet(BaseIdioms.DSC.SET200);
 				if (load_okay) break;
 			default:
-				P.e(TAG, "Couldn't identify dataset size. Load SET100");
-				load_okay |= bi.loadSet(BaseIdioms.DSC.SET100);
+				P.e(TAG, "Couldn't identify dataset size. Load SET200");
+				load_okay |= bi.loadSet(BaseIdioms.DSC.SET200);
 			}
 		}
 		catch (Exception e)
@@ -217,6 +217,7 @@ public class Sense extends DatabaseConstants
 		}
 		catch (SQLException e)
 		{
+			P.e(TAG, "데이터베이스 준비 실패");
 			e.printStackTrace();
 		}
 		return false;
@@ -254,7 +255,7 @@ public class Sense extends DatabaseConstants
 			Hana hn = new Hana();
 			hn.getConfiguration(); // == Meta, should be consume()d by original object.
 			// XXX: multiplier는 가져오십시오. 그럼 이만
-			hn.setAmplifier(1).setMultiplier(1).setProb(idiom.getE(), idiom.getP());
+			hn.setAmplifier(1).setMultiplier(1).setProb(idiom.getE(), idiom.getS());
 			return hn; // TODO: more configuration?
 		}
 		else
