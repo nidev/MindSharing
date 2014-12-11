@@ -3,6 +3,7 @@ package jnu.mindsharing.testsuite;
 import jnu.mindsharing.chainengine.MappingGraphDrawer;
 import jnu.mindsharing.chainengine.Sense;
 import jnu.mindsharing.common.HList;
+import jnu.mindsharing.common.Hana;
 import jnu.mindsharing.common.P;
 
 /**
@@ -24,6 +25,11 @@ public class MappingGraphDrawerTest
 		P.d(TAG, "데이터 수신 중....");
 		HList results = ss_mgtest.genearteNewdexMap();
 		ss_mgtest.closeExplicitly();
+		
+		results.add(new Hana("(+,+)테스트").setAmplifier(1000).setMultiplier(1).setProb(1.0, 1.0));
+		results.add(new Hana("(-,+)테스트").setAmplifier(1000).setMultiplier(1).setProb(-1.0, 1.0));
+		results.add(new Hana("(-,-)테스트").setAmplifier(1000).setMultiplier(1).setProb(-1.0, -1.0));
+		results.add(new Hana("(+,-)테스트").setAmplifier(1000).setMultiplier(1).setProb(1.0, -1.0));
 		
 		P.d(TAG, "총 %d건이 수신됨. 그래프를 작성합니다.", results.size());
 		

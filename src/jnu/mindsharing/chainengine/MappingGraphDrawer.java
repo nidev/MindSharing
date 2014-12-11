@@ -18,8 +18,8 @@ import jnu.mindsharing.common.Hana;
 public class MappingGraphDrawer
 {
 	final String outputPath = "graph.jpg";
-	final int X=1024;
-	final int Y=1024;
+	final int X=800;
+	final int Y=800;
 	
 	private BufferedImage imgBuffer;
 	private Graphics2D g2d;
@@ -62,14 +62,14 @@ public class MappingGraphDrawer
 		// X눈금
 		for (point = 0; point < labels.length; point++)
 		{
-			g2d.drawLine(12 + 100*point, Y/2 + 10, 12 + 100*point, Y/2 - 10);
-			drawText(labels[point], 14 + 100*point, Y/2 + 10);
+			g2d.drawLine(80*point, Y/2 + 10, 80*point, Y/2 - 10);
+			drawText(labels[point], 4 + 80*point, Y/2 + 14);
 		}
 		// Y눈금
 		for (point = 0; point < labels.length; point++)
 		{
-			g2d.drawLine(X/2 - 10, Y - 100*point - 12, X/2 + 10, Y - 100*point - 12);
-			drawText(labels[point], X/2 + 5, Y - 100*point -12);
+			g2d.drawLine(X/2 - 10, Y - 80*point, X/2 + 10, Y - 80*point);
+			drawText(labels[point], X/2 + 8, Y - 80*point);
 		}
 		
 	}
@@ -77,7 +77,7 @@ public class MappingGraphDrawer
 	public void drawText(String msg, int x, int y)
 	{
 		g2d.setColor(Color.BLACK);
-		g2d.setFont(new Font("Droid Sans Fallback", Font.PLAIN, 14));
+		g2d.setFont(new Font("Gulim", Font.PLAIN, 12));
 		g2d.drawString(msg, x, y);
 	}
 	
@@ -99,12 +99,13 @@ public class MappingGraphDrawer
 	{
 		for (Hana wi: wl)
 		{
-			// TODO:혹시 (0, 0)은 그리지 말아야할까?
 			double[] projectile = wi.getProjectiles();
 			int translated_x=0, translated_y=0;
-			translated_x = X/2 + (int)(projectile[0] * X/4);
-			translated_y = Y/2 + -(int)(projectile[0] * Y/4);
-			drawText(wi.toString(), translated_x, translated_y);
+			translated_x = X/2 + (int)(projectile[0] * X/10);
+			translated_y = Y/2 + -(int)(projectile[1] * Y/10);
+			
+			g2d.drawRect(translated_x, translated_y, 2, 2); // 점찍기
+			drawText(wi.toString(), translated_x+5, translated_y+5);
 		}
 	}
 }
