@@ -4,6 +4,7 @@
 package jnu.mindsharing.hq;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -13,8 +14,11 @@ import java.util.HashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import jnu.mindsharing.chainengine.ChainEngine;
+import jnu.mindsharing.chainengine.MappingGraphDrawer;
 import jnu.mindsharing.chainengine.ResultProcessor;
+import jnu.mindsharing.chainengine.Sense;
 import jnu.mindsharing.common.ApplicationInfo;
+import jnu.mindsharing.common.HList;
 import jnu.mindsharing.common.P;
 
 import org.restlet.Component;
@@ -25,6 +29,7 @@ import org.restlet.Server;
 import org.restlet.data.MediaType;
 import org.restlet.data.Method;
 import org.restlet.data.Protocol;
+import org.restlet.representation.FileRepresentation;
 import org.restlet.resource.Get;
 import org.restlet.resource.ServerResource;
 
@@ -296,7 +301,19 @@ public class RESTServer extends ServerResource implements ApplicationInfo
 			@Override
 			public void handle(Request req, Response res)
 			{
-				res.setEntity(engineObject.getSenseDigest(), MediaType.TEXT_PLAIN);
+				Sense ss = new Sense();
+				HList hl = ss.genearteNewdexMap();
+				ss.closeExplicitly();
+				
+				MappingGraphDrawer mgp = new MappingGraphDrawer();
+				mgp.drawEmotionalWords(hl);
+				mgp.writeImage();
+				
+				File graphjpg = new File("./graph.jpg");
+				if (graphjpg.exists())
+					res.setEntity(new FileRepresentation("./graph.jpg", MediaType.IMAGE_JPEG));
+				else
+					res.setEntity("Not available graph.jpg", MediaType.TEXT_PLAIN);
 			}
 		};
 		
@@ -328,6 +345,6 @@ public class RESTServer extends ServerResource implements ApplicationInfo
     public String toHTML()
 	{
         return "Welcome to Chain Engine API Server.\r\n(Emotional data analyzer for Korean Language)\r\nHost here provides below services:\r\n=========================================\r\n"
-        		+ "GET /stat : Digest of Sense Status (machine learning)\r\nGET /console : Web console to test the engine(View json object, get raw analysis data)\r\nGET /test : For testing purpose\r\nPOST /new : Invoke new task of analizing. Returning id.\r\nGET /get/id/{type} : Get results of a certain job. Type can be txt or json.";
+        		+ "GET /stat : Digest of Sense Status (machine learning)\r\nGET /console : Web console to test the engine(View json object, get raw analysis data)\r\nGET /test : For testing purpose\r\nPOST /new : Invoke new task of analizing. Returning id.\r\nGET /get/{id}/{type} : Get results of a certain job. Type can be either txt or json.";
     }
 }

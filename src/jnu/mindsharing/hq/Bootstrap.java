@@ -40,6 +40,11 @@ public class Bootstrap extends ServerResource
 		P.d(TAG, "메모리 부족으로 프로그램이 종료될 경우, -xm512M 옵션을 추가하여 재가동하십시오.");
 	}
 	
+	/**
+	 * 서버와 메시지 로거를 가동한다. 메시지는 기본적으로 표준 출력을 통해 출력된다.
+	 * @param args 명령행 옵션들(사용되지 않음)
+	 * @return none
+	 */
 	public static void initiateFullSystem(ChainEngine chainEngine, RESTServer restServer)
 	{
 		P.d(TAG, "API 서버 버전\t= %d (%s)", restServer.getVersionNumber(), restServer.getVersionCode());
@@ -63,11 +68,6 @@ public class Bootstrap extends ServerResource
 		}
 	}
 	
-	/**
-	 * 서버와 메시지 로거를 가동한다. 메시지는 기본적으로 표준 출력을 통해 출력된다.
-	 * @param args 명령행 옵션들(사용되지 않음)
-	 * @return none
-	 */
 	public static void main(String[] args)
 	{
 		CmdLineParser parser = new CmdLineParser(new Bootstrap());
