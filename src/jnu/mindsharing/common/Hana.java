@@ -109,7 +109,7 @@ public class Hana extends DatabaseConstants implements Serializable
 	
 	public boolean areZeroProbs()
 	{
-		return (eprob == 0.0 && sprob == 0.0) ? true : false;
+		return (eprob == 0.0 && sprob == 0.0);
 	}
 	
 	public void cutProbVector()
@@ -131,7 +131,7 @@ public class Hana extends DatabaseConstants implements Serializable
 		if (operand != null)
 		{
 			eprob = operand.getProb()[0];
-			eprob = operand.getProb()[1];
+			sprob = operand.getProb()[1];
 			amplifier = operand.getAmplifier();
 		}
 		return this;
