@@ -409,6 +409,12 @@ public class Sense extends DatabaseConstants
 		}
 		
 		
+		if (num_records == 0)
+		{
+			// Zero-division이 일어날 수도 있음
+			return final_output;
+		}
+		
 		emean = sum_eprob / num_records;
 		smean = sum_sprob / num_records;
 		
@@ -526,9 +532,44 @@ public class Sense extends DatabaseConstants
 		return new HList();
 	}
 	
-	public String getSenseStatDigest()
+	/**
+	 * 데이터베이스에 학습된 어휘들을 모두 수신하여 추정 감정값과 세기를 문자열로 요약하여 반환한다.
+	 * @return 요약문, 만약 쿼리에 실패했다면 null
+	 */
+	public String generateNewdexTableDigest()
 	{
+		StringBuffer sb = new StringBuffer();
+		sb.append("Learning Record Digest Table\r\n");
+		sb.append("===================================================\r\n");
+		sb.append("|Emotional|State    |Amplifier| String            |\r\n");
+		sb.append("===================================================\r\n");
+		try
+		{
+			PreparedStatement sql = db.prepareStatement("SELECT expression, exprhash FROM Newdex;");
+			ArrayList<Pair<String>> dexes = new ArrayList<Pair<String>>();
+			ResultSet res = sql.executeQuery();
+			while (res.next())
+			{
+				dexes.add(new Pair<String>(res.getString("expression"), res.getString("exprhash")));
+			}
+			
+			if (dexes.size() > 0)
+			{
+				for (Pair<String> expr_exprhash_pair: dexes)
+				{
+					Hana hn = ask(expr_exprhash_pair.first);
+					if (hn != null)
+						sb.append(String.format("|%+1.6f|%+1.6f|%9d/ %s\r\n", hn.getProb()[0], hn.getProb()[1], hn.getAmplifier(), expr_exprhash_pair.first));
+				}
+			}
+			return sb.toString();
+			
+		}
+		catch (SQLException e)
+		{
+			e.printStackTrace();
+		}
+		
 		return null;
 	}
-	
 }

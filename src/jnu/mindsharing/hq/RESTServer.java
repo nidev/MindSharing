@@ -297,7 +297,22 @@ public class RESTServer extends ServerResource implements ApplicationInfo
 			}
 		};
 		
-		Restlet rtMachineLearning = new Restlet(getContext()) {
+		Restlet rtMachineLearningDigest = new Restlet(getContext()) {
+			@Override
+			public void handle(Request req, Response res)
+			{
+				Sense ss = new Sense();
+				String digestText = ss.generateNewdexTableDigest();
+				ss.closeExplicitly();
+
+				if (digestText != null)
+					res.setEntity(digestText, MediaType.TEXT_PLAIN);
+				else
+					res.setEntity("Fail to retrieve digest.", MediaType.TEXT_PLAIN);
+			}
+		};
+		
+		Restlet rtMachineLearningMap = new Restlet(getContext()) {
 			@Override
 			public void handle(Request req, Response res)
 			{
@@ -313,11 +328,12 @@ public class RESTServer extends ServerResource implements ApplicationInfo
 				if (graphjpg.exists())
 					res.setEntity(new FileRepresentation("./graph.jpg", MediaType.IMAGE_JPEG));
 				else
-					res.setEntity("Not available graph.jpg", MediaType.TEXT_PLAIN);
+					res.setEntity("Not available: graph.jpg", MediaType.TEXT_PLAIN);
 			}
 		};
 		
-		component.getDefaultHost().attach("/stat", rtMachineLearning);
+		component.getDefaultHost().attach("/digest", rtMachineLearningDigest);
+		component.getDefaultHost().attach("/map", rtMachineLearningMap);
 		component.getDefaultHost().attach("/console", rtWebConsole);
 		component.getDefaultHost().attach("/new", rtAnalyzer);
 		component.getDefaultHost().attach("/get/{id}/{type}", rtSendResult);
@@ -345,6 +361,6 @@ public class RESTServer extends ServerResource implements ApplicationInfo
     public String toHTML()
 	{
         return "Welcome to Chain Engine API Server.\r\n(Emotional data analyzer for Korean Language)\r\nHost here provides below services:\r\n=========================================\r\n"
-        		+ "GET /stat : Digest of Sense Status (machine learning)\r\nGET /console : Web console to test the engine(View json object, get raw analysis data)\r\nGET /test : For testing purpose\r\nPOST /new : Invoke new task of analizing. Returning id.\r\nGET /get/{id}/{type} : Get results of a certain job. Type can be either txt or json.";
+        		+ "GET /map: Mapping Graph made by Sense module (JPEG file)\r\nGET /digest : Digest of Sense Status in text (machine learning)\r\nGET /console : Web console to test the engine(View json object, get raw analysis data)\r\nGET /test : For testing purpose\r\nPOST /new : Invoke new task of analizing. Returning id.\r\nGET /get/{id}/{type} : Get results of a certain job. Type can be either txt or json.";
     }
 }

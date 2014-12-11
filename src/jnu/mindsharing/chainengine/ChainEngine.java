@@ -1,7 +1,6 @@
 package jnu.mindsharing.chainengine;
 
 import java.util.ArrayList;
-import java.util.StringTokenizer;
 
 import jnu.mindsharing.common.ApplicationInfo;
 import jnu.mindsharing.common.HList;
@@ -102,14 +101,5 @@ public class ChainEngine implements ApplicationInfo
 			e.printStackTrace();
 			return null;
 		}
-	}
-	
-	/**
-	 * Sense 모듈로부터 데이터베이스 학습 결과 요약을 가져온다.
-	 * @return Sense가 학습한 정보가 요약된 문자열
-	 */
-	public String getSenseDigest()
-	{
-		return (new Sense()).getSenseStatDigest();
 	}
 }
