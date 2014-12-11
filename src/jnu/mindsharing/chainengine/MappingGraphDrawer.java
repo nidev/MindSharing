@@ -7,6 +7,8 @@ import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import javax.imageio.ImageIO;
 
@@ -41,9 +43,15 @@ public class MappingGraphDrawer
 	
 	public void drawLegend()
 	{
+		drawXYcoordinates();
+		
 		int point;
 		String[] labels = {"-5", "-4", "-3", "-2", "-1", "0", "1", "2", "3", "4", "5"};
 		drawText("MindSharing Emotional Word Mapping Graph", 15, 15);
+		
+		SimpleDateFormat dateFormat = new SimpleDateFormat();
+		
+		drawText("생성시각  " + dateFormat.format(new Date()), 15, 40);
 		drawText("감정+", X-60, Y/2 - 20);
 		drawText("감정-", 20, Y/2 - 20);
 		drawText("인과적+", X/2 + 20, 20);
