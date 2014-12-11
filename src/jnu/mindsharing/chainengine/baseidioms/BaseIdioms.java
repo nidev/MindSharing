@@ -15,13 +15,13 @@ public class BaseIdioms
 	{
 		String w;
 		int e;
-		int p;
+		int s;
 		
-		public Idiom(String w, int e, int p) // emotional/progression
+		public Idiom(String w, int e, int s) // emotional/progression
 		{
 			this.w = w;
 			this.e = e;
-			this.p = p;
+			this.s = s;
 		}
 		
 		public int getE()
@@ -29,9 +29,9 @@ public class BaseIdioms
 			return e;
 		}
 		
-		public int getP()
+		public int getS()
 		{
-			return p;
+			return s;
 		}
 		
 		@Override
