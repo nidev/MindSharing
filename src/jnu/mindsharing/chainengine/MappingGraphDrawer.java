@@ -14,6 +14,7 @@ import javax.imageio.ImageIO;
 
 import jnu.mindsharing.common.HList;
 import jnu.mindsharing.common.Hana;
+import jnu.mindsharing.common.P;
 
 public class MappingGraphDrawer
 {
@@ -24,6 +25,12 @@ public class MappingGraphDrawer
 	private BufferedImage imgBuffer;
 	private Graphics2D g2d;
 	
+	// 그래프 상에서 글자가 안겹치게 그려야한다.
+	private int plusy_inc = 10;
+	private int minusy_inc = 10;
+	final int delta = 15; 
+	
+	
 	public MappingGraphDrawer()
 	{
 		imgBuffer = new BufferedImage(X, Y, BufferedImage.TYPE_INT_RGB);
@@ -31,12 +38,12 @@ public class MappingGraphDrawer
 		g2d.setBackground(Color.WHITE);
 		g2d.clearRect(0, 0, X, Y);
 		g2d.setColor(Color.BLACK);
-		g2d.setStroke(new BasicStroke(2));
+		g2d.setStroke(new BasicStroke(1));
 	}
 	
 	public void drawXYcoordinates()
 	{
-		g2d.setColor(Color.BLACK);
+		g2d.setColor(Color.GRAY);
 		g2d.drawLine(0, Y/2, X, Y/2);
 		g2d.drawLine(X/2, 0, X/2, Y);
 	}
@@ -46,30 +53,30 @@ public class MappingGraphDrawer
 		drawXYcoordinates();
 		
 		int point;
-		String[] labels = {"-5", "-4", "-3", "-2", "-1", "0", "1", "2", "3", "4", "5"};
+		String[] labels = {"-4", "-3", "-2", "-1", "0", "1", "2", "3", "4"};
 		drawText("MindSharing Emotional Word Mapping Graph", 15, 15);
 		
 		SimpleDateFormat dateFormat = new SimpleDateFormat();
 		
-		drawText("생성시각  " + dateFormat.format(new Date()), 15, 40);
-		drawText("감정+", X-60, Y/2 - 20);
-		drawText("감정-", 20, Y/2 - 20);
-		drawText("인과적+", X/2 + 20, 20);
-		drawText("인과적-", X/2 + 20, Y-20);
+		drawText("생성시각  " + dateFormat.format(new Date()), 15, 30);
+		drawText("감정+", X-15, Y/2 - 5);
+		drawText("감정-", 15, Y/2 - 5);
+		drawText("인과적+", X/2 + 5, 15);
+		drawText("인과적-", X/2 + 5, Y-15);
 		
 		// 눈금 그리기
 		// XXX: 아직 스케일링은 구현되어있지 않아서 고정 스케일로 그려야할듯
 		// X눈금
 		for (point = 0; point < labels.length; point++)
 		{
-			g2d.drawLine(80*point, Y/2 + 10, 80*point, Y/2 - 10);
-			drawText(labels[point], 4 + 80*point, Y/2 + 14);
+			g2d.drawLine(100*point, Y/2 + 10, 100*point, Y/2 - 10);
+			drawText(labels[point], 4 + 100*point, Y/2 + 14);
 		}
 		// Y눈금
 		for (point = 0; point < labels.length; point++)
 		{
-			g2d.drawLine(X/2 - 10, Y - 80*point, X/2 + 10, Y - 80*point);
-			drawText(labels[point], X/2 + 8, Y - 80*point);
+			g2d.drawLine(X/2 - 10, Y - 100*point, X/2 + 10, Y - 100*point);
+			drawText(labels[point], X/2 + 8, Y - 100*point);
 		}
 		
 	}
@@ -79,6 +86,14 @@ public class MappingGraphDrawer
 		g2d.setColor(Color.BLACK);
 		g2d.setFont(new Font("Gulim", Font.PLAIN, 12));
 		g2d.drawString(msg, x, y);
+	}
+	
+	public void drawTextWithLine(String msg, int text_x, int text_y, int from_x, int from_y)
+	{
+		g2d.setColor(Color.MAGENTA);
+		g2d.drawLine(text_x, text_y, from_x, from_y);
+		g2d.setColor(Color.BLACK);
+		drawText(msg, text_x, text_y);
 	}
 	
 	public void writeImage()
@@ -97,15 +112,35 @@ public class MappingGraphDrawer
 	
 	public void drawEmotionalWords(HList wl)
 	{
+		int zero_vectors = 0;
+		
 		for (Hana wi: wl)
 		{
+			if (wi.areZeroProbs())
+			{
+				//P.d("ZERO", "제로 벡터: " + wi.toString());
+				zero_vectors++;
+				continue;
+			}
 			double[] projectile = wi.getProjectiles();
 			int translated_x=0, translated_y=0;
-			translated_x = X/2 + (int)(projectile[0] * X/10);
-			translated_y = Y/2 + -(int)(projectile[1] * Y/10);
+			translated_x = X/2 + (int)(projectile[0] * X/4);
+			translated_y = Y/2 + -(int)(projectile[1] * Y/4);
 			
-			g2d.drawRect(translated_x, translated_y, 2, 2); // 점찍기
-			drawText(wi.toString(), translated_x+5, translated_y+5);
+			g2d.fillOval(translated_x-4, translated_y-4, 8, 8); // 점찍기
+			
+			if (translated_y > 0)
+			{
+				drawTextWithLine(wi.toString(), translated_x, translated_y + plusy_inc, translated_x, translated_y);
+				plusy_inc += delta;
+			}
+			else
+			{
+				drawTextWithLine(wi.toString(), translated_x, translated_y - minusy_inc, translated_x, translated_y);
+				minusy_inc += delta;
+			}
 		}
+		
+		drawText("크기가 0이라 안그려진 벡터수: " + zero_vectors, 15, 45);
 	}
 }
