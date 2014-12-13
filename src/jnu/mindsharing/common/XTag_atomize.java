@@ -66,6 +66,5 @@ public class XTag_atomize
 	//public static final String NextDescEnhancer = "^D";
 	//public static final String NextDescReducer = "vD";
 	//public static final String NextDescDepender = "?D";
-	//// 이모티콘은 명사로 취급한다. 따라서 NounMarker를 사용하여 나중에 Object로 변환
-	//public static final String Emoticon = "EMO";
+	public static final String Emoticon = "EMO";
 }
