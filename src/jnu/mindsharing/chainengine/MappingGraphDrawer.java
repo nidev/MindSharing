@@ -14,7 +14,6 @@ import javax.imageio.ImageIO;
 
 import jnu.mindsharing.common.HList;
 import jnu.mindsharing.common.Hana;
-import jnu.mindsharing.common.P;
 
 public class MappingGraphDrawer
 {
@@ -25,10 +24,7 @@ public class MappingGraphDrawer
 	private BufferedImage imgBuffer;
 	private Graphics2D g2d;
 	
-	// 그래프 상에서 글자가 안겹치게 그려야한다.
-	private int plusy_inc = 10;
-	private int minusy_inc = 10;
-	final int delta = 15; 
+	final int delta = 10; 
 	
 	
 	public MappingGraphDrawer()
@@ -124,23 +120,22 @@ public class MappingGraphDrawer
 			}
 			double[] projectile = wi.getProjectiles();
 			int translated_x=0, translated_y=0;
-			translated_x = X/2 + (int)(projectile[0] * X/4);
-			translated_y = Y/2 + -(int)(projectile[1] * Y/4);
+			translated_x = X/2 + (int)(projectile[0] * X/8);
+			translated_y = Y/2 + -(int)(projectile[1] * Y/8);
 			
-			g2d.fillOval(translated_x-4, translated_y-4, 8, 8); // 점찍기
+			g2d.fillOval(translated_x-2, translated_y-2, 4, 4); // 점찍기
 			
 			if (translated_y > 0)
 			{
-				drawTextWithLine(wi.toString(), translated_x, translated_y + plusy_inc, translated_x, translated_y);
-				plusy_inc += delta;
+				drawText(wi.toString(), translated_x, translated_y-5);
 			}
 			else
 			{
-				drawTextWithLine(wi.toString(), translated_x, translated_y - minusy_inc, translated_x, translated_y);
-				minusy_inc += delta;
+				drawText(wi.toString(), translated_x, translated_y + 5);
 			}
 		}
 		
 		drawText("크기가 0이라 안그려진 벡터수: " + zero_vectors, 15, 45);
+		drawText("그려진 벡터수: " + (wl.size() - zero_vectors), 15, 60);
 	}
 }
