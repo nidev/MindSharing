@@ -11,36 +11,6 @@ import jnu.mindsharing.common.P;
 public class BaseIdioms
 {
 	public static enum DSC {SET20, SET50, SET100, SET200};
-	public class Idiom
-	{
-		String w;
-		int e;
-		int s;
-		
-		public Idiom(String w, int e, int s) // emotional/progression
-		{
-			this.w = w;
-			this.e = e;
-			this.s = s;
-		}
-		
-		public int getE()
-		{
-			return e;
-		}
-		
-		public int getS()
-		{
-			return s;
-		}
-		
-		@Override
-		public String toString()
-		{
-			return w;
-		}
-		
-	}
 	private final String TAG="BaseIdioms";
 	private ArrayList<Idiom> idioms;
 	
@@ -50,7 +20,7 @@ public class BaseIdioms
 		idioms = new ArrayList<Idiom>();
 	}
 	
-	public synchronized boolean loadSet(DSC datasetLength) throws Exception
+	public boolean loadSet(DSC datasetLength) throws Exception
 	{
 		InputStream source=null;
 		switch (datasetLength)
