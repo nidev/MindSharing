@@ -42,6 +42,7 @@ public class Hana extends DatabaseConstants implements Serializable
 	private double sprob = 0.0;
 	private int multiplier = 1; // 기본 증폭을 위한 수, 기본 어휘를 위한 기능임. 1배는 기본 출력을 내보냄
 	private int amplifier = 1; // 출력. 최소 출력은 1임. (즉, 최소는 확률값을 출력으로 내보낸다.
+	private String notes = "";;
 	
 	public Hana()
 	{
@@ -192,6 +193,27 @@ public class Hana extends DatabaseConstants implements Serializable
 			break;
 		}
 		return projects;
+	}
+	
+	public Hana invertSigns()
+	{
+		eprob *= -1.0;
+		sprob *= -1.0;
+		return this;
+	}
+	
+	public Hana putNotes(String note)
+	{
+		if (notes.isEmpty())
+			notes += note;
+		else
+			notes += "/" + note;
+		return this;
+	}
+	
+	public String getNotes()
+	{
+		return notes;
 	}
 	
 	/**
