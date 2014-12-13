@@ -60,7 +60,7 @@ public class ResultProcessor
 					
 					JSONObject json_word = new JSONObject();
 					json_word.put("word", hn.toString());
-					json_word.put("tag", hn.getXTag());
+					json_word.put("tag", hn.getXTag() + String.format("[%s]", hn.getNotes()));
 					json_word.put("eprob", hn.getProb()[0]);
 					json_word.put("sprob", hn.getProb()[1]);
 					json_word.put("amp", hn.getAmplifier());
@@ -104,8 +104,8 @@ public class ResultProcessor
 				for (Hana hn: hlist.subList(1, hlist.size()))
 				{
 					double[] mapped_to = hn.getProjectiles();
-					buffer.append(String.format("%s(tag:%s) [e %.4f s %.4f ^ %d ] mapped to (%4f, %4f)",
-							hn.toString(), hn.getXTag(), hn.getProb()[0], hn.getProb()[1], hn.getAmplifier(),
+					buffer.append(String.format("%s(tag:%s [%s]) [e %.4f s %.4f ^ %d ] mapped to (%4f, %4f)",
+							hn.toString(), hn.getXTag(), hn.getNotes(), hn.getProb()[0], hn.getProb()[1], hn.getAmplifier(),
 							mapped_to[0], mapped_to[1]));
 					buffer.append("\r\n");
 				}
