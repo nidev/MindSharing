@@ -3,10 +3,12 @@ package jnu.mindsharing.chainengine;
 import java.util.List;
 
 import jnu.mindsharing.common.DatabaseConstants.WORD_TYPE;
+import jnu.mindsharing.common.DescOpHelper;
 import jnu.mindsharing.common.HList;
 import jnu.mindsharing.common.Hana;
 import jnu.mindsharing.common.P;
 import jnu.mindsharing.common.XTag_atomize;
+import jnu.mindsharing.common.XTag_logical;
 
 import org.snu.ids.ha.ma.MCandidate;
 import org.snu.ids.ha.ma.MExpression;
@@ -24,6 +26,7 @@ public class TextPreprocessor
 	String TAG="TPreproc";
 	String contents;
 	HList internal;
+	DescOpHelper descop_separator;
 	
 	/**
 	 * ESentence 객체를 받아 작업을 준비한다.
@@ -33,6 +36,7 @@ public class TextPreprocessor
 	{
 		contents = rawText;
 		internal = new HList();
+		descop_separator = new DescOpHelper();
 	}
 	
 	/**
@@ -56,6 +60,12 @@ public class TextPreprocessor
 			}
 		}
 		return false;
+	}
+	
+	public boolean isStartWithHangul(String word)
+	{
+		char testVal = (char) (word.charAt(0) - 0xAC00);
+		return (testVal >= 0 && testVal <= 11172);
 	}
 	
 	/**
@@ -208,8 +218,16 @@ public class TextPreprocessor
 						/*
 						 * 주목: UN 은 형태소 분석기에서 '명사'로 추정한 어휘이다. '인명'도 엄밀히 명사의 범주에 속하기 때문에, 인명 인식을 위해서 추가한다.
 						 */
-						// DescOp 중에는 명사 어휘도 존재한다.
-						internal.add((new Hana(word)).setXTag(XTag_atomize.NounMarker));
+						if (descop_separator.identify(word).equals(XTag_logical.DescOp_Undefined))
+						{
+							internal.add((new Hana(word)).setXTag(XTag_atomize.NounMarker));
+						}
+						else
+						{
+							// 명사 어휘 중 일부는 DescOp용 명사가 존재하므로 이렇게 처리한다.
+							internal.add((new Hana(word)).setXTag(XTag_atomize.DescOp));
+						}
+							
 					}
 					else if (isTagIn(mtag, "SW"))
 					{
@@ -260,7 +278,7 @@ public class TextPreprocessor
 					i = j; // 내부 루프에서 전진한만큼 동기화
 					
 					P.d(TAG, "이모티콘 JOIN 완료: %s", emoticon_base);
-					internal.add((new Hana(emoticon_base, WORD_TYPE.noun)).setXTag(XTag_atomize.NounMarker)); // 내부적으로 명사로 간주한다.
+					internal.add((new Hana(emoticon_base)).setXTag(XTag_atomize.Emoticon));
 					P.d(TAG, "삽입 완료");
 				}
 				
@@ -270,15 +288,10 @@ public class TextPreprocessor
 			
 		}
 		
-		// Skip 으로 끝나지 않았다면, 패딩을 추가해준다.
-
-		internal.add(new Hana(".").setXTag(XTag_atomize.EndOfSentence));
+		// 문장 종료 마커로 끝나지 않았다면, 패딩을 추가해준다.
+		if (!internal.last().getXTag().equals(XTag_atomize.EndOfSentence))
+			internal.add(new Hana(".").setXTag(XTag_atomize.EndOfSentence));
 		
-		// 디버깅용
-		for (Hana hn: internal)
-		{
-			//P.d(TAG, "%s -> %s", hn.toString(), hn.getXTag());
-		}
 	}
 	
 	/**
@@ -450,16 +463,18 @@ public class TextPreprocessor
 	{
 		for (Hana hn : internal)
 		{
-			if (hn.getXTag().equals(XTag_atomize.Desc))
+			if (hn.toString().length() > 1)
 			{
-				Hana value = ss.ask(hn.toString());
-				if (value != null)
+				if (!hn.toString().contains(" ") && isStartWithHangul(hn.toString()))
 				{
-					hn.merge(value);
+					Hana value = ss.ask(hn.toString());
+					if (value != null)
+					{
+						hn.merge(value);
+					}
 				}
 			}
 		}
-		
 	}
 	
 	/**

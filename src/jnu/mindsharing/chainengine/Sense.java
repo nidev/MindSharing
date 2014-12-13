@@ -11,6 +11,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 
 import jnu.mindsharing.chainengine.baseidioms.BaseIdioms;
+import jnu.mindsharing.chainengine.baseidioms.Idiom;
 import jnu.mindsharing.common.DatabaseConstants;
 import jnu.mindsharing.common.ExprHash;
 import jnu.mindsharing.common.HList;
@@ -58,17 +59,17 @@ public class Sense extends DatabaseConstants
 	 */
 	public Sense()
 	{
-		P.d(TAG, "Sense Class created (With baseIdioms = 100)");
+		P.d(TAG, "Sense Class created (With baseIdioms = 200)");
 		bi = new BaseIdioms();
 		try
 		{
-			bi.loadSet(BaseIdioms.DSC.SET100);
+			bi.loadSet(BaseIdioms.DSC.SET200);
 		}
 		catch (Exception e)
 		{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		} // 기본 어휘는 100개 세트를 사용한다.
+		} // 기본 어휘는 200개 세트를 사용한다.
 		
 		negotiateDatabaseConnection();
 	}
@@ -125,6 +126,7 @@ public class Sense extends DatabaseConstants
 			last_err_msg = null;
 			// Concrete Database Structure.
 			sanitizeTableStructure();
+			
 			return db;
 		}
 		catch (SQLException e)
@@ -228,13 +230,13 @@ public class Sense extends DatabaseConstants
 	 * @param word 기본어휘
 	 * @return 존재하는 경우 해당하는 BaseIdioms.Idiom 객체, 아니면 null
 	 */
-	public BaseIdioms.Idiom isBaseIdiom(String word)
+	public Idiom isBaseIdiom(String word)
 	{
-		for (BaseIdioms.Idiom i: bi.retIdioms())
+		for (Idiom idiom: bi.retIdioms())
 		{
-			if (i.toString().equals(word))
+			if (idiom.toString().equals(word))
 			{
-				return i;
+				return idiom;
 			}
 		}
 		return null;
@@ -249,13 +251,16 @@ public class Sense extends DatabaseConstants
 	{
 		//P.d(TAG, "Query Emotional/State information on (%s)", word);
 		//P.d(TAG, "... Searching on BaseIdioms");
-		BaseIdioms.Idiom idiom = isBaseIdiom(word);
+		Idiom idiom = isBaseIdiom(word);
 		if (idiom != null)
 		{
+			//P.d(TAG, "조회 됨: " + idiom.toString());
 			Hana hn = new Hana();
 			hn.getConfiguration(); // == Meta, should be consume()d by original object.
-			// XXX: multiplier는 가져오십시오. 그럼 이만
-			hn.setAmplifier(1).setMultiplier(1).setProb(idiom.getE(), idiom.getS());
+			
+			// 추론용 함수는 사용하지만, 빈도수에 영향을 미치기 위해서 레코드를 삽입한다.
+			double[] inferred = inferFromRecords((new ExprHash(word)).toString());
+			hn.setAmplifier((int)inferred[0]).setMultiplier(1).setProb(idiom.base_e()*1.0, idiom.base_s()*1.0);
 			return hn; // TODO: more configuration?
 		}
 		else
@@ -265,6 +270,7 @@ public class Sense extends DatabaseConstants
 			try
 			{
 				PreparedStatement stmt = db.prepareStatement("SELECT * FROM Newdex WHERE expression = ?");
+				stmt.setFetchSize(20000);
 				stmt.setString(1, word);
 
 				ResultSet res = stmt.executeQuery();
@@ -323,6 +329,7 @@ public class Sense extends DatabaseConstants
 		try
 		{
 			PreparedStatement sql = db.prepareStatement("SELECT eprob, sprob FROM Dexrecord WHERE exprhash = ? ORDER BY id LIMIT 1000");
+			sql.setFetchSize(20000);
 			sql.setString(1,  expr_hash);
 			ResultSet res = sql.executeQuery();
 			ArrayList<Pair<Double>> pair_probs = new ArrayList<Pair<Double>>();			
@@ -499,8 +506,15 @@ public class Sense extends DatabaseConstants
 	{
 		try
 		{
-			PreparedStatement sql = db.prepareStatement("SELECT expression, exprhash FROM Newdex;");
+			// 기본 어휘도 여기에서 추가하자. 함께 보여져야지.
 			ArrayList<Pair<String>> dexes = new ArrayList<Pair<String>>();
+			for (Idiom idiom: bi.retIdioms())
+			{
+				dexes.add(new Pair<String>(idiom.toString(), idiom.toString()));
+			}
+			PreparedStatement sql = db.prepareStatement("SELECT expression, exprhash FROM Newdex;");
+			sql.setFetchSize(20000);
+			
 			ResultSet res = sql.executeQuery();
 			while (res.next())
 			{
@@ -543,15 +557,27 @@ public class Sense extends DatabaseConstants
 		sb.append("===================================================\r\n");
 		sb.append("|Emotional|State    |Amplifier| String            |\r\n");
 		sb.append("===================================================\r\n");
+		
+		
+		
 		try
 		{
-			PreparedStatement sql = db.prepareStatement("SELECT expression, exprhash FROM Newdex;");
+			// 기본 어휘도 여기에서 추가하자. 함께 보여져야지.
 			ArrayList<Pair<String>> dexes = new ArrayList<Pair<String>>();
+			for (Idiom idiom: bi.retIdioms())
+			{
+				dexes.add(new Pair<String>(idiom.toString(), idiom.toString()));
+			}
+			
+			PreparedStatement sql = db.prepareStatement("SELECT expression, exprhash FROM Newdex;");
+			sql.setFetchSize(20000);
+			
 			ResultSet res = sql.executeQuery();
 			while (res.next())
 			{
 				dexes.add(new Pair<String>(res.getString("expression"), res.getString("exprhash")));
 			}
+			
 			
 			if (dexes.size() > 0)
 			{

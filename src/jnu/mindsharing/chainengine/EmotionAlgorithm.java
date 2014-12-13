@@ -92,7 +92,9 @@ public class EmotionAlgorithm
 					// XXX: Fix
 					int pos = atoms.findFirstPosForXTagFrom(XTag_atomize.Desc, hn_idx);
 					if (pos != -1)
-						atoms.get(pos).setAmplifier(atoms.get(0).getAmplifier()/10);
+						atoms.get(pos)
+						.setAmplifier(atoms.get(0).getAmplifier()/10)
+						.putNotes("Amp감소:" + atoms.get(hn_idx).toString());
 					// 연산 역할을 성공적으로 수행하였는지와 무관하게, 현재 토큰은 파괴된다.
 					atoms.get(hn_idx).setXTag(XTag_atomize.Skip);
 				}
@@ -101,25 +103,29 @@ public class EmotionAlgorithm
 					// XXX: Fix
 					int pos = atoms.findFirstPosForXTagFrom(XTag_atomize.Desc, hn_idx);
 					if (pos != -1)
-						atoms.get(pos).setAmplifier(atoms.get(0).getAmplifier()*10);
+						atoms.get(pos)
+						.setAmplifier(atoms.get(0).getAmplifier()*10)
+						.putNotes("Amp증가:" + atoms.get(hn_idx).toString());;
 					// 연산 역할을 성공적으로 수행하였는지와 무관하게, 현재 토큰은 파괴된다.
 					atoms.get(hn_idx).setXTag(XTag_atomize.Skip);
 				}
 				else if (descop_type.equals(XTag_logical.DescOp_InvertPrev))
 				{
-					// XXX: Fix
 					int pos = atoms.findFirstPosForXTagFrom(XTag_atomize.Desc, hn_idx);
 					if (pos != -1)
-						atoms.prev(pos).setAmplifier(atoms.get(0).getAmplifier());
+						atoms.prev(pos)
+						.invertSigns()
+						.putNotes("벡터반전:" + atoms.get(hn_idx).toString());
 					// 연산 역할을 성공적으로 수행하였는지와 무관하게, 현재 토큰은 파괴된다.
 					atoms.get(hn_idx).setXTag(XTag_atomize.Skip);
 				}
 				else if (descop_type.equals(XTag_logical.DescOp_InvertNext))
 				{
-					// XXX: Fix
 					int pos = atoms.findFirstPosForXTagFrom(XTag_atomize.Desc, hn_idx);
 					if (pos != -1)
-						atoms.get(pos).setAmplifier(atoms.get(0).getAmplifier());
+						atoms.get(pos)
+						.invertSigns()
+						.putNotes("벡터반전:" + atoms.get(hn_idx).toString());
 					// 연산 역할을 성공적으로 수행하였는지와 무관하게, 현재 토큰은 파괴된다.
 					atoms.get(hn_idx).setXTag(XTag_atomize.Skip);
 				}
@@ -130,39 +136,6 @@ public class EmotionAlgorithm
 			}
 		}
 		
-		atoms.compaction();
-		
-		for (int hn_idx=0; hn_idx < atoms.size(); hn_idx++)
-		{
-			if (atoms.get(hn_idx).getXTag().equals(XTag_atomize.DescOp))
-			{
-				Hana base = atoms.get(hn_idx);
-				// 여기에서 부사 + 형용사 -> 형용사, 반전이나 강화/감소 연산이 완료된 서술어를 필요하다면 연결한다.
-				String descop_type = identifyDescOp(base.toString());
-				if (descop_type.equals(XTag_logical.DescOp_Join))
-				{
-					
-					// NullPointerException 으로부터 first, prev, next, last 연산은 안전하므로
-					// 마음 놓고 비교가 가능하다.
-					if (atoms.prev(hn_idx).getXTag().equals(XTag_atomize.Desc) &&
-						atoms.next(hn_idx).getXTag().equals(XTag_atomize.Desc))
-					{
-						Hana base_hn = atoms.prev(hn_idx);
-						Hana aux_hn = atoms.next(hn_idx);
-						Hana new_hn = new Hana(base_hn.toString() + "/" + aux_hn.toString());
-						
-						new_hn.merge(base_hn).merge(aux_hn);
-						new_hn.setXTag(XTag_atomize.Desc);
-						atoms.prev(hn_idx).setXTag(XTag_atomize.Skip);
-						atoms.next(hn_idx).setXTag(XTag_atomize.Skip);
-						atoms.set(hn_idx, new_hn);
-						
-					}
-				}
-			}
-		}
-		// TODO: 있다, 없다, 하다 에 대한 처리도 필요함. 이 경우는 Object Desc(sentence end)식으로 구성된 경우가 많음.
-		// Compaction 한번 더 실시
 		atoms.compaction();
 		
 		// 현재 hlist 내부의 어휘에 대해 EndOfSentence 키워드를 기준으로 문장을 분할한다.
@@ -203,15 +176,17 @@ public class EmotionAlgorithm
 			
 			// 감정값이 없는 단어/서술어에 대해 문맥 추정값에 증감값을 적절히 적용해 추론한다. 문장 전체의 평가값을 0번에 저장하고 종료한다.
 			evaluateAllOnHList(hl);
-			
-			
+
 			// 0번에서 추론된 값을 Sense 학습 모듈의 데이터베이스로 전송한다. 단 2번 인덱스(0, 1, 2...)부터 전송한다.
 			// 0번은 헤더, 1번은 주어이기 때문에 다른 감정 요소만 전달한다.
 			senseFeedBackFromHList(hl, ss);
+			
+			// 출력을 위해, 결합된 어휘를 합치는 단계를 수행한다.
+			descOpJoinOperation(hl);
 		}
 		ss.closeExplicitly();
 		
-		//TODO:  sentences로부터 글 전체의 감정값을 요약한다. 강세 어휘를 추출한다.
+		
 		
 		return sentences;
 	}
@@ -260,9 +235,9 @@ public class EmotionAlgorithm
 					 * Ex) 불가능한 경우
 					 * 봉사하는 마음가짐으로 행복하게 산다. -> '마음가짐'이라는 명사를 가져올 수 없음
 					 */
-					if (!hl.prev(hl.findFirstPosForXTag(XTag_atomize.Object)).getXTag().equals(XTag_atomize.Desc))
+					if (!hl.prev(hl.findFirstPosForXTag(XTag_atomize.NounMarker)).getXTag().equals(XTag_atomize.Desc))
 					{
-						hl.findHanaForXTag(XTag_atomize.Object).setXTag(XTag_atomize.Subject);
+						hl.findHanaForXTag(XTag_atomize.NounMarker).setXTag(XTag_atomize.Subject);
 						hl.swap(hl.findFirstPosForXTag(XTag_atomize.Subject), 1);
 					}
 				}
@@ -320,6 +295,44 @@ public class EmotionAlgorithm
 			}
 		}
 		return true;
+	}
+	
+	public void descOpJoinOperation(HList hl)
+	{
+		for (int hn_idx=0; hn_idx < hl.size(); hn_idx++)
+		{
+			if (hl.get(hn_idx).getXTag().equals(XTag_atomize.DescOp))
+			{
+				Hana base = hl.get(hn_idx);
+				// 여기에서 부사 + 형용사 -> 형용사, 반전이나 강화/감소 연산이 완료된 서술어를 필요하다면 연결한다.
+				String descop_type = identifyDescOp(base.toString());
+				if (descop_type.equals(XTag_logical.DescOp_Join))
+				{
+					
+					// NullPointerException 으로부터 first, prev, next, last 연산은 안전하므로
+					// 마음 놓고 비교가 가능하다.
+					if (hl.prev(hn_idx).getXTag().equals(XTag_atomize.Desc) &&
+							hl.next(hn_idx).getXTag().equals(XTag_atomize.Desc))
+					{
+						Hana base_hn = hl.prev(hn_idx);
+						Hana aux_hn = hl.next(hn_idx);
+						Hana new_hn = new Hana(base_hn.toString() + "/" + aux_hn.toString());
+						
+						double joined_e_vector = base_hn.getProb()[0] + aux_hn.getProb()[0];
+						double joined_s_vector = base_hn.getProb()[1] + aux_hn.getProb()[1];
+						
+						new_hn.setProb(joined_e_vector, joined_s_vector);
+						new_hn.setXTag(XTag_atomize.Desc);
+						new_hn.putNotes("결합된 어휘");
+						hl.prev(hn_idx).setXTag(XTag_atomize.Skip);
+						hl.next(hn_idx).setXTag(XTag_atomize.Skip);
+						hl.set(hn_idx, new_hn);
+					}
+				}
+			}
+		}
+		// Compaction 한번 더 실시
+		hl.compaction();
 	}
 	
 	/**
