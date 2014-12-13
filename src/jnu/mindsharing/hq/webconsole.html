@@ -63,14 +63,14 @@
 		        	// for 문과 동일함
 		        	$.each(result.data, function (index) {
 		        		addline("---- 문장 시작 ----")
-		        		addline("문맥의 감정분석값 출력 [ 감정적인 변화 : " + result.data[index].ctx_evalue + " / 인과적인 변화: " + result.data[index].ctx_svalue + " ] ");
+		        		addline("문맥의 감정분석값 출력 [ 감정: " + result.data[index].ctx_evalue + " / 인과: " + result.data[index].ctx_svalue + " ] ");
 		        		addline("[문장 속 표현들]");
 		        		var words = result.data[index].words;
 		        		$.each(words, function (index2) {
 		        			var hn = words[index2];
 		        			addline(" >> " + hn.word + "(" + "태그" + ":" + hn.tag + ")");
-		        			addline(" --- 감정적 긍정/부정 확률: " + hn.eprob + " 인과적 긍정/부정 확률: " + hn.sprob);
-		        			addline(" --- 빈도수 " + hn.amp + "에 따른 출력(X축 좌표:감정, Y축 좌표:인과) (" + hn.evalue + ", " + hn.svalue +")");
+		        			addline(" --- 감정적 긍정/부정 벡터: " + hn.eprob + " 인과적 긍정/부정 벡터: " + hn.sprob);
+		        			addline(" --- 빈도수 " + hn.amp + "에 따른 출력조정 (X:감정, Y:인과) (" + hn.evalue + ", " + hn.svalue +")");
 		        		});
 		        		addline(" ----------------- " + request_id + " 결과 수신 끝");
 		        	});
