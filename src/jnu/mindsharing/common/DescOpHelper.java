@@ -9,7 +9,7 @@ public class DescOpHelper
 	final String[] join = {"고", "지만", "ㄴ데"};
 	final String[] negate_forward = {"안", "별로" };
 	final String[] negate_backward = {"아니"};
-	final String[] emphasize = {"너무", "매우", "정말"};
+	final String[] emphasize = {"너무", "매우", "정말", "참"};
 	final String[] minimize = {"조금", "약간", "살짝", "좀"};
 	
 	public DescOpHelper()
