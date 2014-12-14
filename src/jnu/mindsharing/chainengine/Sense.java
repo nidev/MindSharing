@@ -437,9 +437,9 @@ public class Sense extends DatabaseConstants
 		s_stddevi = Math.pow(sum_sprob / num_records, 0.5);
 		
 		final_output[0] = emean;
-		final_output[0] = e_stddevi;
-		final_output[0] = smean;
-		final_output[0] = s_stddevi;
+		final_output[1] = e_stddevi;
+		final_output[2] = smean;
+		final_output[3] = s_stddevi;
 		return final_output;
 	}
 	
