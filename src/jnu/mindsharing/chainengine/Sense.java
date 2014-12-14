@@ -8,7 +8,9 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 
 import jnu.mindsharing.chainengine.baseidioms.BaseIdioms;
 import jnu.mindsharing.chainengine.baseidioms.Idiom;
@@ -117,12 +119,11 @@ public class Sense extends DatabaseConstants
 	private Connection negotiateDatabaseConnection()
 	{
 		String uri = (new DB_URI()).toString();
-		String localTAG = "GET-DB";
 
 		try
 		{
 			db = DriverManager.getConnection(uri, DB_URI.user, DB_URI.password);
-			P.d(localTAG, "데이터베이스에 연결되었습니다.");
+			P.d(TAG, "데이터베이스에 연결되었습니다.");
 			last_err_msg = null;
 			// Concrete Database Structure.
 			sanitizeTableStructure();
@@ -137,7 +138,7 @@ public class Sense extends DatabaseConstants
 			err_msg.append("\r\n꼭 Sense.getLastError() 로 오류를 체크하십시오.");
 			e.printStackTrace();
 			last_err_msg = err_msg.toString();
-			P.e(localTAG, last_err_msg);
+			P.e(TAG, last_err_msg);
 			return null;
 		}
 	}
@@ -548,54 +549,28 @@ public class Sense extends DatabaseConstants
 	
 	/**
 	 * 데이터베이스에 학습된 어휘들을 모두 수신하여 추정 감정값과 세기를 문자열로 요약하여 반환한다.
+	 * @param newdexMap generateNewdexMap에서 반환된 HList 객체
 	 * @return 요약문, 만약 쿼리에 실패했다면 null
 	 */
-	public String generateNewdexTableDigest()
+	public String generateNewdexTableDigest(HList newdexMap)
 	{
 		StringBuffer sb = new StringBuffer();
+		SimpleDateFormat sdf = new SimpleDateFormat();
 		sb.append("Learning Record Digest Table\r\n");
+		sb.append("Created at " + sdf.format(new Date()) + "\r\n");
 		sb.append("===================================================\r\n");
 		sb.append("|Emotional|State    |Amplifier| String            |\r\n");
 		sb.append("===================================================\r\n");
 		
-		
-		
-		try
+					
+		if (newdexMap.size() > 0)
 		{
-			// 기본 어휘도 여기에서 추가하자. 함께 보여져야지.
-			ArrayList<Pair<String>> dexes = new ArrayList<Pair<String>>();
-			for (Idiom idiom: bi.retIdioms())
+			for (Hana hn: newdexMap)
 			{
-				dexes.add(new Pair<String>(idiom.toString(), idiom.toString()));
+				if (hn != null)
+					sb.append(String.format("|%+1.6f|%+1.6f|%9d/ %s\r\n", hn.getProb()[0], hn.getProb()[1], hn.getAmplifier(), hn.toString()));
 			}
-			
-			PreparedStatement sql = db.prepareStatement("SELECT expression, exprhash FROM Newdex;");
-			sql.setFetchSize(20000);
-			
-			ResultSet res = sql.executeQuery();
-			while (res.next())
-			{
-				dexes.add(new Pair<String>(res.getString("expression"), res.getString("exprhash")));
-			}
-			
-			
-			if (dexes.size() > 0)
-			{
-				for (Pair<String> expr_exprhash_pair: dexes)
-				{
-					Hana hn = ask(expr_exprhash_pair.first);
-					if (hn != null)
-						sb.append(String.format("|%+1.6f|%+1.6f|%9d/ %s\r\n", hn.getProb()[0], hn.getProb()[1], hn.getAmplifier(), expr_exprhash_pair.first));
-				}
-			}
-			return sb.toString();
-			
 		}
-		catch (SQLException e)
-		{
-			e.printStackTrace();
-		}
-		
-		return null;
+		return sb.toString();
 	}
 }

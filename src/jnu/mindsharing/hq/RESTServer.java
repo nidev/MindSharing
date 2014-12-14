@@ -14,11 +14,8 @@ import java.util.HashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import jnu.mindsharing.chainengine.ChainEngine;
-import jnu.mindsharing.chainengine.MappingGraphDrawer;
 import jnu.mindsharing.chainengine.ResultProcessor;
-import jnu.mindsharing.chainengine.Sense;
 import jnu.mindsharing.common.ApplicationInfo;
-import jnu.mindsharing.common.HList;
 import jnu.mindsharing.common.P;
 
 import org.restlet.Component;
@@ -50,12 +47,17 @@ public class RESTServer extends ServerResource implements ApplicationInfo
 	private int max_requests = 5;
 	private HashMap<String, ResultProcessor> rpcache;
 	
+	private ServiceThread svc;
+	
 	/**
 	 * 생성자, 캐시를 위한 해시 테이블을 생성함
 	 */
 	public RESTServer()
 	{
 		rpcache = new HashMap<String, ResultProcessor>();
+		svc = new ServiceThread();
+		svc.setDaemon(true);
+		svc.start();
 	}
 
 	/**
@@ -301,14 +303,11 @@ public class RESTServer extends ServerResource implements ApplicationInfo
 			@Override
 			public void handle(Request req, Response res)
 			{
-				Sense ss = new Sense();
-				String digestText = ss.generateNewdexTableDigest();
-				ss.closeExplicitly();
-
-				if (digestText != null)
-					res.setEntity(digestText, MediaType.TEXT_PLAIN);
+				File graphjpg = new File(ServiceThread.digestFile);
+				if (graphjpg.exists())
+					res.setEntity(new FileRepresentation(ServiceThread.digestFile, MediaType.TEXT_HTML));
 				else
-					res.setEntity("Fail to retrieve digest.", MediaType.TEXT_PLAIN);
+					res.setEntity("Not available: " + ServiceThread.digestFile, MediaType.TEXT_PLAIN);
 			}
 		};
 		
@@ -316,19 +315,12 @@ public class RESTServer extends ServerResource implements ApplicationInfo
 			@Override
 			public void handle(Request req, Response res)
 			{
-				Sense ss = new Sense();
-				HList hl = ss.genearteNewdexMap();
-				ss.closeExplicitly();
-				
-				MappingGraphDrawer mgp = new MappingGraphDrawer();
-				mgp.drawEmotionalWords(hl);
-				mgp.writeImage();
-				
-				File graphjpg = new File("./graph.jpg");
+				// ServiceThread 에서 그리고 여기에서는 전송만.
+				File graphjpg = new File(ServiceThread.graphFile);
 				if (graphjpg.exists())
-					res.setEntity(new FileRepresentation("./graph.jpg", MediaType.IMAGE_JPEG));
+					res.setEntity(new FileRepresentation(ServiceThread.graphFile, MediaType.IMAGE_JPEG));
 				else
-					res.setEntity("Not available: graph.jpg", MediaType.TEXT_PLAIN);
+					res.setEntity("Not available: " + ServiceThread.graphFile, MediaType.TEXT_PLAIN);
 			}
 		};
 		

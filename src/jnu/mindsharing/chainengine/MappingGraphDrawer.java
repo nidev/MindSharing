@@ -17,7 +17,6 @@ import jnu.mindsharing.common.Hana;
 
 public class MappingGraphDrawer
 {
-	final String outputPath = "graph.jpg";
 	final int X=800;
 	final int Y=800;
 	
@@ -92,12 +91,12 @@ public class MappingGraphDrawer
 		drawText(msg, text_x, text_y);
 	}
 	
-	public void writeImage()
+	public void writeImage(String outputFile)
 	{
 		drawLegend();
 		try
 		{
-			ImageIO.write(imgBuffer, "JPEG", new File(outputPath));
+			ImageIO.write(imgBuffer, "JPEG", new File(outputFile));
 		}
 		catch (IOException e)
 		{

@@ -36,7 +36,7 @@ public class MappingGraphDrawerTest
 		MappingGraphDrawer mgd = new MappingGraphDrawer();
 		mgd.drawXYcoordinates();
 		mgd.drawEmotionalWords(results);
-		mgd.writeImage();
+		mgd.writeImage("graph_test.jpg");
 		P.d(TAG, "테스트 종료");
 	}
 }
