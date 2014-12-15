@@ -20,7 +20,7 @@ public class SenseTest
 	public static void main(String[] args)
 	{
 		P.d(TAG, "감정값 평가 및 학습 모듈 Sense를 테스트합니다.");
-		Sense ss = new Sense(20);
+		Sense ss = new Sense(20, true);
 		ss.sanitizeTableStructure();
 		ss.addNewdex("테스트");
 		ss.addRecord((new ExprHash("테스트")).toString(), 0.0, 0.0, System.currentTimeMillis());

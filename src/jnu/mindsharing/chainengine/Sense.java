@@ -61,7 +61,6 @@ public class Sense extends DatabaseConstants
 	 */
 	public Sense()
 	{
-		P.d(TAG, "Sense Class created (With baseIdioms = 200)");
 		bi = new BaseIdioms();
 		try
 		{
@@ -76,7 +75,7 @@ public class Sense extends DatabaseConstants
 		negotiateDatabaseConnection();
 	}
 	
-	public Sense(int dsc_size)
+	public Sense(int dsc_size, boolean custom_dict)
 	{
 		boolean load_okay = false;
 		
