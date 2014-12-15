@@ -113,6 +113,26 @@ public class Hana extends DatabaseConstants implements Serializable
 		return (eprob == 0.0 && sprob == 0.0);
 	}
 	
+	public boolean arePositiveProbs()
+	{
+		if (eprob == 0.0)
+			return sprob > 0.0;
+		else if (sprob == 0.0)
+			return eprob > 0.0;
+		else		
+			return (eprob > 0.0 && sprob > 0.0);
+	}
+	
+	public boolean areNegativeProbs()
+	{
+		if (eprob == 0.0)
+			return sprob < 0.0;
+		else if (sprob == 0.0)
+			return eprob < 0.0;
+		else		
+			return (eprob < 0.0 && sprob < 0.0);
+	}
+	
 	public void cutProbVector()
 	{
 		if (eprob < -1.0)

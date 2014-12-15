@@ -108,15 +108,24 @@ public class MappingGraphDrawer
 	public void drawEmotionalWords(HList wl)
 	{
 		int zero_vectors = 0;
+		int neg_vectors = 0;
+		int pos_vectors = 0;
+		int mixed_vectors = 0;
 		
 		for (Hana wi: wl)
 		{
 			if (wi.areZeroProbs())
 			{
-				//P.d("ZERO", "제로 벡터: " + wi.toString());
 				zero_vectors++;
 				continue;
 			}
+			else if (wi.arePositiveProbs())
+				pos_vectors++;
+			else if (wi.areNegativeProbs())
+				neg_vectors++;
+			else
+				mixed_vectors++;
+			
 			double[] projectile = wi.getProjectiles();
 			int translated_x=0, translated_y=0;
 			translated_x = X/2 + (int)(projectile[0] * X/8);
@@ -134,7 +143,7 @@ public class MappingGraphDrawer
 			}
 		}
 		
-		drawText("크기가 0이라 안그려진 벡터수: " + zero_vectors, 15, 45);
+		drawText(String.format("제로 벡터: %d, 긍정: %d, 부정: %d, 혼합: %d", zero_vectors, pos_vectors, neg_vectors, mixed_vectors), 15, 45);
 		drawText("그려진 벡터수: " + (wl.size() - zero_vectors), 15, 60);
 	}
 }
