@@ -556,8 +556,9 @@ public class Sense extends DatabaseConstants
 	{
 		StringBuffer sb = new StringBuffer();
 		SimpleDateFormat sdf = new SimpleDateFormat();
-		sb.append("Learning Record Digest Table\r\n");
+		sb.append("Learning Record Digest\r\n");
 		sb.append("Created at " + sdf.format(new Date()) + "\r\n");
+		sb.append("Total words on given table: " + newdexMap.size() + "\r\n");
 		sb.append("===================================================\r\n");
 		sb.append("|Emotional|State    |Amplifier| String            |\r\n");
 		sb.append("===================================================\r\n");
