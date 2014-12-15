@@ -271,7 +271,7 @@ public class EmotionAlgorithm
 				accumulated_probs[1] += hn.getProb()[1];
 			}
 			
-			hl.get(0).setAmplifier(1).setProb(accumulated_probs[0]/(hl_size - 2), accumulated_probs[0]/(hl_size - 2));
+			hl.get(0).setAmplifier(1).setProb(accumulated_probs[0]/(hl_size - 2), accumulated_probs[1]/(hl_size - 2));
 		}
 		return true;
 	}
