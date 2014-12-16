@@ -155,6 +155,8 @@ public class EmotionAlgorithm
 			}
 		}
 		
+		sentences.remove(pos); // 마지막에 빈 배열이 추가됨.
+		
 		atoms.clear();
 		// allText 내부의 HList는 다음과 같은 구조로 구성한다.
 		//   0                       |   1   2   3   4  5  6  7  8  9 .... ... last

@@ -58,7 +58,7 @@ public class P
 	 * @param msg 메시지
 	 * @param args 메시지에 포맷 문자열이 사용된 경우, 추가로 입력할 값들 
 	 */
-	public static void d(String msgid, Object msg, Object...args)
+	synchronized public static void d(String msgid, Object msg, Object...args)
 	{
 		if (args.length == 0)
 		{
@@ -78,7 +78,7 @@ public class P
 	/**
 	 * 내부 버퍼와 표준 출력에 각각 긴 줄을 하나 삽입한다. 
 	 */
-	public static void b()
+	synchronized public static void b()
 	{
 		System.out.println(" --------------------------------------------------- ");
 		logToInternal(" --------------------------------------------------- ");
@@ -90,7 +90,7 @@ public class P
 	 * @param msg 메시지
 	 * @param args 메시지에 포맷 문자열이 사용된 경우, 추가로 입력할 값들 
 	 */
-	public static void e(String msgid, Object msg, Object...args)
+	synchronized public static void e(String msgid, Object msg, Object...args)
 	{
 		if (args.length == 0)
 		{

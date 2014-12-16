@@ -289,8 +289,8 @@ public class TextPreprocessor
 		}
 		
 		// 문장 종료 마커로 끝나지 않았다면, 패딩을 추가해준다.
-		if (!internal.last().getXTag().equals(XTag_atomize.EndOfSentence))
-			internal.add(new Hana(".").setXTag(XTag_atomize.EndOfSentence));
+		//if (!internal.last().getXTag().equals(XTag_atomize.EndOfSentence))
+		//	internal.add(new Hana(".").setXTag(XTag_atomize.EndOfSentence));
 		
 	}
 	
@@ -395,62 +395,13 @@ public class TextPreprocessor
 					em.setXTag(XTag_atomize.Skip);
 				}
 			}
-			else if (tag == XTag_atomize.Desc)
-			{
-				// XXX: 추후 삭제할 것
-				
-				/*
-				if ((es_idx+2) <= internal.size())
-				{
-					// (서술어)한 (명사) ex) 예쁜 그녀
-					// 의 결합 조건을 체크한다.
-					if (internal.get(es_idx+1).getXTag() == XTag_atomize.Object || internal.get(es_idx+1).getXTag() == XTag_atomize.Subject)
-					{
-						// XXX: 수정 필요
-						// em.setXTag(XTag_atomize.DescOp);
-					}
-					else
-					{
-						// XXX: 수정 필요
-						if (internal.get(es_idx+1).getXTag() == XTag_atomize.DescOp
-								&& internal.get(es_idx+2).getXTag() == XTag_atomize.Desc)
-						{
-							// -지 아니하다/않다/못하다
-							String depender = internal.get(es_idx+1).toString();
-							String verb = internal.get(es_idx+2).toString();
-							// XXX: 문자열 상수가 아닌, 태그로 비교하는 방법을 만들자.
-							if (depender.equals("지") && isTagIn(verb, "아니하다", "않다", "못하다"))
-							{
-								Hana inverter = new Hana(String.format("-%s %s", depender, verb)).setXTag(XTag_atomize.DescOp);
-								Hana desc = internal.get(es_idx);
-								internal.set(es_idx, new Hana().setXTag(XTag_atomize.Skip));
-								internal.set(es_idx+1, inverter);
-								internal.set(es_idx+2, desc);
-							}
-						}
-					}
-				}
-				*/
-			}
+			// 원래 이곳에 있던 결합 관계 설정 코드는 EmotionAlgorithm.java으로 이동되었음
 			else 
 			{
 				;
 			}
 		}
-		
-		
-		
-		// 모든 작업이 완료된 후에도, 마지막 서술어가 Desc라면 DescSubject로 변환한다.
-		// TODO: 실행 위치 변경
-		/*
-		if (internal.last().getXTag() == XTag_atomize.Desc)
-		{
-			// XXX: 목적어를 취하는 동사라면?
-			// 이것을 체크할 방법은?
-			internal.last().setXTag(XTag_atomize.DescSubject);
-		}
-		*/
-		
+				
 		// Compaction 코드는 ESentence 내부로 옮겼음.
 		internal.compaction();
 	}
