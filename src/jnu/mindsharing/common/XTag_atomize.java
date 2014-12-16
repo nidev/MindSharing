@@ -61,10 +61,5 @@ public class XTag_atomize
 	public static final String DescSubject = "DS";
 	public static final String DescOp = "D^v?";
 	public static final String EndOfSentence = ".";
-	//public static final String DescNextObject = "D>O";
-	//public static final String InvertNextDesc = "I>D";
-	//public static final String NextDescEnhancer = "^D";
-	//public static final String NextDescReducer = "vD";
-	//public static final String NextDescDepender = "?D";
 	public static final String Emoticon = "EMO";
 }
