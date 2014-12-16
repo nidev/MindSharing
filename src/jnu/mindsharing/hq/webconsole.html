@@ -113,7 +113,7 @@
 }
 -->
 
-<html>
+<html lang="ko">
     <head>
         <meta charset="UTF-8">
         <title>MindSharing Web Console</title>
@@ -121,44 +121,44 @@
         <script type="text/javascript">
 
         function addline(msg) {
-        	$("#output").append(msg);
-        	$("#output").append("<br />");
+            $("#output").append(msg);
+            $("#output").append("<br />");
         }
 
         function get_result(request_id) {
-        	$.ajax({
-		        url: "http://j.nidev.org:8182/get/" + request_id + "/json",
-		        type: "GET",
-		        crossDomain: true,
-		        dataType: "json",
-		        success:function(result) {
-		        	addline("서버에서 결과를 가져오는 중");
-		        	addline("요청 결과 : " + result.error);
-		        	addline("요청 응답 : " + result.error_msg);
-		        	// for 문과 동일함
-		        	$.each(result.data, function (index) {
-		        		addline("---- 문장 시작 ----")
-		        		// 소수 여섯자리로 고정
-		        		addline("문맥의 감정분석값 출력 [ 감정: "
-		        			+ result.data[index].ctx_evalue.toFixed(6)
-		        			+ " / 인과: "
-		        			+ result.data[index].ctx_svalue.toFixed(6)
-		        			+ " ] ");
-		        		addline("[문장 속 표현들]");
-		        		var words = result.data[index].words;
-		        		$.each(words, function (index2) {
-		        			var hn = words[index2];
-		        			addline(" >> " + hn.word + "(" + "태그" + ":" + hn.tag + ")");
-		        			addline(" --- 2차원 벡터의 감정 부분: " + hn.eprob.toFixed(6) + " 인과 부분: " + hn.sprob.toFixed(6));
-		        			addline(" --- 빈도수 " + hn.amp + "에 따른 출력조정 (X:감정, Y:인과) (" + hn.evalue.toFixed(6) + ", " + hn.svalue.toFixed(6) +")");
-		        		});
-		        	});
-		        	addline(" ----------------- " + request_id + " 결과 수신 끝");
-		        },
-		        error:function(xhr,status,error) {
-		            alert(status);
-		        }
-		    });
+            $.ajax({
+                url: "http://j.nidev.org:8182/get/" + request_id + "/json",
+                type: "GET",
+                crossDomain: true,
+                dataType: "json",
+                success:function(result) {
+                    addline("서버에서 결과를 가져오는 중");
+                    addline("요청 결과 : " + result.error);
+                    addline("요청 응답 : " + result.error_msg);
+                    // for 문과 동일함
+                    $.each(result.data, function (index) {
+                        addline("---- 문장 시작 ----")
+                        // 소수 여섯자리로 고정
+                        addline("문맥의 감정분석값 출력 [ 감정: "
+                            + result.data[index].ctx_evalue.toFixed(6)
+                            + " / 인과: "
+                            + result.data[index].ctx_svalue.toFixed(6)
+                            + " ] ");
+                        addline("[문장 속 표현들]");
+                        var words = result.data[index].words;
+                        $.each(words, function (index2) {
+                            var hn = words[index2];
+                            addline(" >> " + hn.word + "(" + "태그" + ":" + hn.tag + ")");
+                            addline(" --- 2차원 벡터의 감정 부분: " + hn.eprob.toFixed(6) + " 인과 부분: " + hn.sprob.toFixed(6));
+                            addline(" --- 빈도수 " + hn.amp + "에 따른 출력조정 (X:감정, Y:인과) (" + hn.evalue.toFixed(6) + ", " + hn.svalue.toFixed(6) +")");
+                        });
+                    });
+                    addline(" ----------------- " + request_id + " 결과 수신 끝");
+                },
+                error:function(xhr,status,error) {
+                    alert(status);
+                }
+            });
 
         }
 
@@ -172,48 +172,69 @@
             // http://stackoverflow.com/questions/4508198/how-to-use-type-post-in-jsonp-ajax-call
             // 영어문서 참고
             $.ajax({
-		        url: "http://j.nidev.org:8182/new",
-		        type: "POST",
-		        crossDomain: true,
-		        data: {text:sourcetext},
-		        dataType: "json",
-		        success:function(result) {
-		        	addline("작업 요청 완료.");
-		        	addline("요청 결과 : " + result.error);
-		        	addline("요청 응답 : " + result.error_msg);
-		        	addline("요청 번호 : " + result.data[0]);
-		        	if (result.data[0])
-		        	{
-		        		get_result(result.data[0]);
-		        	}
-		        },
-		        error:function(xhr,status,error) {
-		            alert("오류가 발생했습니다. 원격 서버가 정상적으로 동작 중인지 확인하십시오.");
-		        }
-		    });
+                url: "http://j.nidev.org:8182/new",
+                type: "POST",
+                crossDomain: true,
+                data: {text:sourcetext},
+                dataType: "json",
+                success:function(result) {
+                    addline("작업 요청 완료.");
+                    addline("요청 결과 : " + result.error);
+                    addline("요청 응답 : " + result.error_msg);
+                    addline("요청 번호 : " + result.data[0]);
+                    if (result.data[0])
+                    {
+                        get_result(result.data[0]);
+                    }
+                },
+                error:function(xhr,status,error) {
+                    alert("오류가 발생했습니다. 원격 서버가 정상적으로 동작 중인지 확인하십시오.");
+                }
+            });
+        }
+        
+        function show_partition(partition_name)
+        {
+        	// 먼저 나머지를 싹 숨긴다
+        	$("div[id^='partition']").hide();
+        	// 그리고 선택한 하나만 보여준다.
+        	$("div[id='partition_" + partition_name + "']").show(); 
+        
+        }
+
+        function reload_mapping_graph()
+        {
+        	var d = new Date();
+            $("#img_mapping_graph").empty();
+            $("#img_mapping_graph").html($("<img />").attr("src", "/map?"+d.getTime()));
         }
 
         </script>
     </head>
 <body>
-
-<div id='input_area'>
-    <h3>입력</h3><br />
-    <form>
-        <textarea rows='4' cols='50' id='inputbox'></textarea>
-        <input type='button' value='분석' onclick="post_process();">
-    </form>
+<div style="margin-bottom: 20px;">
+<button onclick="show_partition('console');">콘솔 화면</button>&nbsp;&nbsp;
+<button onclick="show_partition('description');">태그 표</button>&nbsp;&nbsp;
+<button onclick="show_partition('mapping');">감정 어휘 평면</button>&nbsp;&nbsp;
+<button onclick="show_partition('digest');">학습 이력 요약</button>
 </div>
-<hr>
-<div id='output_area'>
-    <h3>출력</h3>
-    <div id='output' style="border-style: solid;"></div>
-</div>
-<div id='description' style="margin-top: 30ox">
 
-<hr>
-<h4>엔진에서 쓰는 연산 태그를 보시려면 <button type="button" onclick="$('#tagtable').toggle();">여기</button>를 클릭하십시오.</h4><br />
-<div id="tagtable" style="display:none;">
+<div id='partition_console'>
+	<div id='input_area'>
+	    <h3>입력</h3><br />
+	    <form>
+	        <textarea rows='4' cols='50' id='inputbox'></textarea>
+	        <input type='button' value='분석' onclick="post_process();">
+	    </form>
+	</div>
+	<hr>
+	<div id='output_area'>
+	    <h3>출력</h3>
+	    <div id='output' style="border-style: solid;"></div>
+	</div>
+</div>
+
+<div id='partition_description' style='display: none;'>
     <table border="1">
     <tr><th>태그 이름</th><th>태그 설명</th></tr>
     <tr><td colspan="2">마커 태그</td></tr>
@@ -224,15 +245,13 @@
     <tr><td>V</td><td>이 어휘는 동사이나, 서술어로 처리되진 않았다.</td></tr>
     <tr><td>RF</td><td>이 어휘는 지칭 대명사이다.</td></tr>
     <tr><td>Q</td><td>이 어휘는 수량을 나타낼 때 함께 쓰이는 의존 명사이다.</td></tr>
-<tr><td>S</td><td>이 어휘는 주어로 판정되었다.</td></tr>
-<tr><td>O</td><td>이 어휘는 목적어로 판정되었다.</td></tr>
-<tr><td>D</td><td>이 어휘는 형용사, 동사 등을 포함한 서술어로 판정되었다.</td></tr>
-<tr><td>DS</td><td>이 어휘는 서술어 중에서도 주어를 서술하는 어휘로 판정되었다.</td></tr>
-<tr><td>D^v?</td><td>이 어휘는 부사 어휘 연산자 태그로 처리되었다.</td></tr>
-<tr><td>.</td><td>문장을 마치는 기호가 발견되었다.</td></tr>
-<tr><td>EMO</td><td>한글로 간주할 수 없는 기호나 숫자의 집합으로, 이모티콘으로 추정되었다.</td></tr>
-                
-
+    <tr><td>S</td><td>이 어휘는 주어로 판정되었다.</td></tr>
+    <tr><td>O</td><td>이 어휘는 목적어로 판정되었다.</td></tr>
+    <tr><td>D</td><td>이 어휘는 형용사, 동사 등을 포함한 서술어로 판정되었다.</td></tr>
+    <tr><td>DS</td><td>이 어휘는 서술어 중에서도 주어를 서술하는 어휘로 판정되었다.</td></tr>
+    <tr><td>D^v?</td><td>이 어휘는 부사 어휘 연산자 태그로 처리되었다.</td></tr>
+    <tr><td>.</td><td>문장을 마치는 기호가 발견되었다.</td></tr>
+    <tr><td>EMO</td><td>한글로 간주할 수 없는 기호나 숫자의 집합으로, 이모티콘으로 추정되었다.</td></tr>
     <tr><td colspan="2">부사 어휘 연산자 태그</td></tr>
     <tr><td>DO&amp;</td><td>전후의 서술어를 결합하여 벡터를 합성한다.</td></tr>
     <tr><td>DO!</td><td>다음 서술어의 감정 벡터을 반전한다.</td></tr>
@@ -241,6 +260,16 @@
     <tr><td>DOv</td><td>다음 서술어의 증폭값을 약화한다.</td></tr>
     <tr><td>?DO?</td><td>알 수 없는 부사 어휘 연산자로 판정되었다.</td></tr>
     </table>
+</div>
+
+<div id='partition_mapping' style='display: none;'>
+감정 어휘 평면을 보여줍니다.
+<button type="button" onclick="reload_mapping_graph();">그래프 새로고침</button>
+<div id="img_mapping_graph"></div>
+</div>
+
+<div id='partition_digest' style='display: none;'>
+데이터베이스 학습 요약을 보시려면 <a href="/digest" target="_blank">여기(새 창으로 열림)</a>를 누르세요.
 </div>
 
 </body>
