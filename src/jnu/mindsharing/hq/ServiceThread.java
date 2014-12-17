@@ -2,8 +2,9 @@ package jnu.mindsharing.hq;
 
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 
 import jnu.mindsharing.chainengine.MappingGraphDrawer;
 import jnu.mindsharing.chainengine.Sense;
@@ -42,8 +43,8 @@ public class ServiceThread extends Thread
 				
 				String digestText = ss.generateNewdexTableDigest(wl);
 				File digest = new File(digestFile);
-				BufferedWriter bw = new BufferedWriter(new FileWriter(digest));
-				bw.write("<html lang='ko'><head><meta charset='utf-8'/></head><body><pre>");
+				BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(digest), "UTF-8"));
+				bw.write("<!doctype html><html lang='ko'><head><meta charset='utf-8'/></head><body><pre>");
 				bw.write(digestText);
 				bw.write("</pre></body></html>");
 				bw.close();

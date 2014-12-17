@@ -47,17 +47,12 @@ public class RESTServer extends ServerResource implements ApplicationInfo
 	private int max_requests = 5;
 	private HashMap<String, ResultProcessor> rpcache;
 	
-	private ServiceThread svc;
-	
 	/**
 	 * 생성자, 캐시를 위한 해시 테이블을 생성함
 	 */
 	public RESTServer()
 	{
 		rpcache = new HashMap<String, ResultProcessor>();
-		svc = new ServiceThread();
-		svc.setDaemon(true);
-		svc.start();
 	}
 
 	/**

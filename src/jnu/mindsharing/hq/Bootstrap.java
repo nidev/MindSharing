@@ -4,11 +4,6 @@
 package jnu.mindsharing.hq;
 
 import jnu.mindsharing.chainengine.ChainEngine;
-import jnu.mindsharing.chainengine.MappingGraphDrawer;
-import jnu.mindsharing.chainengine.Sense;
-import jnu.mindsharing.common.ExprHash;
-import jnu.mindsharing.common.HList;
-import jnu.mindsharing.common.Hana;
 import jnu.mindsharing.common.P;
 
 import org.kohsuke.args4j.CmdLineParser;
@@ -53,6 +48,9 @@ public class Bootstrap extends ServerResource
 		P.d(TAG, "내부 라이브러리: %s", chainEngine.getLicenseInfo());
 		try
 		{
+			ServiceThread svc = new ServiceThread();
+			svc.setDaemon(true);
+			svc.start();
 			//으어아으 나중에
 			chainEngine.createKKMAAnalyzer();
 			restServer.run(chainEngine);

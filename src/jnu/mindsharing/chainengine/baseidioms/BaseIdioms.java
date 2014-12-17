@@ -43,7 +43,7 @@ public class BaseIdioms
 		
 		idioms.clear();
 		
-		BufferedReader br = new BufferedReader(new InputStreamReader(source));
+		BufferedReader br = new BufferedReader(new InputStreamReader(source, "UTF-8"));
 		String line;
 		while ((line = br.readLine()) != null)
 		{
