@@ -94,7 +94,7 @@ public class TextPreprocessor
 		if (contents.contains("\""))
 		{
 			// TODO: 실질적인 해체 작업
-			P.e(TAG, "따옴표가 포함되어있음.");
+			// P.e(TAG, "따옴표가 포함되어있음.");
 		}
 	}
 	
@@ -139,7 +139,7 @@ public class TextPreprocessor
 				MCandidate cur_mc = SejongMCandidateRefiner.refineAndSelectBest(mexp);
 				for (Morpheme cur_morpheme: cur_mc)
 				{
-					P.d("형태소", "--[단어:%s] %s %s %s %s", cur_mc.getExp(), cur_morpheme.getCharSetName(), cur_morpheme.getString(), cur_morpheme.getTag(), cur_morpheme.getComposed());
+					// P.d("형태소", "--[단어:%s] %s %s %s %s", cur_mc.getExp(), cur_morpheme.getCharSetName(), cur_morpheme.getString(), cur_morpheme.getTag(), cur_morpheme.getComposed());
 
 					// 꼬꼬마 형태소의 태그를, 내부의 태그로 새롭게 변환한다.
 					String mtag = cur_morpheme.getTag();
@@ -243,7 +243,7 @@ public class TextPreprocessor
 			{
 				// 한글이 아닌 경우, 이모티콘 탐색 등을 시도한다.
 				// TODO: 다음 문자가 한글이 아닐때까지 이모티콘 join을 한 후에 한 객체로 정리한다.
-				P.d(TAG, "한글이 아닌 문자입니다. 문장 부호인지 결정합니다.");
+				// P.d(TAG, "한글이 아닌 문자입니다. 문장 부호인지 결정합니다.");
 				MCandidate nonhangul_mc = mexp.getBest();
 				if (isTagIn(nonhangul_mc.getTag(), "SF"))
 				{
@@ -257,7 +257,7 @@ public class TextPreprocessor
 				}
 				else
 				{
-					P.d(TAG, "문장에 사용되지않은 부호를 합성합니다. 이모티콘일 수 있습니다.");
+					// P.d(TAG, "문장에 사용되지않은 부호를 합성합니다. 이모티콘일 수 있습니다.");
 					String emoticon_base;
 					int j = i;
 					emoticon_base = "";
@@ -277,9 +277,9 @@ public class TextPreprocessor
 					}
 					i = j; // 내부 루프에서 전진한만큼 동기화
 					
-					P.d(TAG, "이모티콘 JOIN 완료: %s", emoticon_base);
+					//P.d(TAG, "이모티콘 JOIN 완료: %s", emoticon_base);
 					internal.add((new Hana(emoticon_base)).setXTag(XTag_atomize.Emoticon));
-					P.d(TAG, "삽입 완료");
+					//P.d(TAG, "삽입 완료");
 				}
 				
 				continue;
@@ -347,7 +347,7 @@ public class TextPreprocessor
 			// 명사 파생 접미사(XSN)는 반드시 본 명사에 붙어야한다.
 			if (tag.equals(XTag_atomize.NounMarker)) //  && noun_queue.isEmpty()
 			{
-				P.e("NOUN_MERGER", "명사 어휘 합성 중 - %s", hn.toString());
+				//P.e("NOUN_MERGER", "명사 어휘 합성 중 - %s", hn.toString());
 				noun_queue.add(hn);
 				continue;
 			}
