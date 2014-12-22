@@ -8,7 +8,7 @@ public class DescOpHelper
 	// MAG: 너무, 매우, 정말, 조금(뒤에 명사나 서술어가 올때 부사로 처리됨), 약간, 안(아니), 별로,
 	final String[] join = {"고", "지만", "ㄴ데"};
 	final String[] negate_forward = {"안", "별로" };
-	final String[] negate_backward = {"아니"};
+	final String[] negate_backward = {"지"}; // ~지 않다, ~
 	final String[] emphasize = {"너무", "매우", "정말", "참"};
 	final String[] minimize = {"조금", "약간", "살짝", "좀"};
 	
@@ -33,7 +33,7 @@ public class DescOpHelper
 		else if (isIn(negate_forward, word))
 			return XTag_logical.DescOp_InvertNext;
 		else if (isIn(negate_backward, word))
-			return XTag_logical.DescOp_InvertPrev;
+			return XTag_logical.DescOp_JoinInverted;
 		else if (isIn(emphasize, word))
 			return XTag_logical.DescOp_Increase;
 		else if (isIn(minimize, word))

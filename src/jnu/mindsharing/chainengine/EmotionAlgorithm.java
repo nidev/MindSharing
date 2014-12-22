@@ -109,23 +109,13 @@ public class EmotionAlgorithm
 					// 연산 역할을 성공적으로 수행하였는지와 무관하게, 현재 토큰은 파괴된다.
 					atoms.get(hn_idx).setXTag(XTag_atomize.Skip);
 				}
-				else if (descop_type.equals(XTag_logical.DescOp_InvertPrev))
-				{
-					int pos = atoms.findFirstPosForXTagFrom(XTag_atomize.Desc, hn_idx);
-					if (pos != -1)
-						atoms.prev(pos)
-						.invertSigns()
-						.putNotes("벡터반전:" + atoms.get(hn_idx).toString());
-					// 연산 역할을 성공적으로 수행하였는지와 무관하게, 현재 토큰은 파괴된다.
-					atoms.get(hn_idx).setXTag(XTag_atomize.Skip);
-				}
 				else if (descop_type.equals(XTag_logical.DescOp_InvertNext))
 				{
 					int pos = atoms.findFirstPosForXTagFrom(XTag_atomize.Desc, hn_idx);
 					if (pos != -1)
 						atoms.get(pos)
 						.invertSigns()
-						.putNotes("벡터반전:" + atoms.get(hn_idx).toString());
+						.putNotes("벡터반전(L->R):" + atoms.get(hn_idx).toString());
 					// 연산 역할을 성공적으로 수행하였는지와 무관하게, 현재 토큰은 파괴된다.
 					atoms.get(hn_idx).setXTag(XTag_atomize.Skip);
 				}
@@ -307,7 +297,6 @@ public class EmotionAlgorithm
 			if (hl.get(hn_idx).getXTag().equals(XTag_atomize.DescOp))
 			{
 				Hana base = hl.get(hn_idx);
-				// 여기에서 부사 + 형용사 -> 형용사, 반전이나 강화/감소 연산이 완료된 서술어를 필요하다면 연결한다.
 				String descop_type = identifyDescOp(base.toString());
 				if (descop_type.equals(XTag_logical.DescOp_Join))
 				{
@@ -319,19 +308,53 @@ public class EmotionAlgorithm
 					{
 						Hana base_hn = hl.prev(hn_idx);
 						Hana aux_hn = hl.next(hn_idx);
-						Hana new_hn = new Hana(base_hn.toString() + "/" + aux_hn.toString());
+						Hana new_hn = new Hana(base_hn.toString());
 						
 						double joined_e_vector = base_hn.getProb()[0] + aux_hn.getProb()[0];
 						double joined_s_vector = base_hn.getProb()[1] + aux_hn.getProb()[1];
 						
 						new_hn.setProb(joined_e_vector, joined_s_vector);
 						new_hn.setXTag(XTag_atomize.Desc);
-						new_hn.putNotes("결합된 어휘");
+						new_hn.putNotes("결합: "  + aux_hn.toString());
 						hl.prev(hn_idx).setXTag(XTag_atomize.Skip);
 						hl.next(hn_idx).setXTag(XTag_atomize.Skip);
 						hl.set(hn_idx, new_hn);
 					}
 				}
+				else if (descop_type.equals(XTag_logical.DescOp_JoinInverted))
+				{
+					// 역접 연결 (~하지 않다, ~지 아니하다)
+					if (hl.prev(hn_idx).getXTag().equals(XTag_atomize.Desc) &&
+							hl.next(hn_idx).getXTag().equals(XTag_atomize.Desc))
+					{
+						Hana base_hn = hl.prev(hn_idx);
+						Hana aux_hn = hl.next(hn_idx);
+						
+						String aux_string = aux_hn.toString();
+
+						if (aux_string.equals("않다") || aux_string.equals("아니하다"))
+						{
+							Hana new_hn = new Hana(base_hn.toString());
+							
+							new_hn.merge(base_hn);
+							new_hn.invertSigns();
+							new_hn.setXTag(XTag_atomize.Desc);
+							new_hn.putNotes("벡터 반전(L<-R): " + aux_string);
+							hl.prev(hn_idx).setXTag(XTag_atomize.Skip);
+							hl.next(hn_idx).setXTag(XTag_atomize.Skip);
+							hl.set(hn_idx, new_hn);
+						}
+						
+					}
+				}
+				else
+				{
+					// nothing to do
+				}
+			}
+			else
+			{
+				// nothing to do
 			}
 		}
 		// Compaction 한번 더 실시
