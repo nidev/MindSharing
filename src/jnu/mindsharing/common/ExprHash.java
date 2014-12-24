@@ -1,5 +1,6 @@
 package jnu.mindsharing.common;
 
+import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
@@ -17,7 +18,7 @@ public class ExprHash
 		try
 		{
 			MessageDigest mdobject = MessageDigest.getInstance(USE_MD5);
-			byte[] byte_digest =  mdobject.digest(source.getBytes());
+			byte[] byte_digest =  mdobject.digest(source.getBytes("UTF-8"));
 			StringBuffer sb = new StringBuffer();
 			for (byte b : byte_digest)
 			{
@@ -26,7 +27,7 @@ public class ExprHash
 			hashValue = sb.toString();
 
 		}
-		catch (NoSuchAlgorithmException e)
+		catch (NoSuchAlgorithmException | UnsupportedEncodingException e)
 		{
 			P.e(TAG, "There is no hash algorithm like this.");
 			hashValue = null;
