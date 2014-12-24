@@ -304,7 +304,7 @@ public class Sense extends DatabaseConstants
 				{
 					// 데이터 베이스에 없는 어휘이다. 새로 추가한다.
 					// addNewdex() 를 사용한다.
-					P.d(TAG, "Found new word : " + word);
+					P.d(TAG, "새 어휘 추가 : " + word);
 					addNewdex(word);
 					return new Hana(word);
 				}
@@ -451,9 +451,10 @@ public class Sense extends DatabaseConstants
 			sql.setDate(2,  new java.sql.Date(timestamp_milli));
 			sql.setDouble(3, eprob);
 			sql.setDouble(4, sprob);
+			//P.d(TAG, "레코드 삽입 중 %s %f %f", exprhash, eprob, sprob, timestamp_milli);
 			
 			
-			sql.execute();
+			sql.executeUpdate();
 			sql.close();
 		}
 		catch (SQLException e)
@@ -487,7 +488,7 @@ public class Sense extends DatabaseConstants
 			sql.setDouble(5, 0.0);
 			sql.setString(6, (new ExprHash(word).toString()));
 			
-			sql.execute();
+			sql.executeUpdate();
 			sql.close();
 		}
 		catch (SQLException e)

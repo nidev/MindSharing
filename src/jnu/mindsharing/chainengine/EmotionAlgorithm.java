@@ -219,7 +219,7 @@ public class EmotionAlgorithm
 			if (hl.findFirstPosForXTag(XTag_atomize.Subject) == -1)
 			{
 				// 일단, 첫번째로 Object 로 마크된 Hana를 주어로 선정한다. (우선순위 2)
-				if (hl.findFirstPosForXTag(XTag_atomize.Object) != -1)
+				if (hl.findFirstPosForXTag(XTag_atomize.NounMarker) != -1)
 				{
 					// 단, Object 앞에 Desc가 있다면 데려올 수 없다. 독립된 명사 어휘만 데려올 수 있다.
 					/*
@@ -281,9 +281,11 @@ public class EmotionAlgorithm
 			return false; // 더이상 왜 처리를 하지?
 		else
 		{
+			P.d(TAG, "피드백 호출");
 			Hana baseHn = hl.get(0);
 			for (Hana hn : hl.subList(2, hl.size()))
 			{
+				P.d(TAG, "레코드 추가: " + hn.toString());
 				ss.addRecord(new ExprHash(hn.toString()).toString(), baseHn.getProb()[0], baseHn.getProb()[1], System.currentTimeMillis());
 			}
 		}

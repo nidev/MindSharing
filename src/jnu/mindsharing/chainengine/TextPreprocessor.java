@@ -418,7 +418,7 @@ public class TextPreprocessor
 			{
 				if (!hn.toString().contains(" ") && isStartWithHangul(hn.toString()))
 				{
-					Hana value = ss.ask(hn.toString());
+					Hana value = ss.ask(hn.toString().trim());
 					if (value != null)
 					{
 						hn.merge(value);

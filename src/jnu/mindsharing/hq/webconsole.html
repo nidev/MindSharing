@@ -140,17 +140,17 @@
                         addline("---- 문장 시작 ----")
                         // 소수 여섯자리로 고정
                         addline("문맥의 감정분석값 출력 [ 감정: "
-                            + result.data[index].ctx_evalue.toFixed(6)
+                            + result.data[index].ctx_evalue.toFixed(4)
                             + " / 인과: "
-                            + result.data[index].ctx_svalue.toFixed(6)
+                            + result.data[index].ctx_svalue.toFixed(4)
                             + " ] ");
                         addline("[문장 속 표현들]");
                         var words = result.data[index].words;
                         $.each(words, function (index2) {
                             var hn = words[index2];
                             addline(" >> " + hn.word + "(" + "태그" + ":" + hn.tag + ")");
-                            addline(" --- 2차원 벡터의 감정 부분: " + hn.eprob.toFixed(6) + " 인과 부분: " + hn.sprob.toFixed(6));
-                            addline(" --- 빈도수 " + hn.amp + "에 따른 출력조정 (X:감정, Y:인과) (" + hn.evalue.toFixed(6) + ", " + hn.svalue.toFixed(6) +")");
+                            //addline(" --- 2차원 벡터의 감정 부분: " + hn.eprob.toFixed(4) + " 인과 부분: " + hn.sprob.toFixed(4));
+                            addline(" --- 빈도수 " + hn.amp + "에 따른 출력 (X:감정, Y:인과) (" + hn.evalue.toFixed(4) + ", " + hn.svalue.toFixed(4) +")");
                         });
                     });
                     addline(" ----------------- " + request_id + " 결과 수신 끝");
